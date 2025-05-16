@@ -587,7 +587,7 @@ with col2:
         st.divider()
         st.markdown("### 📊 VALUE_ Variables Over Time")
     
-        value_time_map = extract_time_series_map(vertex_df,MAA_PREFIX)  # Wiederverwenden, da diese Funktion universell ist
+        value_time_map = extract_time_series_map(vertex_df)  # Wiederverwenden, da diese Funktion universell ist
     
         n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
         n_rows_value = ceil(n_techs_value / st.session_state["n_cols_plots"])
