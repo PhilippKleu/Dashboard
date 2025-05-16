@@ -176,7 +176,7 @@ if not st.session_state.get("excel_loaded", False):
     st.stop()
 
 # === Daten laden & vorbereiten ===
-vertex_df = pd.read_excel(st.session_state["excel_path"])
+vertex_df = st.session_state["uploaded_excel"]
 
 # Präfixe automatisch bestimmen
 if any(col.startswith("VALUE_") for col in vertex_df.columns):
