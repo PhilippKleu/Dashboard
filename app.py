@@ -883,11 +883,11 @@ st.markdown("### 📄 Show remaining vertices as table")
 with st.container():
     col_refresh, _ = st.columns([1, 5])
     with col_refresh:
-        refresh = st.button("🔄 Refresh Table View", key="refresh_table_button")
-        if refresh:
+        if st.button("🔄 Refresh Table View", key="refresh_table_button"):
             st.session_state["refresh_tables"] = True
+            st.rerun()  # sorgt dafür, dass im nächsten Run das Flag aktiv ist
 
-# Check if refresh is needed
+# Tabellenanzeige nur bei gesetztem Flag
 if st.session_state.get("refresh_tables", False):
 
     if filtered_data.empty and (
@@ -904,7 +904,6 @@ if st.session_state.get("refresh_tables", False):
         else:
             frames_to_concat = [filtered_full_data.reset_index(drop=True)]
 
-            # Füge Installed Capacity-Spalten hinzu, falls VALUE_-Modus
             if MAA_PREFIX == "VALUE_":
                 installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
                 installed_part = vertex_df.loc[filtered_full_data.index, installed_cols]
@@ -918,10 +917,7 @@ if st.session_state.get("refresh_tables", False):
             st.dataframe(full_with_all, use_container_width=True)
 
         # === Konvexe Kombinationen ===
-        if (
-            st.session_state['show_convex'] 
-            and not st.session_state['convex_combinations'].empty
-        ):
+        if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
             st.markdown("---")
             st.markdown("#### Convex Combinations")
             if filtered_convex_data.empty:
@@ -936,7 +932,7 @@ if st.session_state.get("refresh_tables", False):
                 convex_with_all = pd.concat(frames_to_concat, axis=1)
                 st.dataframe(convex_with_all, use_container_width=True)
 
-    # Reset state after showing
-    st.session_state["refresh_tables"] = False
+    # Hinweis zur Aktualisierung beibehalten
+    st.info("🔁 You can refresh again if filters or data have changed.")
 else:
     st.info("⬆️ Click 'Refresh Table View' to display the latest filtered data.")
