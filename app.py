@@ -528,6 +528,42 @@ with col2:
         'ytick.labelsize': 12,
         'legend.fontsize': 14,
     })
+     # === Layout-Optionen für Diagramme ===
+    if "n_cols_plots" not in st.session_state:
+        st.session_state["n_cols_plots"] = 3
+
+    with st.expander("⚙️ Diagram Options", expanded=False):
+        col_layout_label, col_layout_input = st.columns([1.5, 1])
+        with col_layout_label:
+            st.markdown(
+                '<p style="margin: 2.2rem 0 0 0; font-weight: normal;">Number of columns for installed capacity plots</p>',
+                unsafe_allow_html=True
+            )
+        with col_layout_input:
+            n_cols = st.number_input(
+                " ",
+                min_value=1,
+                max_value=5,
+                step=1,
+                key="n_cols_plots"
+            )
+
+        st.checkbox(
+            "Show convex combinations in installed capacities",
+            key="show_convex_in_timeplot"
+        )
+
+        st.checkbox(
+            "Show original flexibility ranges (red, transparent)",
+            value=False,
+            key="show_original_ranges"
+        )
+
+    # === Plot-Vorbereitung ===
+    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+    n_rows = ceil(n_techs / n_cols)
+    plot_width_per_col = 6
+    plot_height_per_row = 3.5
     if MAA_PREFIX == "VALUE_":
         st.divider()
         st.markdown("### 📊 VALUE_ Variables Over Time")
@@ -633,42 +669,7 @@ with col2:
         st.pyplot(fig_value)
     st.markdown("### ⏳ Installed Capacities Over Time")
 
-    # === Layout-Optionen für Diagramme ===
-    if "n_cols_plots" not in st.session_state:
-        st.session_state["n_cols_plots"] = 3
-
-    with st.expander("⚙️ Diagram Options", expanded=False):
-        col_layout_label, col_layout_input = st.columns([1.5, 1])
-        with col_layout_label:
-            st.markdown(
-                '<p style="margin: 2.2rem 0 0 0; font-weight: normal;">Number of columns for installed capacity plots</p>',
-                unsafe_allow_html=True
-            )
-        with col_layout_input:
-            n_cols = st.number_input(
-                " ",
-                min_value=1,
-                max_value=5,
-                step=1,
-                key="n_cols_plots"
-            )
-
-        st.checkbox(
-            "Show convex combinations in installed capacities",
-            key="show_convex_in_timeplot"
-        )
-
-        st.checkbox(
-            "Show original flexibility ranges (red, transparent)",
-            value=False,
-            key="show_original_ranges"
-        )
-
-    # === Plot-Vorbereitung ===
-    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-    n_rows = ceil(n_techs / n_cols)
-    plot_width_per_col = 6
-    plot_height_per_row = 3.5
+   
     fig_width = plot_width_per_col * n_cols
     fig_height = plot_height_per_row * n_rows
 
