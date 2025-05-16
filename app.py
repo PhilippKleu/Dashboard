@@ -650,9 +650,10 @@ with col2:
                     values = values_matrix.loc[i].values
                     if len(values) != len(years):
                         st.warning(
-                            f"⚠️ Mismatch in plot for **{tech}**: "
-                            f"{len(years)} years vs. {len(values)} values. "
-                            "Check time series column extraction or data shape."
+                            f"⚠️ Mismatch for tech: **{tech}**\n\n"
+                            f"- `years`: {years}\n"
+                            f"- `values`: {values}\n"
+                            f"- `len(years)`: {len(years)}, `len(values)`: {len(values)}"
                         )
                     ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
     
