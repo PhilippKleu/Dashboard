@@ -153,39 +153,26 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
 # === Titel & Initialisierung ===
 st.title("🔬 Technology Decision Tool")
 
-# === Excel-Datei Ladebereich ===
-if not st.session_state["excel_loaded"]:
-    st.subheader("📂 Load Excel File")
-    excel_path_input = st.text_input(
-        "Enter full path to an Excel file (or leave empty to use the default VERTEX_RESULTS.xlsx saved in directory):",
-        value=""
-    )
+# === Excel-Datei Ladebereich via Upload ===
+if not st.session_state.get("excel_loaded", False):
+    st.subheader("📂 Upload Excel File")
+    uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
 
-    if st.button("✅ Load File"):
+    if uploaded_file is not None:
         try:
-            if excel_path_input.strip() == "":
-                if os.path.exists(DEFAULT_PATH):
-                    st.session_state["excel_path"] = DEFAULT_PATH
-                else:
-                    raise FileNotFoundError(f"Default file not found: {DEFAULT_PATH}")
-            else:
-                user_path = excel_path_input.strip()
-                if os.path.exists(user_path):
-                    st.session_state["excel_path"] = user_path
-                else:
-                    raise FileNotFoundError(f"File not found: {user_path}")
-
-            # Lade Test
-            _ = pd.read_excel(st.session_state["excel_path"])
+            vertex_df = pd.read_excel(uploaded_file)
             st.session_state["excel_loaded"] = True
             st.session_state["excel_error"] = None
+            st.session_state["uploaded_excel"] = vertex_df  # speichere die geladene Datei für später
+            st.success("✅ File successfully loaded.")
             st.rerun()
 
         except Exception as e:
-            st.session_state["excel_error"] = f"{str(e)} — Try again. Make sure to type in the full path including VERTEX_RESULTS.xlsx"
+            st.session_state["excel_error"] = f"❌ Error reading Excel file: {e}"
 
-    if st.session_state["excel_error"]:
-        st.error(f"❌ {st.session_state['excel_error']}")
+    if st.session_state.get("excel_error"):
+        st.error(st.session_state["excel_error"])
+
     st.stop()
 
 # === Daten laden & vorbereiten ===
