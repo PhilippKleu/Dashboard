@@ -120,7 +120,7 @@ def extract_time_series_map(df):
         match_bracket = re.match(r"^(.*)\[\((\d{4}),?\)\]$", col)
         if match_bracket:
             tech_full = match_bracket.group(1)
-            prefix_split = tech_full.split('_', 1)
+            prefix_split = tech_full.split("_", 1)
             if len(prefix_split) == 2:
                 _, tech = prefix_split
                 year = int(match_bracket.group(2))
@@ -132,9 +132,9 @@ def extract_time_series_map(df):
         if match_suffix:
             col_base, year_str = match_suffix.groups()
             year = int(year_str)
-            prefix_split = col_base.split('_', 1)
-            if len(prefix_split) == 2:
-                _, tech = prefix_split
+            prefix_split = col_base.split("_", 2)
+            if len(prefix_split) == 3:
+                _, _, tech = prefix_split
                 tech_time_map[tech].append((year, col))
 
     return tech_time_map
