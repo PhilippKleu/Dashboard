@@ -648,6 +648,8 @@ with col2:
             else:
                 for i in values_matrix.index:
                     values = values_matrix.loc[i].values
+                    if len(values) != len(years):
+                        print(f"[WARN] Mismatch for tech={tech}: {len(years)} years vs. {len(values)} values.")
                     ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
     
                 if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
