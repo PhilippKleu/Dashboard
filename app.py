@@ -112,28 +112,33 @@ def extract_technologies(df):
     return techs, df[maa_cols].drop_duplicates(), maa_cols
 
 # === Extrahiere Zeitreihe pro Technologie ===
-def extract_time_series_map(df, prefix="MAA_INSTALLED_CAPACITY_"):
+def extract_time_series_map(df):
     
     tech_time_map = defaultdict(list)
 
     for col in df.columns:
-        if col.startswith(prefix):
-            try:
-                base = col[len(prefix):]
+        # Versuche beide Formate zu erkennen:
 
-                # Sonderfall: z. B. VALUE_Electricity_Renewable[(2025,)]
-                match = re.match(r"(.+?)\[\((\d{4}),?\)\]", base)
-                if match:
-                    tech = match.group(1)
-                    year = int(match.group(2))
-                else:
-                    # Standardfall: Technologie_YYYY
-                    tech, year = base.rsplit("_", 1)
-                    year = int(year)
-
+        # Format 1: z. B. VALUE_Tech[(2025,)]
+        match_bracket = re.match(r"^(.*)\[\((\d{4}),?\)\]$", col)
+        if match_bracket:
+            tech_full = match_bracket.group(1)
+            prefix_split = tech_full.split('_', 1)
+            if len(prefix_split) == 2:
+                _, tech = prefix_split
+                year = int(match_bracket.group(2))
                 tech_time_map[tech].append((year, col))
-            except Exception:
-                continue
+            continue
+
+        # Format 2: z. B. MAA_INSTALLED_CAPACITY_Tech_2025
+        match_suffix = re.match(r"^(.*)_(\d{4})$", col)
+        if match_suffix:
+            col_base, year_str = match_suffix.groups()
+            year = int(year_str)
+            prefix_split = col_base.split('_', 1)
+            if len(prefix_split) == 2:
+                _, tech = prefix_split
+                tech_time_map[tech].append((year, col))
 
     return tech_time_map
 
