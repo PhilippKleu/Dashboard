@@ -113,13 +113,10 @@ def extract_technologies(df):
 
 # === Extrahiere Zeitreihe pro Technologie ===
 def extract_time_series_map(df):
-    
     tech_time_map = defaultdict(list)
 
     for col in df.columns:
-        # Versuche beide Formate zu erkennen:
-
-        # Format 1: z. B. VALUE_Tech[(2025,)]
+        # Format 1: VALUE_Tech[(2025,)]
         match_bracket = re.match(r"^(.*)\[\((\d{4}),?\)\]$", col)
         if match_bracket:
             tech_full = match_bracket.group(1)
@@ -130,8 +127,8 @@ def extract_time_series_map(df):
                 tech_time_map[tech].append((year, col))
             continue
 
-        # Format 2: z. B. MAA_INSTALLED_CAPACITY_Tech_2025
-        match_suffix = re.match(r"^(.*)_(\d{4})$", col)
+        # Format 2: MAA_INSTALLED_CAPACITY_Tech_2025
+        match_suffix = re.match(r"^(.*?)_(\d{4})$", col)
         if match_suffix:
             col_base, year_str = match_suffix.groups()
             year = int(year_str)
