@@ -585,7 +585,7 @@ with col2:
         st.divider()
         st.markdown("### 📊 VALUE_ Variables Over Time")
     
-        value_time_map = extract_time_series_map(vertex_df)  # Wiederverwenden, da diese Funktion universell ist
+        value_time_map = extract_time_series_map(vertex_df)
     
         n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
         n_rows_value = ceil(n_techs_value / st.session_state["n_cols_plots"])
@@ -651,7 +651,7 @@ with col2:
                     values = values_matrix.loc[i].values
                     if len(values) != len(years):
                         st.warning(
-                            f"⚠️ Mismatch for tech: **{tech}**\n\n"
+                            f"⚠️ Mismatch for tech: **{tech}**\n"
                             f"- `years`: {years}\n"
                             f"- `values`: {values}\n"
                             f"- `len(years)`: {len(years)}, `len(values)`: {len(values)}"
@@ -667,7 +667,6 @@ with col2:
     
                 min_vals = full_values_matrix.min()
                 max_vals = full_values_matrix.max()
-    
                 ax.fill_between(years, min_vals, max_vals, color=(0.1, 0.4, 0.8, 0.15))
     
                 if st.session_state['show_original_ranges']:
@@ -689,6 +688,29 @@ with col2:
     
         for i in range(plot_idx_val, len(axes_value)):
             fig_value.delaxes(axes_value[i])
+    
+        if plot_idx_val > 0:
+            value_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+    
+            legend_anchor_y = 1.2 - 0.02 * max(st.session_state["n_cols_plots"] - 2, 0)
+            top_margin = legend_anchor_y - 0.06
+    
+            fig_value.legend(
+                [value_line],
+                ['Vertex'],
+                loc='upper center',
+                bbox_to_anchor=(0.5, legend_anchor_y),
+                ncol=1,
+                frameon=True,
+                fancybox=True,
+                fontsize=14
+            )
+    
+            fig_value.subplots_adjust(
+                top=top_margin,
+                hspace=0.3,
+                wspace=0.18
+            )
     
         st.pyplot(fig_value)
     st.markdown("### ⏳ Installed Capacities Over Time")
