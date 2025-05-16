@@ -114,27 +114,28 @@ def extract_technologies(df):
 # === Extrahiere Zeitreihe pro Technologie ===
 def extract_time_series_map(df):
     tech_time_map = defaultdict(list)
+    seen_columns = set()  # Um doppelte Zuordnungen zu vermeiden
 
     for col in df.columns:
         # Format 1: VALUE_Tech[(2025,)]
-        match_bracket = re.match(r"^(.*)\[\((\d{4}),?\)\]$", col)
+        match_bracket = re.match(r"^(VALUE_[^[]+)\[\((\d{4}),?\)\]$", col)
         if match_bracket:
-            tech_full = match_bracket.group(1)
-            prefix_split = tech_full.split("_", 1)
-            if len(prefix_split) == 2:
-                _, tech = prefix_split
-                year = int(match_bracket.group(2))
-                tech_time_map[tech].append((year, col))
-            continue
+            full_tech_prefix = match_bracket.group(1)
+            year = int(match_bracket.group(2))
+            tech = full_tech_prefix.replace("VALUE_", "")
+            tech_time_map[tech].append((year, col))
+            seen_columns.add(col)
+            continue  # Wichtig: damit derselbe Spaltenname NICHT noch einmal im nächsten Schritt verarbeitet wird
 
         # Format 2: MAA_INSTALLED_CAPACITY_Tech_2025
-        match_suffix = re.match(r"^(.*?)_(\d{4})$", col)
-        if match_suffix:
+        match_suffix = re.match(r"^(.*)_(\d{4})$", col)
+        if match_suffix and col not in seen_columns:
             col_base, year_str = match_suffix.groups()
             year = int(year_str)
-            prefix_split = col_base.split("_", 2)
-            if len(prefix_split) == 3:
-                _, _, tech = prefix_split
+
+            # z. B. MAA_INSTALLED_CAPACITY_Tech_2025 → extrahiere 'Tech'
+            if "INSTALLED_CAPACITY_" in col_base:
+                tech = col_base.split("INSTALLED_CAPACITY_")[-1]
                 tech_time_map[tech].append((year, col))
 
     return tech_time_map
