@@ -11,6 +11,7 @@ from collections import defaultdict
 import matplotlib.lines as mlines
 import matplotlib as mpl
 from scipy.stats import gaussian_kde
+import re
 
 
 
@@ -112,15 +113,28 @@ def extract_technologies(df):
 
 # === Extrahiere Zeitreihe pro Technologie ===
 def extract_time_series_map(df, prefix="MAA_INSTALLED_CAPACITY_"):
+    
     tech_time_map = defaultdict(list)
+
     for col in df.columns:
         if col.startswith(prefix):
             try:
-                base = col.replace(prefix, "")
-                tech, year = base.rsplit("_", 1)
-                tech_time_map[tech].append((int(year), col))
-            except:
+                base = col[len(prefix):]
+
+                # Sonderfall: z. B. VALUE_Electricity_Renewable[(2025,)]
+                match = re.match(r"(.+?)\[\((\d{4}),?\)\]", base)
+                if match:
+                    tech = match.group(1)
+                    year = int(match.group(2))
+                else:
+                    # Standardfall: Technologie_YYYY
+                    tech, year = base.rsplit("_", 1)
+                    year = int(year)
+
+                tech_time_map[tech].append((year, col))
+            except Exception:
                 continue
+
     return tech_time_map
 
 # === Bestimme zusätzliche Metrikspalten ===
