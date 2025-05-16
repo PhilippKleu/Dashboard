@@ -880,50 +880,63 @@ else:
 st.divider()
 st.markdown("### 📄 Show remaining vertices as table")
 
-if filtered_data.empty and (
-    st.session_state['convex_combinations'].empty 
-    or not st.session_state['show_convex']
-):
-    st.info("No valid vertices available for the current selection.")
-else:
-    # === Original-Vertices ===
-    st.markdown("#### Original Vertices")
-    filtered_full_data = tech_data.loc[filtered_data.index] if not filtered_data.empty else pd.DataFrame()
-    if filtered_data.empty:
-        st.dataframe(filtered_full_data, use_container_width=True)
-    else:
-        frames_to_concat = [filtered_full_data.reset_index(drop=True)]
+with st.container():
+    col_refresh, _ = st.columns([1, 5])
+    with col_refresh:
+        refresh = st.button("🔄 Refresh Table View", key="refresh_table_button")
+        if refresh:
+            st.session_state["refresh_tables"] = True
 
-        # Füge Installed Capacity-Spalten hinzu, falls VALUE_-Modus
-        if MAA_PREFIX == "VALUE_":
-            installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
-            installed_part = vertex_df.loc[filtered_full_data.index, installed_cols]
-            frames_to_concat.append(installed_part.reset_index(drop=True))
+# Check if refresh is needed
+if st.session_state.get("refresh_tables", False):
 
-        if additional_cols:
-            additional_metrics_part = vertex_df.loc[filtered_full_data.index, additional_cols]
-            frames_to_concat.append(additional_metrics_part.reset_index(drop=True))
-
-        full_with_all = pd.concat(frames_to_concat, axis=1)
-        st.dataframe(full_with_all, use_container_width=True)
-
-    # === Konvexe Kombinationen ===
-    if (
-        st.session_state['show_convex'] 
-        and not st.session_state['convex_combinations'].empty
+    if filtered_data.empty and (
+        st.session_state['convex_combinations'].empty 
+        or not st.session_state['show_convex']
     ):
-        st.markdown("---")
-        st.markdown("#### Convex Combinations")
-        if filtered_convex_data.empty:
-            st.dataframe(filtered_convex_data, use_container_width=True)
+        st.info("No valid vertices available for the current selection.")
+    else:
+        # === Original-Vertices ===
+        st.markdown("#### Original Vertices")
+        filtered_full_data = tech_data.loc[filtered_data.index] if not filtered_data.empty else pd.DataFrame()
+        if filtered_data.empty:
+            st.dataframe(filtered_full_data, use_container_width=True)
         else:
-            frames_to_concat = [filtered_convex_data.reset_index(drop=True)]
+            frames_to_concat = [filtered_full_data.reset_index(drop=True)]
 
-            
+            # Füge Installed Capacity-Spalten hinzu, falls VALUE_-Modus
+            if MAA_PREFIX == "VALUE_":
+                installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
+                installed_part = vertex_df.loc[filtered_full_data.index, installed_cols]
+                frames_to_concat.append(installed_part.reset_index(drop=True))
 
-            if additional_cols and not filtered_convex_additional.empty:
-                additional_convex_part = filtered_convex_additional[additional_cols].reset_index(drop=True)
-                frames_to_concat.append(additional_convex_part)
+            if additional_cols:
+                additional_metrics_part = vertex_df.loc[filtered_full_data.index, additional_cols]
+                frames_to_concat.append(additional_metrics_part.reset_index(drop=True))
 
-            convex_with_all = pd.concat(frames_to_concat, axis=1)
-            st.dataframe(convex_with_all, use_container_width=True)
+            full_with_all = pd.concat(frames_to_concat, axis=1)
+            st.dataframe(full_with_all, use_container_width=True)
+
+        # === Konvexe Kombinationen ===
+        if (
+            st.session_state['show_convex'] 
+            and not st.session_state['convex_combinations'].empty
+        ):
+            st.markdown("---")
+            st.markdown("#### Convex Combinations")
+            if filtered_convex_data.empty:
+                st.dataframe(filtered_convex_data, use_container_width=True)
+            else:
+                frames_to_concat = [filtered_convex_data.reset_index(drop=True)]
+
+                if additional_cols and not filtered_convex_additional.empty:
+                    additional_convex_part = filtered_convex_additional[additional_cols].reset_index(drop=True)
+                    frames_to_concat.append(additional_convex_part)
+
+                convex_with_all = pd.concat(frames_to_concat, axis=1)
+                st.dataframe(convex_with_all, use_container_width=True)
+
+    # Reset state after showing
+    st.session_state["refresh_tables"] = False
+else:
+    st.info("⬆️ Click 'Refresh Table View' to display the latest filtered data.")
