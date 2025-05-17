@@ -238,6 +238,10 @@ if not st.session_state.get("excel_loaded", False):
         st.stop()
 
 # === Daten laden & vorbereiten ===
+if "uploaded_excel" not in st.session_state:
+    st.warning("⚠️ Please upload and (optionally) cluster an Excel file first.")
+    st.stop()
+
 vertex_df = st.session_state["uploaded_excel"]
 
 # Präfixe automatisch bestimmen
