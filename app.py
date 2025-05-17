@@ -171,37 +171,46 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
 # === Titel & Initialisierung ===
 st.title("🔬 Technology Decision Tool")
 # === Excel-Datei Ladebereich via Upload ===
-st.subheader("📂 Upload Excel File")
-uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
-
 if not st.session_state.get("excel_loaded", False):
+    st.subheader("📂 Upload Excel File")
+    uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
+
     if uploaded_file is not None:
         st.subheader("🔀 Optional Clustering Before Analysis")
+        st.markdown("Wähle eine der beiden Optionen:")
 
-        do_clustering = st.checkbox("Reduce dataset with KMeans clustering before loading", value=False)
+        col_up1, col_up2 = st.columns(2)
 
-        if do_clustering:
+        with col_up1:
+            if st.button("📥 Nur einlesen"):
+                try:
+                    df = pd.read_excel(uploaded_file)
+                    st.session_state["uploaded_excel"] = df.copy()
+                    st.session_state["excel_loaded"] = True
+                    st.session_state["excel_error"] = None
+                    st.rerun()
+                except Exception as e:
+                    st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
+
+        with col_up2:
             k_value = st.number_input(
-                "Number of representative vertices to retain (clusters)",
+                "Number of representative vertices to retain (KMeans)",
                 min_value=50,
                 max_value=5000,
                 value=1000,
                 step=50,
                 key="clustering_k"
             )
-
-        if st.button("✅ Load Excel" + (" with Clustering" if do_clustering else ""), key="load_excel_button"):
-            try:
-                df = pd.read_excel(uploaded_file)
-
-                if do_clustering:
+            if st.button("📊 Clustern und einlesen"):
+                try:
+                    df = pd.read_excel(uploaded_file)
                     amount_vertices_remaining = int(k_value)
 
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
                     last_coeff_col = coeff_columns[-1] if coeff_columns else None
 
                     if not last_coeff_col:
-                        raise ValueError("❌ No COEFF_ columns found for clustering.")
+                        raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
 
                     last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
                     df_first_part = df.loc[:last_index_with_minus1].copy()
@@ -222,20 +231,17 @@ if not st.session_state.get("excel_loaded", False):
 
                     df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
                     st.session_state["uploaded_excel"] = df_final.copy()
-                else:
-                    st.session_state["uploaded_excel"] = df.copy()
+                    st.session_state["excel_loaded"] = True
+                    st.session_state["excel_error"] = None
+                    st.rerun()
 
-                st.session_state["excel_loaded"] = True
-                st.session_state["excel_error"] = None
-                st.success("✅ Excel file successfully loaded.")
-                st.rerun()
+                except Exception as e:
+                    st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
 
-            except Exception as e:
-                st.session_state["excel_error"] = f"❌ Error loading Excel file: {e}"
-    else:
-        if st.session_state.get("excel_error"):
-            st.error(st.session_state["excel_error"])
-        st.stop()
+    if st.session_state.get("excel_error"):
+        st.error(st.session_state["excel_error"])
+
+    st.stop()
 
 # === Daten laden & vorbereiten ===
 if "uploaded_excel" not in st.session_state:
