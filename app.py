@@ -192,7 +192,7 @@ if not st.session_state.get("excel_loaded", False):
                 except Exception as e:
                     st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
 
-        with col_up2:
+        
             k_value = st.number_input(
                 "Number of representative vertices to retain (KMeans)",
                 min_value=50,
