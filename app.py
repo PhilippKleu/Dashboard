@@ -170,7 +170,7 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
 
 # === Titel & Initialisierung ===
 st.title("🔬 Technology Decision Tool")
-
+uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
 # === Excel-Datei Ladebereich via Upload ===
 if uploaded_file is not None:
     st.subheader("🔀 Optional Clustering Before Analysis")
