@@ -170,27 +170,71 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
 # === Titel & Initialisierung ===
 st.title("🔬 Technology Decision Tool")
 
-# === Excel-Datei Ladebereich via Upload ===
-if not st.session_state.get("excel_loaded", False):
-    st.subheader("📂 Upload Excel File")
-    uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
+if uploaded_file is not None:
+    st.subheader("🔀 Optional Clustering Before Analysis")
 
-    if uploaded_file is not None:
+    do_clustering = st.checkbox("Reduce dataset with KMeans clustering before loading", value=False)
+
+    if do_clustering:
+        k_value = st.number_input(
+            "Number of representative vertices to retain (clusters)",
+            min_value=50,
+            max_value=5000,
+            value=1000,
+            step=50,
+            key="clustering_k"
+        )
+
+    if st.button("✅ Load Excel" + (" with Clustering" if do_clustering else ""), key="load_excel_button"):
         try:
-            vertex_df = pd.read_excel(uploaded_file)
-            st.session_state["excel_loaded"] = True
-            st.session_state["excel_error"] = None
-            st.session_state["uploaded_excel"] = vertex_df  # speichere die geladene Datei für später
-            st.success("✅ File successfully loaded.")
-            st.rerun()
+            df = pd.read_excel(uploaded_file)
+
+            if do_clustering:
+                amount_vertices_remaining = int(k_value)
+
+                # COEFF_-Spalten finden
+                coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
+                last_coeff_col = coeff_columns[-1] if coeff_columns else None
+
+                # Falls keine COEFF_-Spalte gefunden → abbrechen
+                if not last_coeff_col:
+                    raise ValueError("❌ No COEFF_ columns found for clustering.")
+
+                last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
+                df_first_part = df.loc[:last_index_with_minus1].copy()
+                df_remaining = df.loc[last_index_with_minus1 + 1:].copy()
+
+                # Cluster-relevante Spalten finden
+                cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
+                df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
+                remaining_target = amount_vertices_remaining - len(df_first_part)
+
+                if len(df_remaining_unique) > remaining_target:
+                    X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
+                    kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
+                    df_remaining_unique["cluster"] = kmeans.fit_predict(X)
+                    representative_indices = df_remaining_unique.groupby("cluster").head(1).index
+                    df_clustered = df_remaining.loc[representative_indices].copy()
+                else:
+                    df_clustered = df_remaining_unique.copy()
+
+                df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
+                vertex_df = df_final.copy()
+                st.session_state["uploaded_excel"] = vertex_df
+                st.session_state["excel_loaded"] = True
+                st.session_state["excel_error"] = None
+                st.success("✅ Clustering and loading successful.")
+                st.rerun()
+            else:
+                vertex_df = pd.read_excel(uploaded_file)
+                st.session_state["uploaded_excel"] = vertex_df
+                st.session_state["excel_loaded"] = True
+                st.session_state["excel_error"] = None
+                st.success("✅ File successfully loaded.")
+                st.rerun()
 
         except Exception as e:
-            st.session_state["excel_error"] = f"❌ Error reading Excel file: {e}"
-
-    if st.session_state.get("excel_error"):
-        st.error(st.session_state["excel_error"])
-
-    st.stop()
+            st.session_state["excel_error"] = f"❌ Error loading or clustering: {e}"
 
 # === Daten laden & vorbereiten ===
 vertex_df = st.session_state["uploaded_excel"]
