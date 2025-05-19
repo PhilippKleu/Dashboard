@@ -177,12 +177,12 @@ if not st.session_state.get("excel_loaded", False):
 
     if uploaded_file is not None:
         st.subheader("🔀 Optional Clustering Before Analysis")
-        st.markdown("Wähle eine der beiden Optionen:")
+        st.markdown("Choose Option:")
 
         col_up1, col_up2 = st.columns(2)
 
         with col_up1:
-            if st.button("📥 Nur einlesen"):
+            if st.button("📥 Read in all vertices from excel file"):
                 try:
                     df = pd.read_excel(uploaded_file)
                     st.session_state["uploaded_excel"] = df.copy()
@@ -201,7 +201,7 @@ if not st.session_state.get("excel_loaded", False):
                 step=50,
                 key="clustering_k"
             )
-            if st.button("📊 Clustern und einlesen"):
+            if st.button("📊 Apply KMeans clustering to the vertices extracted from Excel, retaining only the specified number of representative data points."):
                 try:
                     df = pd.read_excel(uploaded_file)
                     amount_vertices_remaining = int(k_value)
