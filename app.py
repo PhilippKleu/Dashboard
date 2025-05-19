@@ -182,61 +182,63 @@ if not st.session_state.get("excel_loaded", False):
         col_up1, col_up2 = st.columns(2)
 
         with col_up1:
-            if st.button("📥 Read in all vertices from excel file"):
-                try:
-                    df = pd.read_excel(uploaded_file)
-                    st.session_state["uploaded_excel"] = df.copy()
-                    st.session_state["excel_loaded"] = True
-                    st.session_state["excel_error"] = None
-                    st.rerun()
-                except Exception as e:
-                    st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
+            col_sub1, col_sub2 = st.columns(2)
+            with col_sub1:
+                if st.button("📥 Read in all vertices from excel file"):
+                    try:
+                        df = pd.read_excel(uploaded_file)
+                        st.session_state["uploaded_excel"] = df.copy()
+                        st.session_state["excel_loaded"] = True
+                        st.session_state["excel_error"] = None
+                        st.rerun()
+                    except Exception as e:
+                        st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
 
-        
-            k_value = st.number_input(
-                "Number of representative vertices to retain (KMeans)",
-                min_value=50,
-                max_value=5000,
-                value=1000,
-                step=50,
-                key="clustering_k"
-            )
-            if st.button("📊 Apply KMeans clustering to the vertices extracted from Excel, retaining only the specified number of representative data points."):
-                try:
-                    df = pd.read_excel(uploaded_file)
-                    amount_vertices_remaining = int(k_value)
-
-                    coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
-                    last_coeff_col = coeff_columns[-1] if coeff_columns else None
-
-                    if not last_coeff_col:
-                        raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
-
-                    last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
-                    df_first_part = df.loc[:last_index_with_minus1].copy()
-                    df_remaining = df.loc[last_index_with_minus1 + 1:].copy()
-
-                    cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
-                    df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
-                    remaining_target = amount_vertices_remaining - len(df_first_part)
-
-                    if len(df_remaining_unique) > remaining_target:
-                        X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
-                        kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
-                        df_remaining_unique["cluster"] = kmeans.fit_predict(X)
-                        representative_indices = df_remaining_unique.groupby("cluster").head(1).index
-                        df_clustered = df_remaining.loc[representative_indices].copy()
-                    else:
-                        df_clustered = df_remaining_unique.copy()
-
-                    df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
-                    st.session_state["uploaded_excel"] = df_final.copy()
-                    st.session_state["excel_loaded"] = True
-                    st.session_state["excel_error"] = None
-                    st.rerun()
-
-                except Exception as e:
-                    st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
+            with col_sub2:
+                k_value = st.number_input(
+                    "Number of representative vertices to retain (KMeans)",
+                    min_value=50,
+                    max_value=5000,
+                    value=1000,
+                    step=50,
+                    key="clustering_k"
+                )
+                if st.button("📊 Apply KMeans to Excel vertices to retain a set number of representatives."):
+                    try:
+                        df = pd.read_excel(uploaded_file)
+                        amount_vertices_remaining = int(k_value)
+    
+                        coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
+                        last_coeff_col = coeff_columns[-1] if coeff_columns else None
+    
+                        if not last_coeff_col:
+                            raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
+    
+                        last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
+                        df_first_part = df.loc[:last_index_with_minus1].copy()
+                        df_remaining = df.loc[last_index_with_minus1 + 1:].copy()
+    
+                        cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
+                        df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
+                        remaining_target = amount_vertices_remaining - len(df_first_part)
+    
+                        if len(df_remaining_unique) > remaining_target:
+                            X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
+                            kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
+                            df_remaining_unique["cluster"] = kmeans.fit_predict(X)
+                            representative_indices = df_remaining_unique.groupby("cluster").head(1).index
+                            df_clustered = df_remaining.loc[representative_indices].copy()
+                        else:
+                            df_clustered = df_remaining_unique.copy()
+    
+                        df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
+                        st.session_state["uploaded_excel"] = df_final.copy()
+                        st.session_state["excel_loaded"] = True
+                        st.session_state["excel_error"] = None
+                        st.rerun()
+    
+                    except Exception as e:
+                        st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
 
     if st.session_state.get("excel_error"):
         st.error(st.session_state["excel_error"])
