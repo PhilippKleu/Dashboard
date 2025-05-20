@@ -1023,35 +1023,47 @@ if additional_cols:
         ax.set_facecolor('#f0f0f0')
 
         y_max = 0
+        plot_data = []
 
-        for i, col in enumerate(selected_metrics):
+        for col in selected_metrics:
             # Originaldaten
-            original_vals = filtered_additional[col].dropna()
-            sns.violinplot(
-                y=original_vals,
-                ax=ax,
-                positions=[i],
-                width=0.8,
-                color="#444444",
-                inner="quartile"
-            )
+            for val in filtered_additional[col].dropna():
+                plot_data.append({"Metric": col, "Value": val, "Source": "Original"})
 
-            # Konvexdaten (falls vorhanden)
+            # Konvexdaten
             if show_convex_metrics and not filtered_convex_additional.empty:
                 convex_vals = filtered_convex_additional[col].dropna()
-                if not convex_vals.empty:
-                    sns.violinplot(
-                        y=convex_vals,
-                        ax=ax,
-                        positions=[i],
-                        width=0.4,
-                        color="#ff4444",
-                        inner=None,
-                        linewidth=0,
-                        alpha=0.5
-                    )
+                for val in convex_vals:
+                    plot_data.append({"Metric": col, "Value": val, "Source": "Convex"})
 
-            # Min/Max der Originaldaten
+        plot_df = pd.DataFrame(plot_data)
+
+        # Violinplot für Originaldaten
+        sns.violinplot(
+            data=plot_df[plot_df["Source"] == "Original"],
+            x="Metric",
+            y="Value",
+            ax=ax,
+            inner="quartile",
+            linewidth=1,
+            color="#444444"
+        )
+
+        # Violinplot für Konvexdaten (dünner, transparenter Overlay)
+        if show_convex_metrics and "Convex" in plot_df["Source"].unique():
+            sns.violinplot(
+                data=plot_df[plot_df["Source"] == "Convex"],
+                x="Metric",
+                y="Value",
+                ax=ax,
+                inner=None,
+                linewidth=0,
+                color="#ff4444",
+                alpha=0.4
+            )
+
+        # Min/Max-Anzeige
+        for i, col in enumerate(selected_metrics):
             global_min = additional_data[col].min()
             global_max = additional_data[col].max()
             y_max = max(y_max, global_max)
@@ -1083,11 +1095,10 @@ if additional_cols:
         ax.set_ylim(0, y_max * 1.1)
         ax.grid(True, linestyle="--", alpha=0.4)
 
-        # Legende manuell hinzufügen
         from matplotlib.patches import Patch
         legend_elements = [
             Patch(facecolor='#444444', edgecolor='k', label='Original'),
-            Patch(facecolor='#ff4444', edgecolor='k', alpha=0.5, label='Convex'),
+            Patch(facecolor='#ff4444', edgecolor='k', alpha=0.4, label='Convex'),
             Patch(facecolor='gray', alpha=0.1, label='Original Min/Max Range')
         ]
         ax.legend(handles=legend_elements)
