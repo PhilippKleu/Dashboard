@@ -13,7 +13,7 @@ import matplotlib as mpl
 from scipy.stats import gaussian_kde
 import re
 from sklearn.cluster import KMeans
-
+import seaborn as sns
 
 
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
