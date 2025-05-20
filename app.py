@@ -1018,50 +1018,51 @@ if additional_cols:
         additional_data = vertex_df.loc[tech_data.index, selected_metrics]
         filtered_additional = additional_data.loc[current_indices]
 
-        # Kombiniere Original- und konvexe Daten
-        if show_convex_metrics and not filtered_convex_additional.empty:
-            convex_data = filtered_convex_additional[selected_metrics].copy()
-            convex_data["source"] = "Convex"
-            filtered_additional["source"] = "Original"
-            filtered_combined = pd.concat([filtered_additional, convex_data], axis=0)
-        else:
-            filtered_combined = filtered_additional.copy()
-            filtered_combined["source"] = "Original"
-
-        # Für Seaborn: langes Format
-        melted = filtered_combined.reset_index().melt(
-            id_vars=["index", "source"],
-            value_vars=selected_metrics,
-            var_name="Metric",
-            value_name="Value"
-        )
-
-        # Plot
-        fig_violin, ax = plt.subplots(figsize=(12, 4))
-        fig_violin.patch.set_facecolor('#f4f4f4')
+        fig, ax = plt.subplots(figsize=(12, 5))
+        fig.patch.set_facecolor('#f4f4f4')
         ax.set_facecolor('#f0f0f0')
 
-        sns.violinplot(
-            data=melted,
-            x="Metric",
-            y="Value",
-            hue="source",
-            dodge=True,
-            inner="quartile",
-            ax=ax,
-            palette={"Original": "#444444", "Convex": "#ff4444"}
-        )
+        y_max = 0
 
-        # Min/Max-Ranges für Originaldaten
         for i, col in enumerate(selected_metrics):
+            # Originaldaten
+            original_vals = filtered_additional[col].dropna()
+            sns.violinplot(
+                y=original_vals,
+                ax=ax,
+                positions=[i],
+                width=0.8,
+                color="#444444",
+                inner="quartile"
+            )
+
+            # Konvexdaten (falls vorhanden)
+            if show_convex_metrics and not filtered_convex_additional.empty:
+                convex_vals = filtered_convex_additional[col].dropna()
+                if not convex_vals.empty:
+                    sns.violinplot(
+                        y=convex_vals,
+                        ax=ax,
+                        positions=[i],
+                        width=0.4,
+                        color="#ff4444",
+                        inner=None,
+                        linewidth=0,
+                        alpha=0.5
+                    )
+
+            # Min/Max der Originaldaten
             global_min = additional_data[col].min()
             global_max = additional_data[col].max()
+            y_max = max(y_max, global_max)
 
-            # Position des Original-Violinplots
-            ax.plot([i - 0.2, i - 0.2], [global_min, global_max], color='gray', alpha=0.4, linewidth=2)
+            ax.plot([i - 0.25, i + 0.25], [global_min, global_min], color='gray', alpha=0.4, linewidth=2)
+            ax.plot([i - 0.25, i + 0.25], [global_max, global_max], color='gray', alpha=0.4, linewidth=2)
+            ax.fill_between([i - 0.25, i + 0.25], global_min, global_max, color='gray', alpha=0.1)
+
             ax.text(
-                i - 0.2,
-                global_max + 0.02 * melted["Value"].max(),
+                i,
+                global_max + 0.02 * y_max,
                 f"{global_min:.1f}–{global_max:.1f}",
                 ha='center',
                 va='bottom',
@@ -1078,11 +1079,20 @@ if additional_cols:
         ax.set_xticks(range(len(selected_metrics)))
         ax.set_xticklabels(clean_labels, rotation=45, ha="right")
         ax.set_ylabel("Metric Value")
-        ax.set_title("Distribution of Selected Additional Metrics (Violin Plot)")
+        ax.set_title("Combined Violin Plots: Original + Convex Metrics")
+        ax.set_ylim(0, y_max * 1.1)
         ax.grid(True, linestyle="--", alpha=0.4)
-        ax.legend(title="Source")
 
-        st.pyplot(fig_violin)
+        # Legende manuell hinzufügen
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#444444', edgecolor='k', label='Original'),
+            Patch(facecolor='#ff4444', edgecolor='k', alpha=0.5, label='Convex'),
+            Patch(facecolor='gray', alpha=0.1, label='Original Min/Max Range')
+        ]
+        ax.legend(handles=legend_elements)
+
+        st.pyplot(fig)
 
     else:
         st.info("Please select at least one metric to visualize.")
