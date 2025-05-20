@@ -1004,6 +1004,45 @@ with col2:
 
 st.divider()
 # === Weitere Metriken anzeigen ===
+# Beispiel-Daten
+np.random.seed(42)
+original_data = np.random.normal(0.8, 0.05, 100)
+convex_data = np.random.normal(0.78, 0.03, 30)
+
+# Kombinierte Daten
+combined_data = np.concatenate([original_data, convex_data])
+
+# Plot
+fig, ax = plt.subplots(figsize=(4, 6))
+ax.set_facecolor('#f0f0f0')
+
+vp = ax.violinplot(
+    combined_data,
+    positions=[0],
+    showmeans=False,
+    showmedians=True,
+    showextrema=True,
+    widths=0.6
+)
+
+# Styling
+for pc in vp['bodies']:
+    pc.set_facecolor('#3366cc')
+    pc.set_alpha(0.7)
+    pc.set_edgecolor('black')
+vp['cmedians'].set_color('black')
+
+# Beschriftung
+ax.set_xticks([0])
+ax.set_xticklabels(["Combined Metric"])
+ax.set_ylabel("Value")
+ax.set_title("Single Violin Plot (Original + Convex Combined)")
+ax.grid(True, linestyle="--", alpha=0.4)
+
+plt.tight_layout()
+plt.show()
+
+st.divider()
 st.markdown("### 📈 Additional Metrics")
 show_convex_metrics = st.checkbox("Include convex combinations in plot", value=True, key="include_convex_metrics")
 
