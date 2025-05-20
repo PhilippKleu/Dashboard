@@ -1018,41 +1018,53 @@ if additional_cols:
         additional_data = vertex_df.loc[tech_data.index, selected_metrics]
         filtered_additional = additional_data.loc[current_indices]
 
+        # Kombiniere Original- und konvexe Daten
         if show_convex_metrics and not filtered_convex_additional.empty:
-            filtered_combined = pd.concat([filtered_additional, filtered_convex_additional[selected_metrics]], axis=0)
+            convex_data = filtered_convex_additional[selected_metrics].copy()
+            convex_data["source"] = "Convex"
+            filtered_additional["source"] = "Original"
+            filtered_combined = pd.concat([filtered_additional, convex_data], axis=0)
         else:
-            filtered_combined = filtered_additional
+            filtered_combined = filtered_additional.copy()
+            filtered_combined["source"] = "Original"
 
-        fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
-        fig_scatter.patch.set_facecolor('#f4f4f4')
-        ax_scatter.set_facecolor('#f0f0f0')
+        # Für Seaborn in langes Format bringen
+        melted = filtered_combined.reset_index().melt(
+            id_vars=["index", "source"],
+            value_vars=selected_metrics,
+            var_name="Metric",
+            value_name="Value"
+        )
 
-        y_max = max([filtered_combined[col].max() for col in selected_metrics])
+        # Plot
+        fig_violin, ax = plt.subplots(figsize=(12, 4))
+        fig_violin.patch.set_facecolor('#f4f4f4')
+        ax.set_facecolor('#f0f0f0')
 
+        sns.violinplot(
+            data=melted,
+            x="Metric",
+            y="Value",
+            hue="source",
+            split=True,
+            inner="quartile",
+            ax=ax,
+            palette={"Original": "#444444", "Convex": "#ff4444"}
+        )
+
+        # Min/Max-Ranges anzeigen
         for i, col in enumerate(selected_metrics):
-            values = filtered_additional[col].dropna().values
-            x_vals = [i] * len(values)
-            ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
-
-            if show_convex_metrics and not filtered_convex_additional.empty:
-                convex_vals = filtered_convex_additional[col].dropna().values
-                cx_vals = [i] * len(convex_vals)
-                ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
-
             global_min = additional_data[col].min()
             global_max = additional_data[col].max()
 
-            ax_scatter.fill_between(
-                [i - 0.3, i + 0.3],
-                global_min,
-                global_max,
-                color='gray',
-                alpha=0.15
-            )
+            # Zeichne Min/Max-Bereich als vertikale Balken
+            ax.plot([i - 0.25, i + 0.25], [global_min, global_min], color='gray', alpha=0.5, linewidth=2)
+            ax.plot([i - 0.25, i + 0.25], [global_max, global_max], color='gray', alpha=0.5, linewidth=2)
+            ax.fill_between([i - 0.25, i + 0.25], global_min, global_max, color='gray', alpha=0.1)
 
-            ax_scatter.text(
+            ax.text(
                 i,
-                global_max + (y_max * 0.02),
+                global_max + 0.02 * melted["Value"].max(),
                 f"{global_min:.1f}–{global_max:.1f}",
                 ha='center',
                 va='bottom',
@@ -1060,24 +1072,19 @@ if additional_cols:
                 color='black'
             )
 
-        handles, labels = ax_scatter.get_legend_handles_labels()
-        if handles:
-            ax_scatter.legend(handles, labels)
-
         clean_labels = [
             col.replace("installed_capacity_", "")
                 .replace("INSTALLED_CAPACITY_", "")
                 .replace("NEW_CAPACITY_", "")
             for col in selected_metrics
         ]
-        ax_scatter.set_xticks(range(len(selected_metrics)))
-        ax_scatter.set_xticklabels(clean_labels, rotation=45, ha="right")
-        ax_scatter.set_ylabel("Metric Value")
-        ax_scatter.set_title("Remaining Values for Selected Additional Metrics")
-        ax_scatter.set_ylim(0, y_max * 1.1)
-        ax_scatter.grid(True, linestyle="--", alpha=0.4)
+        ax.set_xticklabels(clean_labels, rotation=45, ha="right")
+        ax.set_ylabel("Metric Value")
+        ax.set_title("Distribution of Selected Additional Metrics (Violin Plot)")
+        ax.grid(True, linestyle="--", alpha=0.4)
 
-        st.pyplot(fig_scatter)
+        st.pyplot(fig_violin)
+
     else:
         st.info("Please select at least one metric to visualize.")
 else:
