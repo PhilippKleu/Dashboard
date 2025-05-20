@@ -1004,6 +1004,9 @@ with col2:
 
 st.divider()
 # === Weitere Metriken anzeigen ===
+
+
+# Beispiel-Daten
 np.random.seed(42)
 columns = ["efficiency", "emissions", "cost"]
 
@@ -1018,41 +1021,70 @@ convex_df = pd.DataFrame({
     "cost": np.random.normal(1150, 150, 30)
 })
 
-# Loop über Metriken – je Metrik ein Plot
-for col in columns:
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.set_facecolor('#f0f0f0')
+# Vorbereitung für den Plot
+fig, ax = plt.subplots(figsize=(len(columns) * 2.5, 6))
+ax.set_facecolor('#f0f0f0')
 
-    data = [original_df[col].dropna(), convex_df[col].dropna()]
-    labels = ["Original", "Convex"]
+positions = []
+data = []
+labels = []
 
-    parts = ax.violinplot(
-        data,
-        showmeans=False,
-        showmedians=True,
-        showextrema=True,
-        widths=0.6
-    )
+# Für jede Metrik zwei Positionen und Daten sammeln
+for i, col in enumerate(columns):
+    orig_vals = original_df[col].dropna()
+    conv_vals = convex_df[col].dropna()
 
-    # Styling für beide Plots
-    for i, pc in enumerate(parts['bodies']):
-        color = '#444444' if i == 0 else '#ff4444'
-        edge = 'black' if i == 0 else 'red'
-        pc.set_facecolor(color)
-        pc.set_alpha(0.7)
-        pc.set_edgecolor(edge)
+    # Positionen für Original & Convex
+    pos_orig = i * 2
+    pos_conv = i * 2 + 1
+    positions.extend([pos_orig, pos_conv])
+    data.extend([orig_vals, conv_vals])
+    labels.extend([f"{col}\nOriginal", f"{col}\nConvex"])
 
-    if 'cmedians' in parts:
-        parts['cmedians'].set_color('black')
+# Violinplot zeichnen
+vp = ax.violinplot(
+    data,
+    positions=positions,
+    showmeans=False,
+    showmedians=True,
+    showextrema=True,
+    widths=0.8
+)
 
-    # Achsen
-    ax.set_xticks([1, 2])
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("Value")
-    ax.set_title(f"Violin Plot – {col}")
-    ax.grid(True, linestyle="--", alpha=0.4)
+# Styling
+for i, pc in enumerate(vp['bodies']):
+    is_orig = i % 2 == 0
+    pc.set_facecolor('#444444' if is_orig else '#ff4444')
+    pc.set_edgecolor('black' if is_orig else 'red')
+    pc.set_alpha(0.7)
 
-    st.pyplot(fig)
+# Medianlinie
+if 'cmedians' in vp:
+    vp['cmedians'].set_color('black')
+
+# Achsen & Layout
+ax.set_xticks(positions)
+ax.set_xticklabels(labels, rotation=45, ha="right")
+ax.set_ylabel("Value")
+ax.set_title("All Metrics – Side-by-Side Violin Plots")
+ax.grid(True, linestyle="--", alpha=0.4)
+
+# Optional: Automatisch sinnvolles Y-Limit
+all_vals = pd.concat([original_df[columns], convex_df[columns]])
+ax.set_ylim(all_vals.min().min() - 0.1 * abs(all_vals.min().min()),
+            all_vals.max().max() + 0.1 * abs(all_vals.max().max()))
+
+# Legende
+from matplotlib.patches import Patch
+legend_elements = [
+    Patch(facecolor='#444444', edgecolor='black', alpha=0.7, label='Original'),
+    Patch(facecolor='#ff4444', edgecolor='red', alpha=0.7, label='Convex'),
+]
+ax.legend(handles=legend_elements, loc="upper right")
+
+plt.tight_layout()
+st.pyplot(fig)
+
 
 st.divider()
 st.markdown("### 📈 Additional Metrics")
