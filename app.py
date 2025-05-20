@@ -1028,7 +1028,7 @@ if additional_cols:
             filtered_combined = filtered_additional.copy()
             filtered_combined["source"] = "Original"
 
-        # Für Seaborn in langes Format bringen
+        # Für Seaborn: langes Format
         melted = filtered_combined.reset_index().melt(
             id_vars=["index", "source"],
             value_vars=selected_metrics,
@@ -1046,24 +1046,21 @@ if additional_cols:
             x="Metric",
             y="Value",
             hue="source",
-            split=True,
+            dodge=True,
             inner="quartile",
             ax=ax,
             palette={"Original": "#444444", "Convex": "#ff4444"}
         )
 
-        # Min/Max-Ranges anzeigen
+        # Min/Max-Ranges für Originaldaten
         for i, col in enumerate(selected_metrics):
             global_min = additional_data[col].min()
             global_max = additional_data[col].max()
 
-            # Zeichne Min/Max-Bereich als vertikale Balken
-            ax.plot([i - 0.25, i + 0.25], [global_min, global_min], color='gray', alpha=0.5, linewidth=2)
-            ax.plot([i - 0.25, i + 0.25], [global_max, global_max], color='gray', alpha=0.5, linewidth=2)
-            ax.fill_between([i - 0.25, i + 0.25], global_min, global_max, color='gray', alpha=0.1)
-
+            # Position des Original-Violinplots
+            ax.plot([i - 0.2, i - 0.2], [global_min, global_max], color='gray', alpha=0.4, linewidth=2)
             ax.text(
-                i,
+                i - 0.2,
                 global_max + 0.02 * melted["Value"].max(),
                 f"{global_min:.1f}–{global_max:.1f}",
                 ha='center',
@@ -1078,10 +1075,12 @@ if additional_cols:
                 .replace("NEW_CAPACITY_", "")
             for col in selected_metrics
         ]
+        ax.set_xticks(range(len(selected_metrics)))
         ax.set_xticklabels(clean_labels, rotation=45, ha="right")
         ax.set_ylabel("Metric Value")
         ax.set_title("Distribution of Selected Additional Metrics (Violin Plot)")
         ax.grid(True, linestyle="--", alpha=0.4)
+        ax.legend(title="Source")
 
         st.pyplot(fig_violin)
 
