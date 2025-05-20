@@ -1004,57 +1004,55 @@ with col2:
 
 st.divider()
 # === Weitere Metriken anzeigen ===
-# Beispiel-Daten
 np.random.seed(42)
-original_data = np.random.normal(0.8, 0.05, 100)
-convex_data = np.random.normal(0.78, 0.03, 30)
+columns = ["efficiency", "emissions", "cost"]
 
-# Plot
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.set_facecolor('#f0f0f0')
+original_df = pd.DataFrame({
+    "efficiency": np.random.normal(0.8, 0.05, 100),
+    "emissions": np.random.normal(50, 10, 100),
+    "cost": np.random.normal(1200, 200, 100)
+})
+convex_df = pd.DataFrame({
+    "efficiency": np.random.normal(0.78, 0.03, 30),
+    "emissions": np.random.normal(48, 8, 30),
+    "cost": np.random.normal(1150, 150, 30)
+})
 
-# Violinplot für Original
-vp1 = ax.violinplot(
-    original_data,
-    positions=[0],
-    showmeans=False,
-    showmedians=True,
-    showextrema=True,
-    widths=0.6
-)
-for pc in vp1['bodies']:
-    pc.set_facecolor('#444444')
-    pc.set_alpha(0.7)
-    pc.set_edgecolor('black')
-vp1['cmedians'].set_color('black')
+# Loop über Metriken – je Metrik ein Plot
+for col in columns:
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.set_facecolor('#f0f0f0')
 
-# Violinplot für Convex
-vp2 = ax.violinplot(
-    convex_data,
-    positions=[1],
-    showmeans=False,
-    showmedians=True,
-    showextrema=True,
-    widths=0.6
-)
-for pc in vp2['bodies']:
-    pc.set_facecolor('#ff4444')
-    pc.set_alpha(0.6)
-    pc.set_edgecolor('red')
-vp2['cmedians'].set_color('darkred')
+    data = [original_df[col].dropna(), convex_df[col].dropna()]
+    labels = ["Original", "Convex"]
 
-# Achsenbeschriftung
-ax.set_xticks([0, 1])
-ax.set_xticklabels(["Original", "Convex"])
-ax.set_ylabel("Value")
-ax.set_title("Side-by-Side Violin Plots: Original vs. Convex")
-ax.grid(True, linestyle="--", alpha=0.4)
+    parts = ax.violinplot(
+        data,
+        showmeans=False,
+        showmedians=True,
+        showextrema=True,
+        widths=0.6
+    )
 
-# Optional: Einheitlicher Y-Limit
-y_min = min(original_data.min(), convex_data.min())
-y_max = max(original_data.max(), convex_data.max())
-ax.set_ylim(y_min - 0.05, y_max + 0.05)
-st.pyplot(fig)
+    # Styling für beide Plots
+    for i, pc in enumerate(parts['bodies']):
+        color = '#444444' if i == 0 else '#ff4444'
+        edge = 'black' if i == 0 else 'red'
+        pc.set_facecolor(color)
+        pc.set_alpha(0.7)
+        pc.set_edgecolor(edge)
+
+    if 'cmedians' in parts:
+        parts['cmedians'].set_color('black')
+
+    # Achsen
+    ax.set_xticks([1, 2])
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Value")
+    ax.set_title(f"Violin Plot – {col}")
+    ax.grid(True, linestyle="--", alpha=0.4)
+
+    st.pyplot(fig)
 
 st.divider()
 st.markdown("### 📈 Additional Metrics")
