@@ -1039,8 +1039,7 @@ ax.set_ylabel("Value")
 ax.set_title("Single Violin Plot (Original + Convex Combined)")
 ax.grid(True, linestyle="--", alpha=0.4)
 
-plt.tight_layout()
-plt.show()
+st.pyplot(fig)
 
 st.divider()
 st.markdown("### 📈 Additional Metrics")
