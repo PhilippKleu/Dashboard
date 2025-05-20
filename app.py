@@ -1018,63 +1018,41 @@ if additional_cols:
         additional_data = vertex_df.loc[tech_data.index, selected_metrics]
         filtered_additional = additional_data.loc[current_indices]
 
-        fig, ax = plt.subplots(figsize=(12, 5))
-        fig.patch.set_facecolor('#f4f4f4')
-        ax.set_facecolor('#f0f0f0')
+        if show_convex_metrics and not filtered_convex_additional.empty:
+            filtered_combined = pd.concat([filtered_additional, filtered_convex_additional[selected_metrics]], axis=0)
+        else:
+            filtered_combined = filtered_additional
 
-        y_max = 0
-        plot_data = []
+        fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
+        fig_scatter.patch.set_facecolor('#f4f4f4')
+        ax_scatter.set_facecolor('#f0f0f0')
 
-        for col in selected_metrics:
-            # Originaldaten
-            for val in filtered_additional[col].dropna():
-                plot_data.append({"Metric": col, "Value": val, "Source": "Original"})
+        y_max = max([filtered_combined[col].max() for col in selected_metrics])
 
-            # Konvexdaten
-            if show_convex_metrics and not filtered_convex_additional.empty:
-                convex_vals = filtered_convex_additional[col].dropna()
-                for val in convex_vals:
-                    plot_data.append({"Metric": col, "Value": val, "Source": "Convex"})
-
-        plot_df = pd.DataFrame(plot_data)
-
-        # Violinplot für Originaldaten
-        sns.violinplot(
-            data=plot_df[plot_df["Source"] == "Original"],
-            x="Metric",
-            y="Value",
-            ax=ax,
-            inner="quartile",
-            linewidth=1,
-            color="#444444"
-        )
-
-        # Violinplot für Konvexdaten (dünner, transparenter Overlay)
-        if show_convex_metrics and "Convex" in plot_df["Source"].unique():
-            sns.violinplot(
-                data=plot_df[plot_df["Source"] == "Convex"],
-                x="Metric",
-                y="Value",
-                ax=ax,
-                inner=None,
-                linewidth=0,
-                color="#ff4444",
-                alpha=0.4
-            )
-
-        # Min/Max-Anzeige
         for i, col in enumerate(selected_metrics):
+            values = filtered_additional[col].dropna().values
+            x_vals = [i] * len(values)
+            ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
+
+            if show_convex_metrics and not filtered_convex_additional.empty:
+                convex_vals = filtered_convex_additional[col].dropna().values
+                cx_vals = [i] * len(convex_vals)
+                ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
+
             global_min = additional_data[col].min()
             global_max = additional_data[col].max()
-            y_max = max(y_max, global_max)
 
-            ax.plot([i - 0.25, i + 0.25], [global_min, global_min], color='gray', alpha=0.4, linewidth=2)
-            ax.plot([i - 0.25, i + 0.25], [global_max, global_max], color='gray', alpha=0.4, linewidth=2)
-            ax.fill_between([i - 0.25, i + 0.25], global_min, global_max, color='gray', alpha=0.1)
+            ax_scatter.fill_between(
+                [i - 0.3, i + 0.3],
+                global_min,
+                global_max,
+                color='gray',
+                alpha=0.15
+            )
 
-            ax.text(
+            ax_scatter.text(
                 i,
-                global_max + 0.02 * y_max,
+                global_max + (y_max * 0.02),
                 f"{global_min:.1f}–{global_max:.1f}",
                 ha='center',
                 va='bottom',
@@ -1082,29 +1060,24 @@ if additional_cols:
                 color='black'
             )
 
+        handles, labels = ax_scatter.get_legend_handles_labels()
+        if handles:
+            ax_scatter.legend(handles, labels)
+
         clean_labels = [
             col.replace("installed_capacity_", "")
                 .replace("INSTALLED_CAPACITY_", "")
                 .replace("NEW_CAPACITY_", "")
             for col in selected_metrics
         ]
-        ax.set_xticks(range(len(selected_metrics)))
-        ax.set_xticklabels(clean_labels, rotation=45, ha="right")
-        ax.set_ylabel("Metric Value")
-        ax.set_title("Combined Violin Plots: Original + Convex Metrics")
-        ax.set_ylim(0, y_max * 1.1)
-        ax.grid(True, linestyle="--", alpha=0.4)
+        ax_scatter.set_xticks(range(len(selected_metrics)))
+        ax_scatter.set_xticklabels(clean_labels, rotation=45, ha="right")
+        ax_scatter.set_ylabel("Metric Value")
+        ax_scatter.set_title("Remaining Values for Selected Additional Metrics")
+        ax_scatter.set_ylim(0, y_max * 1.1)
+        ax_scatter.grid(True, linestyle="--", alpha=0.4)
 
-        from matplotlib.patches import Patch
-        legend_elements = [
-            Patch(facecolor='#444444', edgecolor='k', label='Original'),
-            Patch(facecolor='#ff4444', edgecolor='k', alpha=0.4, label='Convex'),
-            Patch(facecolor='gray', alpha=0.1, label='Original Min/Max Range')
-        ]
-        ax.legend(handles=legend_elements)
-
-        st.pyplot(fig)
-
+        st.pyplot(fig_scatter)
     else:
         st.info("Please select at least one metric to visualize.")
 else:
