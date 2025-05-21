@@ -1149,7 +1149,7 @@ if filtered_data.empty and (
 else:
     # === Original-Vertices ===
     st.markdown("#### Original Vertices")
-    filtered_full_data = tech_data.loc[filtered_data.index] if not filtered_data.empty else pd.DataFrame()
+    filtered_full_data = tech_data.loc[current_indices] if not current_indices.empty else pd.DataFrame()
     if filtered_data.empty:
         st.dataframe(filtered_full_data, use_container_width=True)
     else:
