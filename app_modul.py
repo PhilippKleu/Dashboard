@@ -494,8 +494,8 @@ def reset_convex_combinations():
 # === Zeitverlauf: VALUE_ Variablen ===
 def plot_operational_variables_over_time(vertex_df, tech_time_map, current_indices, convex_data, maa_prefix, show_convex, show_ranges, max_vertices, n_cols):
     st.markdown("### Operational Variables Over Time")
-
-    value_time_map = extract_time_series_map(vertex_df)
+for tech, year_cols in sorted(tech_time_map.items()):
+    
     n_techs = sum(1 for v in value_time_map.values() if len(v) >= 1)
     n_rows = ceil(n_techs / n_cols)
     fig_width = 6 * n_cols
@@ -508,7 +508,7 @@ def plot_operational_variables_over_time(vertex_df, tech_time_map, current_indic
     indices_to_plot = np.random.choice(current_indices, size=min(max_vertices, len(current_indices)), replace=False)
 
     plot_idx = 0
-    for tech, year_cols in sorted(value_time_map.items()):
+    for tech, year_cols in sorted(tech_time_map.items()):
         if len(year_cols) < 1:
             continue
 
