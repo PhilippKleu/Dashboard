@@ -637,14 +637,11 @@ with col2:
         'legend.fontsize': 14,
     })
      # === Layout-Optionen für Diagramme ===
-    if "n_cols_plots" not in st.session_state:
-        st.session_state["n_cols_plots"] = 3
-
-    
+      
 
     # === Plot-Vorbereitung ===
     n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-    n_rows = ceil(n_techs / n_cols)
+    n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
     plot_width_per_col = 6
     plot_height_per_row = 3.5
     if MAA_PREFIX == "VALUE_":
@@ -654,11 +651,11 @@ with col2:
         value_time_map = extract_time_series_map(vertex_df)
     
         n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
-        n_rows_value = ceil(n_techs_value / st.session_state["n_cols_plots"])
-        fig_width_value = plot_width_per_col * st.session_state["n_cols_plots"]
+        n_rows_value = ceil(n_techs_value / st.session_state.get("n_cols_plots", 3))
+        fig_width_value = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
         fig_height_value = plot_height_per_row * n_rows_value
     
-        fig_value, axes_value = plt.subplots(n_rows_value, st.session_state["n_cols_plots"], figsize=(fig_width_value, fig_height_value))
+        fig_value, axes_value = plt.subplots(n_rows_value, st.session_state.get("n_cols_plots", 3), figsize=(fig_width_value, fig_height_value))
         fig_value.patch.set_facecolor('#f4f4f4')
         axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
     
@@ -744,9 +741,9 @@ with col2:
                 ax.set_xticks(years)
     
             ax.set_title(tech.replace('_', ' ').title())
-            if plot_idx_val >= (n_rows_value - 1) * st.session_state["n_cols_plots"]:
+            if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
                 ax.set_xlabel("Year")
-            if plot_idx_val % st.session_state["n_cols_plots"] == 0:
+            if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
                 ax.set_ylabel("VALUE_")
             ax.grid(True, linestyle="--", alpha=0.4)
     
@@ -758,7 +755,7 @@ with col2:
         if plot_idx_val > 0:
             value_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
     
-            legend_anchor_y = 1.2 - 0.02 * max(st.session_state["n_cols_plots"] - 2, 0)
+            legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
             top_margin = legend_anchor_y - 0.06
     
             fig_value.legend(
@@ -782,10 +779,10 @@ with col2:
     st.markdown("### ⏳ Installed Capacities Over Time")
 
    
-    fig_width = plot_width_per_col * n_cols
+    fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
     fig_height = plot_height_per_row * n_rows
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(fig_width, fig_height))
+    fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
     fig.patch.set_facecolor('#f4f4f4')
     axes = axes.flatten() if n_techs > 1 else [axes]
 
@@ -876,9 +873,9 @@ with col2:
             ax.set_xticks(years)
 
         ax.set_title(tech.replace('_', ' ').title())
-        if plot_idx >= (n_rows - 1) * n_cols:
+        if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
             ax.set_xlabel("Year")
-        if plot_idx % n_cols == 0:
+        if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
             ax.set_ylabel("Installed Capacity")
         ax.grid(True, linestyle="--", alpha=0.4)
 
@@ -896,7 +893,7 @@ with col2:
         all_handles = [vertex_line] + handles
         all_labels = ['Vertex'] + labels
 
-        legend_anchor_y = 1.2 - 0.02 * max(n_cols - 2, 0)
+        legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
         top_margin = legend_anchor_y - 0.06
 
         fig.legend(
