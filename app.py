@@ -500,53 +500,52 @@ with col1:
     filtered_data = selected_data.loc[current_indices] if ordered_techs else pd.DataFrame(index=current_indices)
     # === Konvexe Kombinationen ===
     st.divider()
-    with st.expander("➕ Options for Convex Combinations", expanded=False):
-        subcol1, subcol2 = st.columns(2)
+    st.sidebar.markdown("### ➕ Convex Combinations")
 
-        with subcol1:
-            n_samples_input = st.number_input(
-                "Total number of convex combinations:",
-                min_value=10,
-                max_value=10000,
-                value=100,
-                step=10,
-                key="n_samples"
-            )
-            max_vertices = len(current_indices) if not current_indices.empty else 0
-            n_vertices_to_use = st.number_input(
-                "Number of vertices to sample per batch:",
-                min_value=2,
-                max_value=max_vertices if max_vertices > 1 else 2,
-                value=max_vertices if max_vertices > 1 else 2,
-                step=1,
-                key="n_vertices_convex"
-            )
-        with subcol2:
-            st.selectbox(
-                "Alpha for Dirichlet distribution:",
-                [0.01, 0.1, 1.0],
-                index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
-                key="alpha_value"
-            )
-
-            n_batch_combinations = st.number_input(
-                "Number of combinations per batch:",
-                min_value=1,
-                max_value=st.session_state["n_samples"],
-                value=min(10, st.session_state["n_samples"]),
-                step=1,
-                key="n_batch_size"
-            )
-
-        col_gen, col_reset = st.columns(2)
-        with col_gen:
-            generate_convex = st.button("➕ Generate combinations", key="generate_convex_button")
-        with col_reset:
-            reset_convex = st.button("🗑️ Reset combinations", key="reset_convex_button")
-
-        if reset_convex:
-            st.session_state['convex_combinations'] = pd.DataFrame()
-            st.session_state['convex_additional'] = pd.DataFrame()
+    st.sidebar.number_input(
+        "Total number of convex combinations:",
+        min_value=10,
+        max_value=10000,
+        value=100,
+        step=10,
+        key="n_samples"
+    )
+    
+    max_vertices = len(current_indices) if not current_indices.empty else 0
+    st.sidebar.number_input(
+        "Vertices per combination:",
+        min_value=2,
+        max_value=max_vertices if max_vertices > 1 else 2,
+        value=max_vertices if max_vertices > 1 else 2,
+        step=1,
+        key="n_vertices_convex"
+    )
+    
+    st.sidebar.selectbox(
+        "Dirichlet α (weight spread):",
+        [0.01, 0.1, 1.0],
+        index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
+        key="alpha_value"
+    )
+    
+    st.sidebar.number_input(
+        "Combinations per batch:",
+        min_value=1,
+        max_value=st.session_state["n_samples"],
+        value=min(10, st.session_state["n_samples"]),
+        step=1,
+        key="n_batch_size"
+    )
+    
+    col_gen_sidebar, col_reset_sidebar = st.sidebar.columns(2)
+    with col_gen_sidebar:
+        generate_convex = st.button("Generate", key="generate_convex_button_sidebar")
+    with col_reset_sidebar:
+        reset_convex = st.button("Reset", key="reset_convex_button_sidebar")
+    
+    if reset_convex:
+        st.session_state['convex_combinations'] = pd.DataFrame()
+        st.session_state['convex_additional'] = pd.DataFrame()
 
         if generate_convex and not current_indices.empty:
             base_data_full = tech_data.loc[current_indices]
