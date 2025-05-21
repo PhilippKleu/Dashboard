@@ -1005,134 +1005,82 @@ with col2:
 st.divider()
 # === Weitere Metriken anzeigen ===
 # Beispiel-Daten
-columns = get_additional_columns(vertex_df)
 
-# Sicherstellen, dass Spalten vorhanden sind
-if not columns:
-    st.warning("Keine geeigneten numerischen Spalten gefunden.")
-else:
-    # Plot vorbereiten
-    fig, ax = plt.subplots(figsize=(len(columns) * 2.5, 6))
-    ax.set_facecolor('#f0f0f0')
+show_convex_metrics = st.checkbox("Include convex combinations in plot", value=True, key="include_convex_metrics")
 
-    data = [vertex_df[col].dropna() for col in columns]
-    positions = list(range(len(columns)))
-
-    # Violinplot zeichnen
-    vp = ax.violinplot(
-        data,
-        positions=positions,
-        showmeans=False,
-        showmedians=True,
-        showextrema=True,
-        widths=0.8
+if additional_cols:
+    selected_metrics = st.multiselect(
+        "📌 Select additional metrics to visualize",
+        additional_cols,
+        default=additional_cols
     )
 
-    # Styling (einheitliche Farbe)
-    for pc in vp['bodies']:
-        pc.set_facecolor('#444444')
-        pc.set_edgecolor('black')
-        pc.set_alpha(0.7)
+    if selected_metrics:
+        additional_data = vertex_df.loc[tech_data.index, selected_metrics]
+        filtered_additional = additional_data.loc[current_indices]
 
-    if 'cmedians' in vp:
-        vp['cmedians'].set_color('black')
+        if show_convex_metrics and not filtered_convex_additional.empty:
+            filtered_combined = pd.concat([filtered_additional, filtered_convex_additional[selected_metrics]], axis=0)
+        else:
+            filtered_combined = filtered_additional
 
-    # Achsen & Layout
-    ax.set_xticks(positions)
-    ax.set_xticklabels(columns, rotation=45, ha="right")
-    ax.set_ylabel("Wert")
-    ax.set_title("Verteilungen der zusätzlichen numerischen Spalten")
-    ax.grid(True, linestyle="--", alpha=0.4)
+        # Sicherstellen, dass Spalten vorhanden sind
+        if not selected_metrics:
+            st.warning("Keine geeigneten numerischen Spalten gefunden.")
+        else:
+            # Plot vorbereiten
+            fig, ax = plt.subplots(figsize=(len(selected_metrics) * 2.5, 6))
+            ax.set_facecolor('#f0f0f0')
 
-    # Y-Achse automatisch skalieren
-    all_vals = pd.concat(data)
-    ax.set_ylim(all_vals.min() - 0.1 * abs(all_vals.min()),
-                all_vals.max() + 0.1 * abs(all_vals.max()))
+            data = [filtered_combined[col].dropna().values for col in selected_metrics]
+            positions = list(range(len(selected_metrics)))
 
-    plt.tight_layout()
-    st.pyplot(fig)
+            # Violinplot zeichnen
+            vp = ax.violinplot(
+                data,
+                positions=positions,
+                showmeans=False,
+                showmedians=True,
+                showextrema=True,
+                widths=0.8
+            )
+
+            for pc in vp['bodies']:
+                pc.set_facecolor('#444444')
+                pc.set_edgecolor('black')
+                pc.set_alpha(0.7)
+
+            if 'cmedians' in vp:
+                vp['cmedians'].set_color('black')
+
+            # Achsen & Layout
+            ax.set_xticks(positions)
+            clean_labels = [
+                col.replace("installed_capacity_", "")
+                    .replace("INSTALLED_CAPACITY_", "")
+                    .replace("NEW_CAPACITY_", "")
+                for col in selected_metrics
+            ]
+            ax.set_xticklabels(clean_labels, rotation=45, ha="right")
+            ax.set_ylabel("Metric Value")
+            ax.set_title("Distributions of Selected Additional Metrics")
+            ax.grid(True, linestyle="--", alpha=0.4)
+
+            # Y-Achse automatisch skalieren
+            all_vals = pd.concat([pd.Series(d) for d in data])
+            ax.set_ylim(all_vals.min() - 0.1 * abs(all_vals.min()),
+                        all_vals.max() + 0.1 * abs(all_vals.max()))
+
+            plt.tight_layout()
+            st.pyplot(fig)
+    else:
+        st.info("Please select at least one metric to visualize.")
+else:
+    st.info("No numeric columns found after the last 'NEW_CAPACITY' column.")
 
 
 st.divider()
 
-# Beispiel-Daten
-np.random.seed(42)
-columns = ["efficiency", "emissions", "cost"]
-
-original_df = pd.DataFrame({
-    "efficiency": np.random.normal(0.8, 0.05, 100),
-    "emissions": np.random.normal(50, 10, 100),
-    "cost": np.random.normal(1200, 200, 100)
-})
-convex_df = pd.DataFrame({
-    "efficiency": np.random.normal(0.78, 0.03, 30),
-    "emissions": np.random.normal(48, 8, 30),
-    "cost": np.random.normal(1150, 150, 30)
-})
-
-# Vorbereitung für den Plot
-fig, ax = plt.subplots(figsize=(len(columns) * 2.5, 6))
-ax.set_facecolor('#f0f0f0')
-
-positions = []
-data = []
-labels = []
-
-# Für jede Metrik zwei Positionen und Daten sammeln
-for i, col in enumerate(columns):
-    orig_vals = original_df[col].dropna()
-    conv_vals = convex_df[col].dropna()
-
-    # Positionen für Original & Convex
-    pos_orig = i * 2
-    pos_conv = i * 2 + 1
-    positions.extend([pos_orig, pos_conv])
-    data.extend([orig_vals, conv_vals])
-    labels.extend([f"{col}\nOriginal", f"{col}\nConvex"])
-
-# Violinplot zeichnen
-vp = ax.violinplot(
-    data,
-    positions=positions,
-    showmeans=False,
-    showmedians=True,
-    showextrema=True,
-    widths=0.8
-)
-
-# Styling
-for i, pc in enumerate(vp['bodies']):
-    is_orig = i % 2 == 0
-    pc.set_facecolor('#444444' if is_orig else '#ff4444')
-    pc.set_edgecolor('black' if is_orig else 'red')
-    pc.set_alpha(0.7)
-
-# Medianlinie
-if 'cmedians' in vp:
-    vp['cmedians'].set_color('black')
-
-# Achsen & Layout
-ax.set_xticks(positions)
-ax.set_xticklabels(labels, rotation=45, ha="right")
-ax.set_ylabel("Value")
-ax.set_title("All Metrics – Side-by-Side Violin Plots")
-ax.grid(True, linestyle="--", alpha=0.4)
-
-# Optional: Automatisch sinnvolles Y-Limit
-all_vals = pd.concat([original_df[columns], convex_df[columns]])
-ax.set_ylim(all_vals.min().min() - 0.1 * abs(all_vals.min().min()),
-            all_vals.max().max() + 0.1 * abs(all_vals.max().max()))
-
-# Legende
-from matplotlib.patches import Patch
-legend_elements = [
-    Patch(facecolor='#444444', edgecolor='black', alpha=0.7, label='Original'),
-    Patch(facecolor='#ff4444', edgecolor='red', alpha=0.7, label='Convex'),
-]
-ax.legend(handles=legend_elements, loc="upper right")
-
-plt.tight_layout()
-st.pyplot(fig)
 
 
 st.divider()
