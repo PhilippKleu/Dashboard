@@ -1015,7 +1015,6 @@ st.markdown("### 📈 Additional Metrics")
 
 
 # Checkbox für Konvexe Kombinationen
-show_convex_metrics = st.checkbox("Include convex combinations in plot", value=True, key="include_convex_metrics")
 
 if additional_cols:
     selected_metrics = st.multiselect(
