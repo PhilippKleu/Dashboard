@@ -1005,7 +1005,17 @@ with col2:
 st.divider()
 # === Weitere Metriken anzeigen ===
 # Beispiel-Daten
+st.markdown("### 📈 Additional Metrics")
 
+# Auswahl des Plottyps
+plot_type = st.radio(
+    "📊 Welchen Plottyp möchtest du anzeigen?",
+    ["Violinplot", "Streudiagramm"],
+    index=0,
+    key="plot_type_selector"
+)
+
+# Checkbox für Konvexe Kombinationen
 show_convex_metrics = st.checkbox("Include convex combinations in plot", value=True, key="include_convex_metrics")
 
 if additional_cols:
@@ -1024,18 +1034,13 @@ if additional_cols:
         else:
             filtered_combined = filtered_additional
 
-        # Sicherstellen, dass Spalten vorhanden sind
-        if not selected_metrics:
-            st.warning("Keine geeigneten numerischen Spalten gefunden.")
-        else:
-            # Plot vorbereiten
+        if plot_type == "Violinplot":
             fig, ax = plt.subplots(figsize=(len(selected_metrics) * 2.5, 6))
             ax.set_facecolor('#f0f0f0')
 
             data = [filtered_combined[col].dropna().values for col in selected_metrics]
             positions = list(range(len(selected_metrics)))
 
-            # Violinplot zeichnen
             vp = ax.violinplot(
                 data,
                 positions=positions,
@@ -1053,7 +1058,6 @@ if additional_cols:
             if 'cmedians' in vp:
                 vp['cmedians'].set_color('black')
 
-            # Achsen & Layout
             ax.set_xticks(positions)
             clean_labels = [
                 col.replace("installed_capacity_", "")
@@ -1066,102 +1070,76 @@ if additional_cols:
             ax.set_title("Distributions of Selected Additional Metrics")
             ax.grid(True, linestyle="--", alpha=0.4)
 
-            # Y-Achse automatisch skalieren
             all_vals = pd.concat([pd.Series(d) for d in data])
             ax.set_ylim(all_vals.min() - 0.1 * abs(all_vals.min()),
                         all_vals.max() + 0.1 * abs(all_vals.max()))
 
             plt.tight_layout()
             st.pyplot(fig)
+
+        elif plot_type == "Streudiagramm":
+            fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
+            fig_scatter.patch.set_facecolor('#f4f4f4')
+            ax_scatter.set_facecolor('#f0f0f0')
+
+            y_max = max([filtered_combined[col].max() for col in selected_metrics])
+
+            for i, col in enumerate(selected_metrics):
+                values = filtered_additional[col].dropna().values
+                x_vals = [i] * len(values)
+                ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
+
+                if show_convex_metrics and not filtered_convex_additional.empty:
+                    convex_vals = filtered_convex_additional[col].dropna().values
+                    cx_vals = [i] * len(convex_vals)
+                    ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
+
+                global_min = additional_data[col].min()
+                global_max = additional_data[col].max()
+
+                ax_scatter.fill_between(
+                    [i - 0.3, i + 0.3],
+                    global_min,
+                    global_max,
+                    color='gray',
+                    alpha=0.15
+                )
+
+                ax_scatter.text(
+                    i,
+                    global_max + (y_max * 0.02),
+                    f"{global_min:.1f}–{global_max:.1f}",
+                    ha='center',
+                    va='bottom',
+                    fontsize=8,
+                    color='black'
+                )
+
+            handles, labels = ax_scatter.get_legend_handles_labels()
+            if handles:
+                ax_scatter.legend(handles, labels)
+
+            clean_labels = [
+                col.replace("installed_capacity_", "")
+                    .replace("INSTALLED_CAPACITY_", "")
+                    .replace("NEW_CAPACITY_", "")
+                for col in selected_metrics
+            ]
+            ax_scatter.set_xticks(range(len(selected_metrics)))
+            ax_scatter.set_xticklabels(clean_labels, rotation=45, ha="right")
+            ax_scatter.set_ylabel("Metric Value")
+            ax_scatter.set_title("Remaining Values for Selected Additional Metrics")
+            ax_scatter.set_ylim(0, y_max * 1.1)
+            ax_scatter.grid(True, linestyle="--", alpha=0.4)
+
+            st.pyplot(fig_scatter)
+
     else:
         st.info("Please select at least one metric to visualize.")
 else:
     st.info("No numeric columns found after the last 'NEW_CAPACITY' column.")
-
-
-st.divider()
-
-
-
-st.divider()
-st.markdown("### 📈 Additional Metrics")
-show_convex_metrics = st.checkbox("Include convex combinations in plot", value=True, key="include_convex_metrics")
-
-if additional_cols:
-    selected_metrics = st.multiselect(
-        "📌 Select additional metrics to visualize",
-        additional_cols,
-        default=additional_cols
-    )
-
-    if selected_metrics:
-        additional_data = vertex_df.loc[tech_data.index, selected_metrics]
-        filtered_additional = additional_data.loc[current_indices]
-
-        if show_convex_metrics and not filtered_convex_additional.empty:
-            filtered_combined = pd.concat([filtered_additional, filtered_convex_additional[selected_metrics]], axis=0)
-        else:
-            filtered_combined = filtered_additional
-
-        fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
-        fig_scatter.patch.set_facecolor('#f4f4f4')
-        ax_scatter.set_facecolor('#f0f0f0')
-
-        y_max = max([filtered_combined[col].max() for col in selected_metrics])
-
-        for i, col in enumerate(selected_metrics):
-            values = filtered_additional[col].dropna().values
-            x_vals = [i] * len(values)
-            ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
-
-            if show_convex_metrics and not filtered_convex_additional.empty:
-                convex_vals = filtered_convex_additional[col].dropna().values
-                cx_vals = [i] * len(convex_vals)
-                ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
-
-            global_min = additional_data[col].min()
-            global_max = additional_data[col].max()
-
-            ax_scatter.fill_between(
-                [i - 0.3, i + 0.3],
-                global_min,
-                global_max,
-                color='gray',
-                alpha=0.15
-            )
-
-            ax_scatter.text(
-                i,
-                global_max + (y_max * 0.02),
-                f"{global_min:.1f}–{global_max:.1f}",
-                ha='center',
-                va='bottom',
-                fontsize=8,
-                color='black'
-            )
-
-        handles, labels = ax_scatter.get_legend_handles_labels()
-        if handles:
-            ax_scatter.legend(handles, labels)
-
-        clean_labels = [
-            col.replace("installed_capacity_", "")
-                .replace("INSTALLED_CAPACITY_", "")
-                .replace("NEW_CAPACITY_", "")
-            for col in selected_metrics
-        ]
-        ax_scatter.set_xticks(range(len(selected_metrics)))
-        ax_scatter.set_xticklabels(clean_labels, rotation=45, ha="right")
-        ax_scatter.set_ylabel("Metric Value")
-        ax_scatter.set_title("Remaining Values for Selected Additional Metrics")
-        ax_scatter.set_ylim(0, y_max * 1.1)
-        ax_scatter.grid(True, linestyle="--", alpha=0.4)
-
-        st.pyplot(fig_scatter)
-    else:
-        st.info("Please select at least one metric to visualize.")
-else:
-    st.info("No numeric columns found after the last 'NEW_CAPACITY' column.")
+    
+    
 # === Daten als Tabelle anzeigen ===
 st.divider()
 st.markdown("### 📄 Show remaining vertices as table")
