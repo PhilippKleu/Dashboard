@@ -644,7 +644,7 @@ with col2:
     plot_width_per_col = 6
     plot_height_per_row = 3.5
     if MAA_PREFIX == "VALUE_":
-        st.divider()
+        
         st.markdown("### Operational Variables Over Time")
     
         value_time_map = extract_time_series_map(vertex_df)
