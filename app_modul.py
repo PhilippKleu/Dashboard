@@ -355,7 +355,22 @@ def apply_technology_filters(tech_data, selected_techs, maa_prefix):
 
     return current_indices, selected_data.loc[current_indices]
 
+# === Einheitliche Filterlogik für Vertex- oder Konvexdaten ===
+def apply_tech_filters(data, session_state, ordered_techs, prefix):
+    if data.empty:
+        return pd.DataFrame()
 
+    filtered_indices = data.index
+    for tech in ordered_techs:
+        key = f"slider_{tech}"
+        col = f"{prefix}{tech}"
+        if key in session_state and col in data.columns:
+            min_val, max_val = session_state[key]
+            filtered_indices = filtered_indices[
+                (data.loc[filtered_indices, col] >= min_val) &
+                (data.loc[filtered_indices, col] <= max_val)
+            ]
+    return data.loc[filtered_indices].reset_index(drop=True)
 
 # === Sidebar-Einstellungen für konvexe Kombinationen ===
 def setup_convex_combination_ui(max_vertices_available):
