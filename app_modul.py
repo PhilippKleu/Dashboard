@@ -49,10 +49,20 @@ def initialize_session_state():
         'convex_additional': pd.DataFrame(),
         'show_convex': True,
         'show_convex_in_timeplot': True,
+        'show_original_ranges': False,
+        'show_density': False,
+        'plot_type_selector': "Violinplot",
+        'include_convex_metrics': True,
         'excel_loaded': False,
         'excel_path': '',
         'excel_error': None,
         'show_tech_info': False,
+        'max_plot_vertices': 5,
+        'n_cols_plots': 3,
+        'n_samples': 100,
+        'n_vertices_convex': 3,
+        'n_batch_size': 10,
+        'alpha_value': 0.1,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -279,6 +289,8 @@ def reset_filter_sliders():
     for key in list(st.session_state.keys()):
         if key.startswith("slider_"):
             del st.session_state[key]
+    st.session_state["convex_combinations"] = pd.DataFrame()
+    st.session_state["convex_additional"] = pd.DataFrame()
     st.rerun()
 
 
