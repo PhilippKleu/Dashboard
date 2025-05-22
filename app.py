@@ -1037,7 +1037,7 @@ if additional_cols:
             n_cols = min(max_cols, n_metrics)
             n_rows = -(-n_metrics // max_cols)  # Ceiling division
             
-            fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 3, n_rows * 5))
+            fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
             if n_metrics == 1:
                 axes = [axes]
             else:
@@ -1073,9 +1073,10 @@ if additional_cols:
                        .replace("INSTALLED_CAPACITY_", "")
                        .replace("NEW_CAPACITY_", "")
                 )
-                ax.set_title(clean_label, fontsize=10)
+                ax.set_title(clean_label, fontsize=14)
                 ax.set_xticks([])
-                ax.set_ylabel("Metric Value")
+                ax.set_ylabel("Metric Value", fontsize=13)
+                ax.tick_params(axis='y', labelsize=12)
                 ax.grid(True, linestyle="--", alpha=0.4)
             
             # Unsichtbare Achsen ausblenden
