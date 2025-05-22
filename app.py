@@ -555,9 +555,9 @@ with col1:
     
         col_gen, col_reset = st.columns(2)
         with col_gen:
-            st.button("Generate", key="generate_convex_button_sidebar")
+            generate_convex=st.button("Generate", key="generate_convex_button_sidebar")
         with col_reset:
-            st.button("Reset", key="reset_convex_button_sidebar")
+            reset_convex=st.button("Reset", key="reset_convex_button_sidebar")
         
         if reset_convex:
             st.session_state['convex_combinations'] = pd.DataFrame()
