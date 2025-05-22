@@ -128,7 +128,7 @@ def extract_time_series_map(df, maa_prefix, mode="installed"):
     for col in df.columns:
         # === Für MAA-Daten: alle INSTALLED_CAPACITY_* Spalten zulassen ===
         if maa_prefix == "MAA_":
-            match = re.match(r"^(MAA_INSTALLED_CAPACITY_)([^_]+)_(\d{4})$", col)
+            match = re.match(r"^MAA_INSTALLED_CAPACITY_(.+)_(\d{4})$", col)
             if match:
                 _, tech, year = match.groups()
                 key = (tech, int(year))
