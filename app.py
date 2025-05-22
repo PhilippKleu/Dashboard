@@ -1019,7 +1019,7 @@ if additional_cols:
     selected_metrics = st.multiselect(
         "📌 Select additional metrics to visualize",
         additional_cols,
-        default=additional_cols
+        default=additional_cols[:5] if len(additional_cols) > 5 else additional_cols
     )
 
     if selected_metrics:
