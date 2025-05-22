@@ -292,23 +292,12 @@ additional_cols = get_additional_columns(vertex_df)
 
 # === Sidebar: Einstellungen ===
 st.sidebar.markdown("## ⚙️ Settings")
-st.sidebar.markdown("Maximum number of vertices to be displayed in plots:")
 
-total_vertices_available = len(tech_data)
-max_vertices_to_plot = st.sidebar.number_input(
-    "Max. number of vertices",
-    min_value=1,
-    max_value=total_vertices_available,
-    value=min(5, total_vertices_available),
-    step=1,
-    key="max_plot_vertices"
-)
-
-st.sidebar.markdown("## 📊 Diagram Options")
 
 # === Sidebar: Strukturierte Einstellungen ===
 
 with st.sidebar.expander("⚙️ General Settings", expanded=True):
+    st.sidebar.markdown("Maximum number of vertices to be displayed in plots:")
     total_vertices_available = len(tech_data)
     st.number_input(
         "Max vertices to display in plots",
