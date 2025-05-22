@@ -796,7 +796,10 @@ with col2:
         st.pyplot(fig_value)
     st.markdown("### ⏳ Installed Capacities Over Time")
 
-   
+    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+    n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
+    plot_width_per_col = 6
+    plot_height_per_row = 3.5
     fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
     fig_height = plot_height_per_row * n_rows
 
