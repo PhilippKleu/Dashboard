@@ -89,11 +89,12 @@ def initialize_session_state():
         'convex_combinations': pd.DataFrame(),
         'convex_additional': pd.DataFrame(),
         'show_convex': True,
-        'show_convex': True,
         'excel_loaded': False,
         'excel_path': '',
         'excel_error': None,
         'show_tech_info': False,
+        'n_cols_plots': 3,  # <--- HIER Standardwert für Plot-Spaltenanzahl
+        'max_plot_vertices': 5,  # optional auch gleich hier
     }
     for key, val in defaults.items():
         if key not in st.session_state:
