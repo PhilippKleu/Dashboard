@@ -934,9 +934,10 @@ with col2:
 
     st.pyplot(fig)
     # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
-    st.divider()
+    
     
     if st.session_state.get("show_density"):
+        st.divider()
         num_interpolated_points = 3
         grid_density = 50
         color_levels = 10
