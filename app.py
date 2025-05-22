@@ -130,7 +130,7 @@ def extract_time_series_map(df, maa_prefix, mode="installed"):
         if maa_prefix == "MAA_":
             match = re.match(r"^MAA_INSTALLED_CAPACITY_(.+)_(\d{4})$", col)
             if match:
-                _, tech, year = match.groups()
+                tech, year = match.groups()
                 key = (tech, int(year))
                 if key not in seen_keys:
                     tech_time_map[tech].append((int(year), col))
