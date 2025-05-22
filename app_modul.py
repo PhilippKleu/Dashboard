@@ -494,7 +494,7 @@ def reset_convex_combinations():
 # === Zeitverlauf: VALUE_ Variablen ===
 def plot_operational_variables_over_time(vertex_df, tech_time_map, current_indices, convex_data, maa_prefix, show_convex, show_ranges, max_vertices, n_cols):
     st.markdown("### Operational Variables Over Time")
-for tech, year_cols in sorted(tech_time_map.items()):
+
     
     n_techs = sum(1 for v in value_time_map.values() if len(v) >= 1)
     n_rows = ceil(n_techs / n_cols)
@@ -564,6 +564,15 @@ for tech, year_cols in sorted(tech_time_map.items()):
 
 
 # === Zeitverlauf: INSTALLED_CAPACITY Variablen ===
+
+for tech, year_cols in sorted(tech_time_map.items()):
+    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+    cols = [col for _, col in years_cols_sorted]
+
+    st.write(f"🔍 Tech: {tech}")
+    st.write(f"Years: {years_cols_sorted}")
+    st.write(f"Cols: {cols}")
+    st.write("Data Preview:", vertex_df[cols].head())
 def plot_installed_capacity_over_time(vertex_df, tech_time_map, current_indices, convex_data, cap_prefix, show_convex, show_ranges, max_vertices, n_cols):
     st.markdown("### ⏳ Installed Capacities Over Time")
 
