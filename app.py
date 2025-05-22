@@ -113,33 +113,55 @@ def extract_technologies(df):
     return techs, df[maa_cols].drop_duplicates(), maa_cols
 
 # === Extrahiere Zeitreihe pro Technologie ===
-def extract_time_series_map(df):
+def extract_time_series_map(df, maa_prefix, mode="installed"):
+    """
+    Extrahiert eine Zeitreihen-Mapping-Technologie → [(Jahr, Spaltenname)].
+
+    :param df: Pandas DataFrame
+    :param maa_prefix: "VALUE_" oder "MAA_"
+    :param mode: "installed" oder "operational"
+    :return: Dictionary {tech: [(year, column)]}
+    """
     tech_time_map = defaultdict(list)
-    seen_columns = set()  # Um doppelte Zuordnungen zu vermeiden
+    seen_keys = set()
 
     for col in df.columns:
-        # Format 1: VALUE_Tech[(2025,)]
-        match_bracket = re.match(r"^(VALUE_[^[]+)\[\((\d{4}),?\)\]$", col)
-        if match_bracket:
-            full_tech_prefix = match_bracket.group(1)
-            year = int(match_bracket.group(2))
-            tech = full_tech_prefix.replace("VALUE_", "")
-            tech_time_map[tech].append((year, col))
-            seen_columns.add(col)
-            continue  # Wichtig: damit derselbe Spaltenname NICHT noch einmal im nächsten Schritt verarbeitet wird
+        # === Für MAA-Daten: alle INSTALLED_CAPACITY_* Spalten zulassen ===
+        if maa_prefix == "MAA_":
+            match = re.match(r"^(MAA_INSTALLED_CAPACITY_)([^_]+)_(\d{4})$", col)
+            if match:
+                _, tech, year = match.groups()
+                key = (tech, int(year))
+                if key not in seen_keys:
+                    tech_time_map[tech].append((int(year), col))
+                    seen_keys.add(key)
 
-        # Format 2: MAA_INSTALLED_CAPACITY_Tech_2025
-        match_suffix = re.match(r"^(.*)_(\d{4})$", col)
-        if match_suffix and col not in seen_columns:
-            col_base, year_str = match_suffix.groups()
-            year = int(year_str)
+        # === Für VALUE-Daten: abhängig vom Modus ===
+        elif maa_prefix == "VALUE_":
+            if mode == "operational":
+                # Format: VALUE_Tech[(2025,)]
+                match = re.match(r"^(VALUE_)([^[]+)\[\((\d{4}),?\)\]$", col)
+                if match:
+                    _, tech, year = match.groups()
+                    key = (tech, int(year))
+                    if key not in seen_keys:
+                        tech_time_map[tech].append((int(year), col))
+                        seen_keys.add(key)
+            elif mode == "installed":
+                # Format: INSTALLED_CAPACITY_Tech_2025
+                match = re.match(r"^(INSTALLED_CAPACITY_)([^_]+)_(\d{4})$", col)
+                if match:
+                    _, tech, year = match.groups()
+                    key = (tech, int(year))
+                    if key not in seen_keys:
+                        tech_time_map[tech].append((int(year), col))
+                        seen_keys.add(key)
 
-            # z. B. MAA_INSTALLED_CAPACITY_Tech_2025 → extrahiere 'Tech'
-            if "INSTALLED_CAPACITY_" in col_base:
-                tech = col_base.split("INSTALLED_CAPACITY_")[-1]
-                tech_time_map[tech].append((year, col))
-
-    return tech_time_map
+    # Sortiere Jahre innerhalb jeder Technologie
+    return {
+        tech: sorted(entries, key=lambda x: x[0])
+        for tech, entries in tech_time_map.items()
+    }
 
 # === Bestimme zusätzliche Metrikspalten ===
 def get_additional_columns(df):
@@ -265,7 +287,7 @@ else:
     st.error("❌ Could not detect expected prefixes ('VALUE_' or 'MAA_') in the Excel columns.")
     st.stop()
 technologies, tech_data, maa_cols = extract_technologies(vertex_df)
-tech_time_map = extract_time_series_map(vertex_df)
+tech_time_map = extract_time_series_map(vertex_df,MAA_PREFIX)
 additional_cols = get_additional_columns(vertex_df)
 
 # === Sidebar: Einstellungen ===
@@ -644,7 +666,7 @@ with col2:
         
         st.markdown("### Operational Variables Over Time")
     
-        value_time_map = extract_time_series_map(vertex_df)
+        value_time_map = extract_time_series_map(vertex_df,MAA_PREFIX,mode="operational"))
     
         n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
         n_rows_value = ceil(n_techs_value / st.session_state.get("n_cols_plots", 3))
