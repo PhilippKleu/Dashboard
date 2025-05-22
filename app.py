@@ -330,47 +330,7 @@ with st.sidebar.expander("📌 Additional Metrics"):
         key="plot_type_selector"
     )
 
-with st.sidebar.expander("➕ Convex Combination Settings"):
-    st.number_input(
-        "Total number of convex combinations",
-        min_value=10,
-        max_value=10000,
-        value=100,
-        step=10,
-        key="n_samples"
-    )
 
-    max_vertices = len(current_indices) if not current_indices.empty else 0
-    st.number_input(
-        "Vertices used per combination",
-        min_value=2,
-        max_value=max_vertices if max_vertices > 1 else 2,
-        value=max_vertices if max_vertices > 1 else 2,
-        step=1,
-        key="n_vertices_convex"
-    )
-
-    st.selectbox(
-        "Dirichlet α (weight spread)",
-        [0.01, 0.1, 1.0],
-        index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
-        key="alpha_value"
-    )
-
-    st.number_input(
-        "Combinations per batch",
-        min_value=1,
-        max_value=st.session_state["n_samples"],
-        value=min(10, st.session_state["n_samples"]),
-        step=1,
-        key="n_batch_size"
-    )
-
-    col_gen, col_reset = st.columns(2)
-    with col_gen:
-        st.button("Generate", key="generate_convex_button_sidebar")
-    with col_reset:
-        st.button("Reset", key="reset_convex_button_sidebar")
 
 
 
@@ -557,121 +517,119 @@ with col1:
 
     filtered_data = selected_data.loc[current_indices] if ordered_techs else pd.DataFrame(index=current_indices)
     # === Konvexe Kombinationen ===
-    st.divider()
-    st.sidebar.markdown("### ➕ Convex Combinations")
-
-    st.sidebar.number_input(
-        "Total number of convex combinations:",
-        min_value=10,
-        max_value=10000,
-        value=100,
-        step=10,
-        key="n_samples"
-    )
-    
-    max_vertices = len(current_indices) if not current_indices.empty else 0
-    st.sidebar.number_input(
-        "Vertices per combination:",
-        min_value=2,
-        max_value=max_vertices if max_vertices > 1 else 2,
-        value=max_vertices if max_vertices > 1 else 2,
-        step=1,
-        key="n_vertices_convex"
-    )
-    
-    st.sidebar.selectbox(
-        "Dirichlet α (weight spread):",
-        [0.01, 0.1, 1.0],
-        index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
-        key="alpha_value"
-    )
-    
-    st.sidebar.number_input(
-        "Combinations per batch:",
-        min_value=1,
-        max_value=st.session_state["n_samples"],
-        value=min(10, st.session_state["n_samples"]),
-        step=1,
-        key="n_batch_size"
-    )
-    
-    col_gen_sidebar, col_reset_sidebar = st.sidebar.columns(2)
-    with col_gen_sidebar:
-        generate_convex = st.button("Generate", key="generate_convex_button_sidebar")
-    with col_reset_sidebar:
-        reset_convex = st.button("Reset", key="reset_convex_button_sidebar")
-    
-    if reset_convex:
-        st.session_state['convex_combinations'] = pd.DataFrame()
-        st.session_state['convex_additional'] = pd.DataFrame()
-
-    if generate_convex and not current_indices.empty:
-        base_data_full = tech_data.loc[current_indices]
-        base_additional_data = vertex_df.loc[current_indices, additional_cols] if additional_cols else pd.DataFrame(index=current_indices)
-
-        # Nur wenn MAA_PREFIX == "VALUE_", auch INSTALLED_CAPACITY einbeziehen
-        include_installed_capacity = MAA_PREFIX == "VALUE_"
-        installed_data = pd.DataFrame(index=current_indices)
-
-        if include_installed_capacity:
-            installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
-            installed_data = vertex_df.loc[current_indices, installed_cols]
-        n_total = st.session_state["n_samples"]
-        batch_size = st.session_state["n_batch_size"]
-        n_vertices = st.session_state["n_vertices_convex"]
-        alpha = st.session_state["alpha_value"]
-
-        all_samples = []
-        all_additional_samples = []
-        all_installed_samples = [] if include_installed_capacity else None
-        n_batches = int(np.ceil(n_total / batch_size))
-
-        for _ in range(n_batches):
-            base_sample = base_data_full.sample(
-                n=n_vertices if len(base_data_full) > n_vertices else len(base_data_full),
-                random_state=np.random.randint(0, 999999)
-            )
-
-            base_additional_sample = base_additional_data.loc[base_sample.index] if not base_additional_data.empty else pd.DataFrame(index=base_sample.index)
-
-            effective_batch_size = min(batch_size, n_total - len(all_samples) * batch_size)
-            weights = np.random.dirichlet([alpha] * len(base_sample), size=effective_batch_size)
-
-            batch_samples = weights @ base_sample.values
-            if include_installed_capacity and not installed_data.empty and MAA_PREFIX == "VALUE_":
-                installed_sample = installed_data.loc[base_sample.index]
-                batch_installed = weights @ installed_sample.values
-                all_installed_samples.append(pd.DataFrame(batch_installed, columns=installed_sample.columns))
-            elif include_installed_capacity and not installed_data.empty:
-                batch_installed = weights @ installed_data.values
-                all_installed_samples.append(pd.DataFrame(batch_installed, columns=installed_data.columns))
-            all_samples.append(pd.DataFrame(batch_samples, columns=base_sample.columns))
-
-            if not base_additional_sample.empty:
-                batch_additional = weights @ base_additional_sample.values
-                all_additional_samples.append(pd.DataFrame(batch_additional, columns=base_additional_sample.columns))
-
-            if sum(len(df) for df in all_samples) >= n_total:
-                break
-
-        convex_df = pd.concat(all_samples, ignore_index=True)
-        st.session_state['convex_combinations'] = pd.concat(
-            [st.session_state['convex_combinations'], convex_df],
-            ignore_index=True
+    with st.sidebar.expander("➕ Convex Combination Settings"):
+        st.number_input(
+            "Total number of convex combinations",
+            min_value=10,
+            max_value=10000,
+            value=100,
+            step=10,
+            key="n_samples"
         )
-        if include_installed_capacity and all_installed_samples:
-            installed_comb_df = pd.concat(all_installed_samples, ignore_index=True)
-            st.session_state['convex_combinations'][installed_data.columns] = installed_comb_df
-
-        if all_additional_samples:
-            additional_comb_df = pd.concat(all_additional_samples, ignore_index=True)
-            st.session_state['convex_additional'] = pd.concat(
-                [st.session_state.get('convex_additional', pd.DataFrame()), additional_comb_df],
+    
+        max_vertices = len(current_indices) if not current_indices.empty else 0
+        st.number_input(
+            "Vertices used per combination",
+            min_value=2,
+            max_value=max_vertices if max_vertices > 1 else 2,
+            value=max_vertices if max_vertices > 1 else 2,
+            step=1,
+            key="n_vertices_convex"
+        )
+    
+        st.selectbox(
+            "Dirichlet α (weight spread)",
+            [0.01, 0.1, 1.0],
+            index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
+            key="alpha_value"
+        )
+    
+        st.number_input(
+            "Combinations per batch",
+            min_value=1,
+            max_value=st.session_state["n_samples"],
+            value=min(10, st.session_state["n_samples"]),
+            step=1,
+            key="n_batch_size"
+        )
+    
+        col_gen, col_reset = st.columns(2)
+        with col_gen:
+            st.button("Generate", key="generate_convex_button_sidebar")
+        with col_reset:
+            st.button("Reset", key="reset_convex_button_sidebar")
+        
+        if reset_convex:
+            st.session_state['convex_combinations'] = pd.DataFrame()
+            st.session_state['convex_additional'] = pd.DataFrame()
+    
+        if generate_convex and not current_indices.empty:
+            base_data_full = tech_data.loc[current_indices]
+            base_additional_data = vertex_df.loc[current_indices, additional_cols] if additional_cols else pd.DataFrame(index=current_indices)
+    
+            # Nur wenn MAA_PREFIX == "VALUE_", auch INSTALLED_CAPACITY einbeziehen
+            include_installed_capacity = MAA_PREFIX == "VALUE_"
+            installed_data = pd.DataFrame(index=current_indices)
+    
+            if include_installed_capacity:
+                installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
+                installed_data = vertex_df.loc[current_indices, installed_cols]
+            n_total = st.session_state["n_samples"]
+            batch_size = st.session_state["n_batch_size"]
+            n_vertices = st.session_state["n_vertices_convex"]
+            alpha = st.session_state["alpha_value"]
+    
+            all_samples = []
+            all_additional_samples = []
+            all_installed_samples = [] if include_installed_capacity else None
+            n_batches = int(np.ceil(n_total / batch_size))
+    
+            for _ in range(n_batches):
+                base_sample = base_data_full.sample(
+                    n=n_vertices if len(base_data_full) > n_vertices else len(base_data_full),
+                    random_state=np.random.randint(0, 999999)
+                )
+    
+                base_additional_sample = base_additional_data.loc[base_sample.index] if not base_additional_data.empty else pd.DataFrame(index=base_sample.index)
+    
+                effective_batch_size = min(batch_size, n_total - len(all_samples) * batch_size)
+                weights = np.random.dirichlet([alpha] * len(base_sample), size=effective_batch_size)
+    
+                batch_samples = weights @ base_sample.values
+                if include_installed_capacity and not installed_data.empty and MAA_PREFIX == "VALUE_":
+                    installed_sample = installed_data.loc[base_sample.index]
+                    batch_installed = weights @ installed_sample.values
+                    all_installed_samples.append(pd.DataFrame(batch_installed, columns=installed_sample.columns))
+                elif include_installed_capacity and not installed_data.empty:
+                    batch_installed = weights @ installed_data.values
+                    all_installed_samples.append(pd.DataFrame(batch_installed, columns=installed_data.columns))
+                all_samples.append(pd.DataFrame(batch_samples, columns=base_sample.columns))
+    
+                if not base_additional_sample.empty:
+                    batch_additional = weights @ base_additional_sample.values
+                    all_additional_samples.append(pd.DataFrame(batch_additional, columns=base_additional_sample.columns))
+    
+                if sum(len(df) for df in all_samples) >= n_total:
+                    break
+    
+            convex_df = pd.concat(all_samples, ignore_index=True)
+            st.session_state['convex_combinations'] = pd.concat(
+                [st.session_state['convex_combinations'], convex_df],
                 ignore_index=True
             )
-
-        n_convex = len(st.session_state['convex_combinations'])
-        st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
+            if include_installed_capacity and all_installed_samples:
+                installed_comb_df = pd.concat(all_installed_samples, ignore_index=True)
+                st.session_state['convex_combinations'][installed_data.columns] = installed_comb_df
+    
+            if all_additional_samples:
+                additional_comb_df = pd.concat(all_additional_samples, ignore_index=True)
+                st.session_state['convex_additional'] = pd.concat(
+                    [st.session_state.get('convex_additional', pd.DataFrame()), additional_comb_df],
+                    ignore_index=True
+                )
+    
+            n_convex = len(st.session_state['convex_combinations'])
+            st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
 
     # === Konvexe Kombinationen filtern ===
     filtered_convex_data = apply_tech_filters(
