@@ -89,7 +89,7 @@ def initialize_session_state():
         'convex_combinations': pd.DataFrame(),
         'convex_additional': pd.DataFrame(),
         'show_convex': True,
-        'show_convex_in_timeplot': True,
+        'show_convex': True,
         'excel_loaded': False,
         'excel_path': '',
         'excel_error': None,
@@ -292,10 +292,7 @@ st.sidebar.number_input(
     key="n_cols_plots"
 )
 
-st.sidebar.checkbox(
-    "Show convex combinations in installed capacities",
-    key="show_convex_in_timeplot"
-)
+st.sidebar.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
 
 st.sidebar.checkbox(
     "Show original flexibility ranges (red shaded)",
@@ -314,7 +311,7 @@ st.sidebar.radio(
     key="plot_type_selector"
 )
 
-st.sidebar.checkbox("Include convex combinations in metrics plot", value=True, key="include_convex_metrics")
+
 
 # === Auswahl & Filter-UI ===
 col1, spacer, col2 = st.columns([1, 0.1, 1])
@@ -691,7 +688,7 @@ with col2:
                 y_values = values_matrix[col]
                 ax.scatter([year] * len(y_values), y_values, color=(0.1, 0.4, 0.8, 0.4))
     
-                if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
+                if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
                     if col in filtered_convex_data.columns:
                         convex_vals = filtered_convex_data[col].dropna()
                         ax.scatter([year] * len(convex_vals), convex_vals, color=(1.0, 0.3, 0.3, 0.4))
@@ -720,7 +717,7 @@ with col2:
                         )
                     ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
     
-                if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
+                if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
                     if all(col in filtered_convex_data.columns for col in cols):
                         for idx in range(len(filtered_convex_data)):
                             values = filtered_convex_data.loc[idx, cols].values
@@ -818,7 +815,7 @@ with col2:
             ax.scatter([year] * len(y_values), y_values, color=(0.1, 0.4, 0.8, 0.4))
 
             # Konvex Punkte
-            if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
+            if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
                 convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}"
                 if convex_col in filtered_convex_data.columns:
                     convex_vals = filtered_convex_data[convex_col].dropna()
@@ -842,7 +839,7 @@ with col2:
                 values = values_matrix.loc[i].values
                 ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
 
-            if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
+            if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
                 convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                 if all(col in filtered_convex_data.columns for col in convex_cols):
                     for idx in range(len(filtered_convex_data)):
@@ -853,7 +850,7 @@ with col2:
             min_vals = full_values_matrix.min()
             max_vals = full_values_matrix.max()
 
-            if st.session_state['show_convex_in_timeplot'] and not st.session_state['convex_combinations'].empty:
+            if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
                 convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                 if all(col in filtered_convex_data.columns for col in convex_cols):
                     convex_min = filtered_convex_data[convex_cols].min()
@@ -1026,7 +1023,7 @@ if additional_cols:
         additional_data = vertex_df.loc[tech_data.index, selected_metrics]
         filtered_additional = additional_data.loc[current_indices]
 
-        if st.session_state.get("include_convex_metrics") and not filtered_convex_additional.empty:
+        if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
             filtered_combined = pd.concat([filtered_additional, filtered_convex_additional[selected_metrics]], axis=0)
         else:
             filtered_combined = filtered_additional
@@ -1100,7 +1097,7 @@ if additional_cols:
                 x_vals = [i] * len(values)
                 ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
 
-                if st.session_state.get("include_convex_metrics") and not filtered_convex_additional.empty:
+                if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
                     convex_vals = filtered_convex_additional[col].dropna().values
                     cx_vals = [i] * len(convex_vals)
                     ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
