@@ -654,7 +654,7 @@ with col2:
       
 
     # === Plot-Vorbereitung ===
-    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+    n_techs = sum(1 for v in operational_time_map.values() if len(v) >= 1)
     n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
     plot_width_per_col = 6
     plot_height_per_row = 3.5
