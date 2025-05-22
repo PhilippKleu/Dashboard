@@ -666,7 +666,7 @@ with col2:
         
         st.markdown("### Operational Variables Over Time")
     
-        value_time_map = extract_time_series_map(vertex_df,MAA_PREFIX,mode="operational"))
+        value_time_map = extract_time_series_map(vertex_df,MAA_PREFIX,mode="operational")
     
         n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
         n_rows_value = ceil(n_techs_value / st.session_state.get("n_cols_plots", 3))
