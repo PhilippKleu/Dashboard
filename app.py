@@ -306,32 +306,82 @@ max_vertices_to_plot = st.sidebar.number_input(
 
 st.sidebar.markdown("## 📊 Diagram Options")
 
-st.sidebar.number_input(
-    "Number of columns for installed capacity plots",
-    min_value=1,
-    max_value=5,
-    step=1,
-    key="n_cols_plots"
-)
+# === Sidebar: Strukturierte Einstellungen ===
 
-st.sidebar.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
+with st.sidebar.expander("⚙️ General Settings", expanded=True):
+    total_vertices_available = len(tech_data)
+    st.number_input(
+        "Max vertices to display in plots",
+        min_value=1,
+        max_value=total_vertices_available,
+        value=min(5, total_vertices_available),
+        step=1,
+        key="max_plot_vertices"
+    )
 
-st.sidebar.checkbox(
-    "Show original flexibility ranges (red shaded)",
-    value=False,
-    key="show_original_ranges"
-)
+with st.sidebar.expander("📊 Plot Options"):
+    st.number_input(
+        "Number of columns in plot layout",
+        min_value=1,
+        max_value=5,
+        step=1,
+        key="n_cols_plots"
+    )
+    st.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
+    st.checkbox("Show original flexibility ranges (red shaded)", value=False, key="show_original_ranges")
 
-st.sidebar.markdown("### 📈 Density Plots")
-st.sidebar.checkbox("Enable density plots", key="show_density")
+with st.sidebar.expander("🌈 Density Plots"):
+    st.checkbox("Enable density plots", key="show_density")
 
-st.sidebar.markdown("### 📌 Additional Metrics")
-st.sidebar.radio(
-    "Plot type for additional metrics",
-    ["Violinplot", "Streudiagramm"],
-    index=0,
-    key="plot_type_selector"
-)
+with st.sidebar.expander("📌 Additional Metrics"):
+    st.radio(
+        "Plot type for additional metrics",
+        ["Violinplot", "Streudiagramm"],
+        index=0,
+        key="plot_type_selector"
+    )
+
+with st.sidebar.expander("➕ Convex Combination Settings"):
+    st.number_input(
+        "Total number of convex combinations",
+        min_value=10,
+        max_value=10000,
+        value=100,
+        step=10,
+        key="n_samples"
+    )
+
+    max_vertices = len(current_indices) if not current_indices.empty else 0
+    st.number_input(
+        "Vertices used per combination",
+        min_value=2,
+        max_value=max_vertices if max_vertices > 1 else 2,
+        value=max_vertices if max_vertices > 1 else 2,
+        step=1,
+        key="n_vertices_convex"
+    )
+
+    st.selectbox(
+        "Dirichlet α (weight spread)",
+        [0.01, 0.1, 1.0],
+        index=[0.01, 0.1, 1.0].index(st.session_state.get('alpha_value', 0.1)),
+        key="alpha_value"
+    )
+
+    st.number_input(
+        "Combinations per batch",
+        min_value=1,
+        max_value=st.session_state["n_samples"],
+        value=min(10, st.session_state["n_samples"]),
+        step=1,
+        key="n_batch_size"
+    )
+
+    col_gen, col_reset = st.columns(2)
+    with col_gen:
+        st.button("Generate", key="generate_convex_button_sidebar")
+    with col_reset:
+        st.button("Reset", key="reset_convex_button_sidebar")
 
 
 
