@@ -661,7 +661,7 @@ with col2:
     if MAA_PREFIX == "VALUE_":
         
         st.markdown("### Operational Variables Over Time")    
-        n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
+        n_techs_value = sum(1 for v in operational_time_map.values() if len(v) >= 1)
         n_rows_value = ceil(n_techs_value / st.session_state.get("n_cols_plots", 3))
         fig_width_value = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
         fig_height_value = plot_height_per_row * n_rows_value
