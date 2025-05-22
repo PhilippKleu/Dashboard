@@ -1032,45 +1032,56 @@ if additional_cols:
             filtered_combined = filtered_additional
 
         if st.session_state.get("plot_type_selector") == "Violinplot":
-            fig, ax = plt.subplots(figsize=(len(selected_metrics) * 2.5, 6))
-            ax.set_facecolor('#f0f0f0')
-
-            data = [filtered_combined[col].dropna().values for col in selected_metrics]
-            positions = list(range(len(selected_metrics)))
-
-            vp = ax.violinplot(
-                data,
-                positions=positions,
-                showmeans=False,
-                showmedians=True,
-                showextrema=True,
-                widths=0.8
-            )
-
-            for pc in vp['bodies']:
-                pc.set_facecolor('#444444')
-                pc.set_edgecolor('black')
-                pc.set_alpha(0.7)
-
-            if 'cmedians' in vp:
-                vp['cmedians'].set_color('black')
-
-            ax.set_xticks(positions)
-            clean_labels = [
-                col.replace("installed_capacity_", "")
-                    .replace("INSTALLED_CAPACITY_", "")
-                    .replace("NEW_CAPACITY_", "")
-                for col in selected_metrics
-            ]
-            ax.set_xticklabels(clean_labels, rotation=45, ha="right")
-            ax.set_ylabel("Metric Value")
-            ax.set_title("Distributions of Selected Additional Metrics")
-            ax.grid(True, linestyle="--", alpha=0.4)
-
-            all_vals = pd.concat([pd.Series(d) for d in data])
-            ax.set_ylim(all_vals.min() - 0.1 * abs(all_vals.min()),
-                        all_vals.max() + 0.1 * abs(all_vals.max()))
-
+            max_cols = 8
+            n_metrics = len(selected_metrics)
+            n_cols = min(max_cols, n_metrics)
+            n_rows = -(-n_metrics // max_cols)  # Ceiling division
+            
+            fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 3, n_rows * 5))
+            if n_metrics == 1:
+                axes = [axes]
+            else:
+                axes = axes.flatten()
+            
+            for i, col in enumerate(selected_metrics):
+                ax = axes[i]
+                ax.set_facecolor('#f0f0f0')
+            
+                values = filtered_combined[col].dropna().values
+                if len(values) == 0:
+                    ax.set_visible(False)
+                    continue
+            
+                vp = ax.violinplot(
+                    [values],
+                    showmeans=False,
+                    showmedians=True,
+                    showextrema=True,
+                    widths=0.8
+                )
+            
+                for pc in vp['bodies']:
+                    pc.set_facecolor('#444444')
+                    pc.set_edgecolor('black')
+                    pc.set_alpha(0.7)
+            
+                if 'cmedians' in vp:
+                    vp['cmedians'].set_color('black')
+            
+                clean_label = (
+                    col.replace("installed_capacity_", "")
+                       .replace("INSTALLED_CAPACITY_", "")
+                       .replace("NEW_CAPACITY_", "")
+                )
+                ax.set_title(clean_label, fontsize=10)
+                ax.set_xticks([])
+                ax.set_ylabel("Metric Value")
+                ax.grid(True, linestyle="--", alpha=0.4)
+            
+            # Unsichtbare Achsen ausblenden
+            for j in range(i + 1, len(axes)):
+                axes[j].set_visible(False)
+            
             plt.tight_layout()
             st.pyplot(fig)
 
