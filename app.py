@@ -1355,6 +1355,8 @@ else:
       
 
     # === Plot-Vorbereitung ===
+    if "n_cols_plots" not in st.session_state:
+        st.session_state["n_cols_plots"] = 3
     n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
     n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
     plot_width_per_col = 6
