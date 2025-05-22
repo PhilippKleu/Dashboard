@@ -1038,6 +1038,8 @@ if additional_cols:
             n_rows = -(-n_metrics // max_cols)  # Ceiling division
             
             fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
+            fig.patch.set_facecolor('#f4f4f4')  # Hintergrund der gesamten Figur
+            
             if n_metrics == 1:
                 axes = [axes]
             else:
@@ -1045,7 +1047,7 @@ if additional_cols:
             
             for i, col in enumerate(selected_metrics):
                 ax = axes[i]
-                ax.set_facecolor('#f0f0f0')
+                ax.set_facecolor('#f0f0f0')  # Hintergrund pro Plot-Achse
             
                 values = filtered_combined[col].dropna().values
                 if len(values) == 0:
@@ -1061,7 +1063,7 @@ if additional_cols:
                 )
             
                 for pc in vp['bodies']:
-                    pc.set_facecolor('#444444')
+                    pc.set_facecolor((0.1, 0.4, 0.8, 0.7))  # Blau, leicht transparent
                     pc.set_edgecolor('black')
                     pc.set_alpha(0.7)
             
