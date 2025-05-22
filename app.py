@@ -781,7 +781,7 @@ if st.session_state["layout_mode"] == "Two-column layout":
                 value_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
         
                 legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                top_margin = legend_anchor_y - 0.8
+                top_margin = legend_anchor_y - 0.1
         
                 fig_value.legend(
                     [value_line],
