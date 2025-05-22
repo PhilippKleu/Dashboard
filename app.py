@@ -320,7 +320,7 @@ with st.sidebar.expander("📊 Plot Options"):
     st.number_input(
         "Number of columns in plot layout",
         min_value=1,
-        max_value=5,
+        max_value=10,
         step=1,
         key="n_cols_plots"
     )
