@@ -297,7 +297,7 @@ st.sidebar.markdown("## ⚙️ Settings")
 # === Sidebar: Strukturierte Einstellungen ===
 
 with st.sidebar.expander("⚙️ General Settings", expanded=True):
-    st.sidebar.markdown("Maximum number of vertices to be displayed in plots:")
+    
     total_vertices_available = len(tech_data)
     st.number_input(
         "Max vertices to display in plots",
