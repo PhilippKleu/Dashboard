@@ -14,6 +14,8 @@ from scipy.stats import gaussian_kde
 import re
 from sklearn.cluster import KMeans
 import seaborn as sns
+from io import BytesIO
+from zipfile import ZipFile
 
 
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
@@ -349,7 +351,7 @@ with st.sidebar.expander("📌 Additional Metrics"):
 
 
 # === Different Tabs ===
-tab1, tab2 = st.tabs(["📊 Decision Tool", "⚙️ Explanation"])
+tab1, tab2,tab3 = st.tabs(["📊 Decision Tool", "⚙️ Explanation","📥 Download Results"])
 
 # === Auswahl & Filter-UI ===
 with tab1: 
@@ -888,9 +890,9 @@ with tab1:
                 n_cols = 2
                 n_rows = ceil(n_techs / n_cols)
         
-                fig, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
+                fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
                 axs = axs.flatten()
-                fig.patch.set_facecolor('#f4f4f4')
+                fig_dichte.patch.set_facecolor('#f4f4f4')
         
                 df_base = vertex_df.loc[current_indices]
                 if len(df_base) > max_vertices_for_density:
@@ -956,16 +958,16 @@ with tab1:
                     cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
         
                 for j in range(i + 1, len(axs)):
-                    fig.delaxes(axs[j])
+                    fig_dichte.delaxes(axs[j])
         
-                fig.subplots_adjust(
+                fig_dichte.subplots_adjust(
                     top=0.95,
                     bottom=0.07,
                     hspace=0.44,
                     wspace=0.3
                 )
-                st.pyplot(fig)
-    
+                st.pyplot(fig_dichte)
+        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig)]
     else:
         
         if "show_tech_info" not in st.session_state:
@@ -1919,3 +1921,28 @@ with tab2:
     ---
     
     """
+with tab3:
+    
+    
+    st.header("⬇️ Export Plots as PDF")
+    
+    if "stored_figures" in st.session_state and st.session_state["stored_figures"]:
+        if st.button("📄 Generate ZIP with all Plots"):
+            zip_buffer = BytesIO()
+            with ZipFile(zip_buffer, "w") as zip_file:
+                for name, fig in st.session_state["stored_figures"]:
+                    pdf_bytes = BytesIO()
+                    fig.savefig(pdf_bytes, format="pdf", bbox_inches="tight")
+                    pdf_bytes.seek(0)
+                    filename = f"{name.replace(' ', '_')}.pdf"
+                    zip_file.writestr(filename, pdf_bytes.read())
+            zip_buffer.seek(0)
+    
+            st.download_button(
+                label="⬇️ Download ZIP",
+                data=zip_buffer,
+                file_name="exported_plots.zip",
+                mime="application/zip"
+            )
+    else:
+        st.info("⚠️ No plots available for download yet. Please generate plots in Tab 1.")
