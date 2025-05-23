@@ -95,7 +95,7 @@ def initialize_session_state():
         'show_tech_info': False,
         'n_cols_plots': 3,  # <--- HIER Standardwert für Plot-Spaltenanzahl
         'max_plot_vertices': 5,  # optional auch gleich hier
-        "st.session_state.column_ratio" : 0.5,
+        "column_ratio" : 0.5,
         'layout_mode': "Two-column layout",
     }
     for key, val in defaults.items():
