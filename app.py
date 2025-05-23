@@ -308,7 +308,7 @@ with st.sidebar.expander("⚙️ General Settings", expanded=True):
         index=0,
         key="layout_mode"
     )
-    if layout_mode == "Two-column layout":
+    if st.session_state.layout_mode == "Two-column layout":
         st.slider(
             "Column ratio (Right vs Left)",
             min_value=0.1,
