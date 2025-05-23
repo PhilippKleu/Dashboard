@@ -1852,74 +1852,64 @@ with tab2:
     
     """
 with tab3:
-    st.header("⬇️ Export Results")
-
-    # === Export Plots as PDF (ZIP) ===
-    st.subheader("📄 Export Plots as PDF (ZIP)")
-    if st.button("📦 Generate ZIP with all Plots"):
-        if "stored_figures" in st.session_state and st.session_state["stored_figures"]:
+    # === Export Everything in One ZIP (Plots + Tables) ===
+    st.subheader("📦 Export All Results (Plots + Tables) as ZIP")
+    
+    if st.button("🗜️ Generate Full ZIP Export"):
+        has_plots = "stored_figures" in st.session_state and st.session_state["stored_figures"]
+        has_data = not filtered_data.empty or (
+            st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty
+        )
+    
+        if not has_plots and not has_data:
+            st.info("⚠️ No plots or tables available for export.")
+        else:
             zip_buffer = BytesIO()
             with ZipFile(zip_buffer, "w") as zip_file:
-                for name, fig in st.session_state["stored_figures"]:
-                    pdf_bytes = BytesIO()
-                    fig.savefig(pdf_bytes, format="pdf", bbox_inches="tight")
-                    pdf_bytes.seek(0)
-                    filename = f"{name.replace(' ', '_')}.pdf"
-                    zip_file.writestr(filename, pdf_bytes.read())
+                # === Add plots as PDFs ===
+                if has_plots:
+                    for name, fig in st.session_state["stored_figures"]:
+                        pdf_bytes = BytesIO()
+                        fig.savefig(pdf_bytes, format="pdf", bbox_inches="tight")
+                        pdf_bytes.seek(0)
+                        filename = f"plots/{name.replace(' ', '_')}.pdf"
+                        zip_file.writestr(filename, pdf_bytes.read())
+    
+                # === Add Excel with tables ===
+                if has_data:
+                    excel_buffer = BytesIO()
+                    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                        if not filtered_data.empty:
+                            frames_to_concat = [tech_data.loc[current_indices].reset_index(drop=True)]
+                            if MAA_PREFIX == "VALUE_":
+                                installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
+                                installed_part = vertex_df.loc[current_indices, installed_cols].reset_index(drop=True)
+                                frames_to_concat.append(installed_part)
+                            if additional_cols:
+                                additional_part = vertex_df.loc[current_indices, additional_cols].reset_index(drop=True)
+                                frames_to_concat.append(additional_part)
+                            full_original_table = pd.concat(frames_to_concat, axis=1)
+                            full_original_table.to_excel(writer, index=False, sheet_name="Filtered Vertices")
+    
+                        if (
+                            st.session_state.get("show_convex") and 
+                            not st.session_state["convex_combinations"].empty
+                        ):
+                            convex_data = st.session_state["convex_combinations"].reset_index(drop=True)
+                            frames_convex = [convex_data]
+                            if additional_cols and not st.session_state.get("convex_additional", pd.DataFrame()).empty:
+                                convex_add = st.session_state["convex_additional"].loc[convex_data.index, additional_cols].reset_index(drop=True)
+                                frames_convex.append(convex_add)
+                            full_convex_table = pd.concat(frames_convex, axis=1)
+                            full_convex_table.to_excel(writer, index=False, sheet_name="Convex Combinations")
+    
+                    excel_buffer.seek(0)
+                    zip_file.writestr("tables/filtered_results.xlsx", excel_buffer.read())
+    
             zip_buffer.seek(0)
             st.download_button(
-                label="⬇️ Download ZIP of Plots",
+                label="⬇️ Download ZIP (Plots + Tables)",
                 data=zip_buffer,
-                file_name="exported_plots.zip",
+                file_name="all_results_export.zip",
                 mime="application/zip"
             )
-        else:
-            st.info("⚠️ No plots available for download yet. Please generate plots in Tab 1.")
-
-    st.divider()
-
-    # === Export Tables as Excel ===
-    st.subheader("📊 Export Filtered Tables as Excel")
-    if st.button("📁 Generate Excel File"):
-        if not filtered_data.empty or (
-            st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty
-        ):
-            excel_buffer = BytesIO()
-            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                if not filtered_data.empty:
-                    filtered_full_data = tech_data.loc[current_indices].reset_index(drop=True)
-                    filtered_full_data.to_excel(writer, index=False, sheet_name="Filtered Vertices")
-
-                    if MAA_PREFIX == "VALUE_":
-                        installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
-                        vertex_df.loc[filtered_full_data.index, installed_cols].reset_index(drop=True).to_excel(
-                            writer, index=False, sheet_name="Installed Capacity"
-                        )
-
-                    if additional_cols:
-                        vertex_df.loc[filtered_full_data.index, additional_cols].reset_index(drop=True).to_excel(
-                            writer, index=False, sheet_name="Additional Metrics"
-                        )
-
-                if (
-                    st.session_state.get("show_convex") and 
-                    not st.session_state["convex_combinations"].empty
-                ):
-                    st.session_state["convex_combinations"].reset_index(drop=True).to_excel(
-                        writer, index=False, sheet_name="Convex Combinations"
-                    )
-
-                    if not st.session_state.get("convex_additional", pd.DataFrame()).empty:
-                        st.session_state["convex_additional"].reset_index(drop=True).to_excel(
-                            writer, index=False, sheet_name="Convex Metrics"
-                        )
-
-            excel_buffer.seek(0)
-            st.download_button(
-                label="⬇️ Download Excel File",
-                data=excel_buffer,
-                file_name="filtered_results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.info("⚠️ No filtered data or convex combinations to export yet.")
