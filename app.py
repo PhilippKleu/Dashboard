@@ -95,6 +95,7 @@ def initialize_session_state():
         'show_tech_info': False,
         'n_cols_plots': 3,  # <--- HIER Standardwert für Plot-Spaltenanzahl
         'max_plot_vertices': 5,  # optional auch gleich hier
+        "st.session_state.column_ratio" : 0.5,
         'layout_mode': "Two-column layout",
     }
     for key, val in defaults.items():
@@ -307,6 +308,15 @@ with st.sidebar.expander("⚙️ General Settings", expanded=True):
         index=0,
         key="layout_mode"
     )
+    if layout_mode == "Two-column layout":
+        st.slider(
+            "Column ratio (Right vs Left)",
+            min_value=0.1,
+            max_value=0.9,
+            value=0.5,
+            step=0.01,
+            key="column_ratio"
+        )
     st.number_input(
         "Max vertices to display in plots",
         min_value=1,
@@ -345,7 +355,8 @@ with st.sidebar.expander("📌 Additional Metrics"):
 # === Auswahl & Filter-UI ===
 
 if st.session_state["layout_mode"] == "Two-column layout":
-    col1, spacer, col2 = st.columns([1, 0.1, 1])
+    ratio = st.session_state.get("column_ratio")
+    col1, spacer, col2 = st.columns([0.5+ratio, 0.1, 1.5-ratio])
     with col1:
         if "show_tech_info" not in st.session_state:
             st.session_state["show_tech_info"] = False
