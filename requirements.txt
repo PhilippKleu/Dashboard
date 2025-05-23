@@ -6,4 +6,4 @@ scipy
 openpyxl
 scikit-learn
 seaborn>=0.11.0
-plotly
+XlsxWriter
