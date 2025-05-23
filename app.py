@@ -967,8 +967,8 @@ with tab1:
                     wspace=0.3
                 )
                 st.pyplot(fig_dichte)
-                st.session_state["stored_figures"] = [("Density", fig_dichte)]
-        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig)]
+                
+        
     else:
        
         st.markdown("### 🧐 Select and Filter Technologies")
@@ -1582,8 +1582,8 @@ with tab1:
                 wspace=0.3
             )
             st.pyplot(fig_dichte)
-            st.session_state["stored_figures"] = [("Density", fig_dichte)]
-        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig)]
+           
+        
     st.divider()
     # === Weitere Metriken anzeigen ===
     # Beispiel-Daten
@@ -1666,7 +1666,10 @@ with tab1:
                 
                 plt.tight_layout()
                 st.pyplot(fig_violin)
-                st.session_state["stored_figures"] = [("Violin", fig_violin)]
+                if st.session_state.get("show_density"):
+                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                else:
+                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
             elif st.session_state.get("plot_type_selector") == "Streudiagramm":
                 fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
                 fig_scatter.patch.set_facecolor('#f4f4f4')
@@ -1723,7 +1726,10 @@ with tab1:
                 ax_scatter.grid(True, linestyle="--", alpha=0.4)
     
                 st.pyplot(fig_scatter)
-                st.session_state["stored_figures"] = [("Scatter", fig_scatter)]
+                if st.session_state.get("show_density"):
+                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Scatter", fig_scatter)]
+                else:
+                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Scatter", fig_scatter)]
         else:
             st.info("Please select at least one metric to visualize.")
     else:
