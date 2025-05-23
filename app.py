@@ -896,7 +896,7 @@ with tab1:
                 axs = axs.flatten()
                 fig_dichte.patch.set_facecolor('#f4f4f4')
         
-                df_base = vertex_df.loc[current_indices]
+                df_base = vertex_df.loc[plot_indices]
                 if len(df_base) > max_vertices_for_density:
                     df_base = df_base.sample(n=max_vertices_for_density, random_state=42)
         
