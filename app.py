@@ -967,89 +967,12 @@ with tab1:
                     wspace=0.3
                 )
                 st.pyplot(fig_dichte)
+                st.session_state["stored_figures"] = [("Density", fig_dichte)]
         st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig)]
     else:
+       
+        st.markdown("### 🧐 Select and Filter Technologies")
         
-        if "show_tech_info" not in st.session_state:
-            st.session_state["show_tech_info"] = False
-    
-        col_title, col_icon = st.columns([6, 2.5])
-        with col_title:
-            st.markdown("### 🧐 Select and Filter Technologies")
-        with col_icon:
-            st.markdown("<div style='margin-top: -1.0rem;'>", unsafe_allow_html=True)
-            if st.button("❓", key="show_info_button", help="Show/hide explanation"):
-                st.session_state["show_tech_info"] = not st.session_state["show_tech_info"]
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-        if st.session_state["show_tech_info"]:
-            st.markdown(
-                """
-                ### 🧠 Technology Decision Tool – Overview & Usage
-    
-                This tool supports the exploration and evaluation of **technology transition pathways**. It enables interactive filtering, visualization, and generation of new combinations. The main features include:
-    
-                ---
-    
-                #### 🔹 1. Selection & Filtering
-                - Choose any number of technologies from the dataset.
-                - For each selected technology, a slider will appear to restrict its value range.
-                - Filtering is **sequential**: adjust one slider at a time in order. Avoid changing earlier sliders later.
-                - Result: only the vertices that meet **all constraints** are used for analysis.
-    
-                ---
-    
-                #### 🔹 2. Convex Combinations
-                - Generate **new in-between scenarios** based on valid vertices.
-                - These are created as convex combinations — weighted averages of selected vertices.
-                - Adjustable settings:
-                    - Number of total combinations
-                    - Number of vertices per combination
-                    - Dirichlet alpha (controls weight spread)
-                - Installed capacities and additional metrics are also interpolated.
-    
-                ---
-    
-                #### 🔹 3. Visualization
-                - Time series plots show installed capacities over the years for each technology.
-                - Comparison between:
-                    - Original valid vertices
-                    - Convex combinations (if enabled)
-                    - Original min/max value ranges (optional)
-                - Additionally: **density plots (KDE)** to reveal typical development patterns.
-    
-                ---
-    
-                #### 🔹 4. Additional Metrics
-                - Select and visualize additional numeric indicators (e.g. costs, emissions).
-                - A scatterplot compares:
-                    - Original filtered vertices
-                    - Convex combinations (optional)
-                    - Global value range (min/max band)
-    
-                ---
-    
-                #### 🔹 5. Results Table
-                - Full display of remaining valid vertices:
-                    - Selected technology values
-                    - Installed capacities
-                    - Additional metrics
-                - Convex combinations are listed separately (if activated).
-    
-                ---
-    
-                #### 📌 Notes
-                - Filtering is strictly **step-by-step** – apply constraints in order.
-                - Empty plots usually indicate over-filtering or missing data.
-                - The **maximum number of displayed vertices** can be limited in the sidebar for performance.
-    
-                ---
-                
-                """
-                ,
-                unsafe_allow_html=True
-            )
-    
         col_select, col_reset = st.columns([4, 1])
         with col_select:
             selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
@@ -1582,9 +1505,9 @@ with tab1:
             n_cols = 2
             n_rows = ceil(n_techs / n_cols)
     
-            fig, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
+            fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
             axs = axs.flatten()
-            fig.patch.set_facecolor('#f4f4f4')
+            fig_dichte.patch.set_facecolor('#f4f4f4')
     
             df_base = vertex_df.loc[current_indices]
             if len(df_base) > max_vertices_for_density:
@@ -1650,16 +1573,17 @@ with tab1:
                 cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
     
             for j in range(i + 1, len(axs)):
-                fig.delaxes(axs[j])
+                fig_dichte.delaxes(axs[j])
     
-            fig.subplots_adjust(
+            fig_dichte.subplots_adjust(
                 top=0.95,
                 bottom=0.07,
                 hspace=0.44,
                 wspace=0.3
             )
-            st.pyplot(fig)
-    
+            st.pyplot(fig_dichte)
+            st.session_state["stored_figures"] = [("Density", fig_dichte)]
+        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig)]
     st.divider()
     # === Weitere Metriken anzeigen ===
     # Beispiel-Daten
@@ -1692,8 +1616,8 @@ with tab1:
                 n_cols = min(max_cols, n_metrics)
                 n_rows = -(-n_metrics // max_cols)  # Ceiling division
                 
-                fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
-                fig.patch.set_facecolor('#f4f4f4')  # Hintergrund der gesamten Figur
+                fig_violin, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
+                fig_violin.patch.set_facecolor('#f4f4f4')  # Hintergrund der gesamten Figur
                 
                 if n_metrics == 1:
                     axes = [axes]
@@ -1741,8 +1665,8 @@ with tab1:
                     axes[j].set_visible(False)
                 
                 plt.tight_layout()
-                st.pyplot(fig)
-    
+                st.pyplot(fig_violin)
+                st.session_state["stored_figures"] = [("Violin", fig_violin)]
             elif st.session_state.get("plot_type_selector") == "Streudiagramm":
                 fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
                 fig_scatter.patch.set_facecolor('#f4f4f4')
@@ -1799,7 +1723,7 @@ with tab1:
                 ax_scatter.grid(True, linestyle="--", alpha=0.4)
     
                 st.pyplot(fig_scatter)
-    
+                st.session_state["stored_figures"] = [("Scatter", fig_scatter)]
         else:
             st.info("Please select at least one metric to visualize.")
     else:
@@ -1922,12 +1846,12 @@ with tab2:
     
     """
 with tab3:
-    
-    
-    st.header("⬇️ Export Plots as PDF")
-    
-    if "stored_figures" in st.session_state and st.session_state["stored_figures"]:
-        if st.button("📄 Generate ZIP with all Plots"):
+    st.header("⬇️ Export Results")
+
+    # === Export Plots as PDF (ZIP) ===
+    st.subheader("📄 Export Plots as PDF (ZIP)")
+    if st.button("📦 Generate ZIP with all Plots"):
+        if "stored_figures" in st.session_state and st.session_state["stored_figures"]:
             zip_buffer = BytesIO()
             with ZipFile(zip_buffer, "w") as zip_file:
                 for name, fig in st.session_state["stored_figures"]:
@@ -1937,12 +1861,59 @@ with tab3:
                     filename = f"{name.replace(' ', '_')}.pdf"
                     zip_file.writestr(filename, pdf_bytes.read())
             zip_buffer.seek(0)
-    
             st.download_button(
-                label="⬇️ Download ZIP",
+                label="⬇️ Download ZIP of Plots",
                 data=zip_buffer,
                 file_name="exported_plots.zip",
                 mime="application/zip"
             )
-    else:
-        st.info("⚠️ No plots available for download yet. Please generate plots in Tab 1.")
+        else:
+            st.info("⚠️ No plots available for download yet. Please generate plots in Tab 1.")
+
+    st.divider()
+
+    # === Export Tables as Excel ===
+    st.subheader("📊 Export Filtered Tables as Excel")
+    if st.button("📁 Generate Excel File"):
+        if not filtered_data.empty or (
+            st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty
+        ):
+            excel_buffer = BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                if not filtered_data.empty:
+                    filtered_full_data = tech_data.loc[current_indices].reset_index(drop=True)
+                    filtered_full_data.to_excel(writer, index=False, sheet_name="Filtered Vertices")
+
+                    if MAA_PREFIX == "VALUE_":
+                        installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
+                        vertex_df.loc[filtered_full_data.index, installed_cols].reset_index(drop=True).to_excel(
+                            writer, index=False, sheet_name="Installed Capacity"
+                        )
+
+                    if additional_cols:
+                        vertex_df.loc[filtered_full_data.index, additional_cols].reset_index(drop=True).to_excel(
+                            writer, index=False, sheet_name="Additional Metrics"
+                        )
+
+                if (
+                    st.session_state.get("show_convex") and 
+                    not st.session_state["convex_combinations"].empty
+                ):
+                    st.session_state["convex_combinations"].reset_index(drop=True).to_excel(
+                        writer, index=False, sheet_name="Convex Combinations"
+                    )
+
+                    if not st.session_state.get("convex_additional", pd.DataFrame()).empty:
+                        st.session_state["convex_additional"].reset_index(drop=True).to_excel(
+                            writer, index=False, sheet_name="Convex Metrics"
+                        )
+
+            excel_buffer.seek(0)
+            st.download_button(
+                label="⬇️ Download Excel File",
+                data=excel_buffer,
+                file_name="filtered_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.info("⚠️ No filtered data or convex combinations to export yet.")
