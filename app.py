@@ -206,6 +206,15 @@ if not st.session_state.get("excel_loaded", False):
         st.markdown("Choose Option:")
 
         col_up1, col_up2 = st.columns(2)
+        if st.button("📥 Read in all vertices from excel file"):
+            try:
+                df = pd.read_excel(uploaded_file)
+                st.session_state["uploaded_excel"] = df.copy()
+                st.session_state["excel_loaded"] = True
+                st.session_state["excel_error"] = None
+                st.rerun()
+            except Exception as e:
+                st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
 
         with col_up1:
             col_sub1, col_sub2 = st.columns(2)
@@ -261,16 +270,7 @@ if not st.session_state.get("excel_loaded", False):
                 
                     except Exception as e:
                         st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
-                if st.button("📥 Read in all vertices from excel file"):
-                    try:
-                        df = pd.read_excel(uploaded_file)
-                        st.session_state["uploaded_excel"] = df.copy()
-                        st.session_state["excel_loaded"] = True
-                        st.session_state["excel_error"] = None
-                        st.rerun()
-                    except Exception as e:
-                        st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
-
+                
             with col_sub2:
                 k_value = st.number_input(
                             "Number of representative vertices to retain (KMeans)",
