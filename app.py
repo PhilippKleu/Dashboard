@@ -32,7 +32,14 @@ st.markdown("""
             background-color: #f4f4f4;
             font-family: 'Segoe UI', sans-serif;
         } 
-        
+        .stButton>button {
+            background-color: #E0E3E8;
+            color: white;
+            border: none;
+            padding: 0.5em 1.2em;
+            border-radius: 8px;
+            font-weight: 500;
+        }
         
         
         .stButton>button:hover {
