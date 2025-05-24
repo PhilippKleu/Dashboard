@@ -210,30 +210,11 @@ if not st.session_state.get("excel_loaded", False):
         with col_up1:
             col_sub1, col_sub2 = st.columns(2)
             with col_sub1:
-                if st.button("📥 Read in all vertices from excel file"):
-                    try:
-                        df = pd.read_excel(uploaded_file)
-                        st.session_state["uploaded_excel"] = df.copy()
-                        st.session_state["excel_loaded"] = True
-                        st.session_state["excel_error"] = None
-                        st.rerun()
-                    except Exception as e:
-                        st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
-
-            with col_sub2:
-                
                 if st.button("📊 Apply KMeans to Excel vertices to retain a set number of representatives."):
                     try:
                         df = pd.read_excel(uploaded_file)
                         amount_vertices_requested = int(k_value)
-                        k_value = st.number_input(
-                            "Number of representative vertices to retain (KMeans)",
-                            min_value=50,
-                            max_value=5000,
-                            value=1000,
-                            step=50,
-                            key="clustering_k"
-                        )
+                        
                         coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
                         if not coeff_columns:
                             raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
@@ -280,6 +261,26 @@ if not st.session_state.get("excel_loaded", False):
                 
                     except Exception as e:
                         st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
+                if st.button("📥 Read in all vertices from excel file"):
+                    try:
+                        df = pd.read_excel(uploaded_file)
+                        st.session_state["uploaded_excel"] = df.copy()
+                        st.session_state["excel_loaded"] = True
+                        st.session_state["excel_error"] = None
+                        st.rerun()
+                    except Exception as e:
+                        st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
+
+            with col_sub2:
+                k_value = st.number_input(
+                            "Number of representative vertices to retain (KMeans)",
+                            min_value=50,
+                            max_value=5000,
+                            value=1000,
+                            step=50,
+                            key="clustering_k"
+                        )
+                
 
     if st.session_state.get("excel_error"):
         st.error(st.session_state["excel_error"])
