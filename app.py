@@ -41,11 +41,15 @@ st.markdown("""
             font-weight: 500;
         }
         div[data-testid="stFileUploader"] {
-            background-color: #e6eef7;     /* Wunschfarbe */
+            background-color: #e6eef7;      /* Hintergrundfarbe */
             padding: 1.5rem;
             border-radius: 0.5rem;
-            border: 2px solid #7a9ab8;     /* statt dashed → solid */
+            border: 2px solid #7a9ab8;      /* durchgezogene Linie */
+            text-align: center;             /* Zentrierter Text */
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
+
                 
     </style>
 """, unsafe_allow_html=True)
