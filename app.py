@@ -25,10 +25,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_
 st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathways", layout="wide")
 st.markdown("""
     <style>
-        body, .stApp {
-            background-color: #f4f4f4;
-            font-family: 'Segoe UI', sans-serif;
-        }
+        
         html, body, [class*="css"] {
             color: #2c2c2c;
         }
