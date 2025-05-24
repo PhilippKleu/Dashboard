@@ -44,9 +44,7 @@ st.markdown("""
         
         
         
-        .stSlider [role="slider"] {
-            background-color: #888888 !important;
-        }
+        
         .stSelectbox, .stMultiSelect, .stSlider, .stButton {
             font-size: 0.95rem;
         }
