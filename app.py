@@ -40,14 +40,19 @@ st.markdown("""
             border-radius: 8px;
             font-weight: 500;
         }
-        div[data-baseweb="select"]:hover,
-        div[data-testid="stSelectbox"]:hover,
-        div[data-testid="stMultiSelect"]:hover,
-        div[data-testid="stNumberInput"]:hover,
-        div[data-testid="stRadio"]:hover {
-            background-color: #f0f0f0;
-            border-radius: 6px;
-            transition: background-color 0.3s ease;
+        div[data-testid="stFileUploader"]:hover,
+        div[data-testid^="stSelectbox"]:hover,
+        div[data-testid^="stMultiSelect"]:hover,
+        div[data-testid^="stNumberInput"]:hover,
+        div[data-testid^="stRadio"]:hover,
+        div[data-testid^="stSlider"]:hover {
+            background-color: #d4e4f1;
+            border-radius: 10px;
+            border: 1px solid #4a80a8;
+            transform: scale(1.01);
+            box-shadow: 0 0 12px rgba(122, 154, 184, 0.35);
+            transition: all 0.25s ease;
+            cursor: pointer;
         }
         
     </style>
