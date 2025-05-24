@@ -204,8 +204,6 @@ if not st.session_state.get("excel_loaded", False):
     if uploaded_file is not None:
         st.subheader("🔀 Optional Clustering Before Analysis")
         st.markdown("Choose Option:")
-
-        col_up1, col_up2 = st.columns(2)
         if st.button("📥 Read in all vertices from excel file"):
             try:
                 df = pd.read_excel(uploaded_file)
@@ -215,7 +213,9 @@ if not st.session_state.get("excel_loaded", False):
                 st.rerun()
             except Exception as e:
                 st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
-
+        st.divider()
+        col_up1, col_up2 = st.columns(2)
+        
         with col_up1:
             col_sub1, col_sub2 = st.columns(2)
             with col_sub1:
