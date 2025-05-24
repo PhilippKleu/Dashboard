@@ -40,6 +40,12 @@ st.markdown("""
             border-radius: 8px;
             font-weight: 500;
         }
+        div[data-testid="stFileUploader"] {
+            background-color: #e6eef7;  /* deine Wunschfarbe */
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px dashed #7a9ab8;
+        }
                 
     </style>
 """, unsafe_allow_html=True)
