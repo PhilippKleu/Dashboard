@@ -41,10 +41,10 @@ st.markdown("""
             font-weight: 500;
         }
         div[data-testid="stFileUploader"] {
-            background-color: #e6eef7;  /* deine Wunschfarbe */
+            background-color: #e6eef7;     /* Wunschfarbe */
             padding: 1.5rem;
             border-radius: 0.5rem;
-            border: 2px dashed #7a9ab8;
+            border: 2px solid #7a9ab8;     /* statt dashed → solid */
         }
                 
     </style>
