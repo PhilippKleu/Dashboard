@@ -49,6 +49,14 @@ st.markdown("""
             transition: all 0.3s ease;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
+        div[data-testid="stFileUploader"] section > div {
+            background-color: #d3e3f0 !important;
+            color: #30475e !important;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+        }
 
                 
     </style>
