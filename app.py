@@ -163,7 +163,7 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
     return data.loc[filtered_indices].reset_index(drop=True)
 
 # === Titel & Initialisierung ===
-st.title("🔬 Technology Decision Tool")
+st.title(" Technology Decision Tool")
 # === Excel-Datei Ladebereich via Upload ===
 if not st.session_state.get("excel_loaded", False):
     st.subheader("📂 Upload Excel File")
