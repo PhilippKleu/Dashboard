@@ -29,7 +29,7 @@ st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathway
 st.markdown("""
     <style>
         body, .stApp {
-            background-color: #e0e0e0;
+            background-color: #eaeaea;
             font-family: 'Segoe UI', sans-serif;
         } 
         .stButton>button {
