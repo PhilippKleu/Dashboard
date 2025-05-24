@@ -232,37 +232,52 @@ if not st.session_state.get("excel_loaded", False):
                 if st.button("📊 Apply KMeans to Excel vertices to retain a set number of representatives."):
                     try:
                         df = pd.read_excel(uploaded_file)
-                        amount_vertices_remaining = int(k_value)
-    
+                        amount_vertices_requested = int(k_value)
+                
                         coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
-                        last_coeff_col = coeff_columns[-1] if coeff_columns else None
-    
-                        if not last_coeff_col:
+                        if not coeff_columns:
                             raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
-    
+                
+                        last_coeff_col = coeff_columns[-1]
                         last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
                         df_first_part = df.loc[:last_index_with_minus1].copy()
                         df_remaining = df.loc[last_index_with_minus1 + 1:].copy()
-    
-                        cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
-                        df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
-                        remaining_target = amount_vertices_remaining - len(df_first_part)
-    
-                        if len(df_remaining_unique) > remaining_target:
-                            X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
-                            kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
-                            df_remaining_unique["cluster"] = kmeans.fit_predict(X)
-                            representative_indices = df_remaining_unique.groupby("cluster").head(1).index
-                            df_clustered = df_remaining.loc[representative_indices].copy()
+                
+                        if amount_vertices_requested >= len(df):
+                            # Fall 1: Zahl größer oder gleich Gesamtanzahl → alles laden
+                            st.session_state["uploaded_excel"] = df.copy()
+                            st.session_state["excel_loaded"] = True
+                            st.session_state["excel_error"] = None
+                            st.rerun()
+                
+                        elif amount_vertices_requested <= len(df_first_part):
+                            # Fall 2: Zahl kleiner als erste Vertices → nur diese laden
+                            st.session_state["uploaded_excel"] = df_first_part.copy()
+                            st.session_state["excel_loaded"] = True
+                            st.session_state["excel_error"] = None
+                            st.rerun()
+                
                         else:
-                            df_clustered = df_remaining_unique.copy()
-    
-                        df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
-                        st.session_state["uploaded_excel"] = df_final.copy()
-                        st.session_state["excel_loaded"] = True
-                        st.session_state["excel_error"] = None
-                        st.rerun()
-    
+                            # Fall 3: KMeans nötig
+                            cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
+                            df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
+                            remaining_target = amount_vertices_requested - len(df_first_part)
+                
+                            if len(df_remaining_unique) > remaining_target:
+                                X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
+                                kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
+                                df_remaining_unique["cluster"] = kmeans.fit_predict(X)
+                                representative_indices = df_remaining_unique.groupby("cluster").head(1).index
+                                df_clustered = df_remaining.loc[representative_indices].copy()
+                            else:
+                                df_clustered = df_remaining_unique.copy()
+                
+                            df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
+                            st.session_state["uploaded_excel"] = df_final.copy()
+                            st.session_state["excel_loaded"] = True
+                            st.session_state["excel_error"] = None
+                            st.rerun()
+                
                     except Exception as e:
                         st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
 
