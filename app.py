@@ -50,7 +50,7 @@ st.markdown("""
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
         div[data-testid="stFileUploader"] section > div {
-            background-color: #d3e3f0 !important;
+            background-color: #30475e !important;
             color: #30475e !important;
             border-radius: 8px;
             padding: 0.75rem;
