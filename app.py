@@ -40,10 +40,16 @@ st.markdown("""
             border-radius: 8px;
             font-weight: 500;
         }
+        div[data-baseweb="select"]:hover,
+        div[data-testid="stSelectbox"]:hover,
+        div[data-testid="stMultiSelect"]:hover,
+        div[data-testid="stNumberInput"]:hover,
+        div[data-testid="stRadio"]:hover {
+            background-color: #f0f0f0;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
         
-        
-
-                
     </style>
 """, unsafe_allow_html=True)
 
