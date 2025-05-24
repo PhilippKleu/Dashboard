@@ -24,7 +24,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_
 # === Streamlit Style ===
 st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathways", layout="wide")
 # === body, .stApp background color website ===
-# === html, body, background color website ===
+# === .stButton>button Reset Button ===
 
 st.markdown("""
     <style>
@@ -33,7 +33,7 @@ st.markdown("""
             font-family: 'Segoe UI', sans-serif;
         } 
         .stButton>button {
-            background-color: #E0E3E8;
+            background-color: #C0C6D2;
             color: white;
             border: none;
             padding: 0.5em 1.2em;
@@ -42,9 +42,6 @@ st.markdown("""
         }
         
         
-        .stButton>button:hover {
-            background-color: #5a5a5a;
-        }
         .stSlider>div>div>div>div {
             background: #888888;
         }
