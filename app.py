@@ -49,13 +49,7 @@ st.markdown("""
         
         
         
-        input[type="text"] {
-            background-color: #eaeaea;
-            color: #2c2c2c;
-            border: 1px solid #cccccc;
-            border-radius: 6px;
-            padding: 0.4em;
-        }
+        
         input[type="text"]:focus {
             border-color: #888888;
             outline: none;
