@@ -46,10 +46,7 @@ st.markdown("""
         
         
         
-        .stDataFrame, .css-1d391kg {
-            border-radius: 10px;
-            overflow: hidden;
-        }
+        
         .stProgress > div {
             margin-bottom: 2em;
         }
