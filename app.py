@@ -29,7 +29,7 @@ st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathway
 st.markdown("""
     <style>
         body, .stApp {
-            background-color: #eaeaea;
+            background-color: #f4f4f4;
             font-family: 'Segoe UI', sans-serif;
         } 
         .stButton>button {
@@ -597,7 +597,7 @@ with tab1:
                 fig_height_value = plot_height_per_row * n_rows_value
             
                 fig_value, axes_value = plt.subplots(n_rows_value, st.session_state.get("n_cols_plots", 3), figsize=(fig_width_value, fig_height_value))
-                fig_value.patch.set_facecolor('#eaeaea')
+                fig_value.patch.set_facecolor('#f4f4f4')
                 axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
             
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -727,7 +727,7 @@ with tab1:
             fig_height = plot_height_per_row * n_rows
         
             fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
-            fig.patch.set_facecolor('#eaeaea')
+            fig.patch.set_facecolor('#f4f4f4')
             axes = axes.flatten() if n_techs > 1 else [axes]
         
             if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -877,7 +877,7 @@ with tab1:
             
                 fig_dichte, axs = plt.subplots(n_rows, st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
                 axs = axs.flatten()
-                fig_dichte.patch.set_facecolor('#eaeaea')
+                fig_dichte.patch.set_facecolor('#f4f4f4')
             
                 # Gleiche Datenbasis wie oben
                 plot_indices = st.session_state.get("plot_indices", current_indices)
@@ -944,8 +944,8 @@ with tab1:
             
                     min_vals = df.min()
                     max_vals = df.max()
-                    axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#eaeaea', alpha=1)
-                    axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#eaeaea', alpha=1)
+                    axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
+                    axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
             
                     cbar = plt.colorbar(contour, ax=axs[i], label="Density")
                     cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
@@ -1225,7 +1225,7 @@ with tab1:
             fig_height_value = plot_height_per_row * n_rows_value
         
             fig_value, axes_value = plt.subplots(n_rows_value, st.session_state.get("n_cols_plots", 3), figsize=(fig_width_value, fig_height_value))
-            fig_value.patch.set_facecolor('#eaeaea')
+            fig_value.patch.set_facecolor('#f4f4f4')
             axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
         
             if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -1355,7 +1355,7 @@ with tab1:
         fig_height = plot_height_per_row * n_rows
     
         fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
-        fig.patch.set_facecolor('#eaeaea')
+        fig.patch.set_facecolor('#f4f4f4')
         axes = axes.flatten() if n_techs > 1 else [axes]
     
         if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -1503,7 +1503,7 @@ with tab1:
     
             fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
             axs = axs.flatten()
-            fig_dichte.patch.set_facecolor('#eaeaea')
+            fig_dichte.patch.set_facecolor('#f4f4f4')
     
             df_base = vertex_df.loc[current_indices]
             if len(df_base) > max_vertices_for_density:
@@ -1561,8 +1561,8 @@ with tab1:
     
                 min_vals = df.min()
                 max_vals = df.max()
-                axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#eaeaea', alpha=1)
-                axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#eaeaea', alpha=1)
+                axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
+                axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
     
                 cbar = plt.colorbar(contour, ax=axs[i], label="Density")
                 cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
@@ -1613,7 +1613,7 @@ with tab1:
                 n_rows = -(-n_metrics // max_cols)  # Ceiling division
                 
                 fig_violin, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
-                fig_violin.patch.set_facecolor('#eaeaea')  # Hintergrund der gesamten Figur
+                fig_violin.patch.set_facecolor('#f4f4f4')  # Hintergrund der gesamten Figur
                 
                 if n_metrics == 1:
                     axes = [axes]
@@ -1668,7 +1668,7 @@ with tab1:
                     st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
             elif st.session_state.get("plot_type_selector") == "Streudiagramm":
                 fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
-                fig_scatter.patch.set_facecolor('#eaeaea')
+                fig_scatter.patch.set_facecolor('#f4f4f4')
                 ax_scatter.set_facecolor('#f0f0f0')
     
                 y_max = max([filtered_combined[col].max() for col in selected_metrics])
