@@ -48,9 +48,7 @@ st.markdown("""
         
         
         
-        .element-container svg {
-            background-color: 	#C0C6D2 !important;
-        }
+        
         input[type="text"] {
             background-color: #eaeaea;
             color: #2c2c2c;
