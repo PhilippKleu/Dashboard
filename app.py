@@ -40,17 +40,7 @@ st.markdown("""
             border-radius: 8px;
             font-weight: 500;
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+                
     </style>
 """, unsafe_allow_html=True)
 
