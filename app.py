@@ -213,7 +213,7 @@ if not st.session_state.get("excel_loaded", False):
                 st.rerun()
             except Exception as e:
                 st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
-        st.divider()
+       
         col_up1, col_up2 = st.columns(2)
         
         with col_up1:
