@@ -45,9 +45,7 @@ st.markdown("""
         
         
         
-        .stSelectbox, .stMultiSelect, .stSlider, .stButton {
-            font-size: 0.95rem;
-        }
+        
         .stDataFrame, .css-1d391kg {
             border-radius: 10px;
             overflow: hidden;
