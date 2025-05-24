@@ -34,14 +34,7 @@ st.markdown("""
         } 
         
         
-        .stButton>button {
-            background-color: #6e6e6e;
-            color: white;
-            border: none;
-            padding: 0.5em 1.2em;
-            border-radius: 8px;
-            font-weight: 500;
-        }
+        
         .stButton>button:hover {
             background-color: #5a5a5a;
         }
