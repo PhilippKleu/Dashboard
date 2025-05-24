@@ -41,22 +41,36 @@ st.markdown("""
             font-weight: 500;
         }
         div[data-testid="stFileUploader"] {
-            background-color: #e6eef7;      /* Hintergrundfarbe */
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            border: 2px solid #7a9ab8;      /* durchgezogene Linie */
-            text-align: center;             /* Zentrierter Text */
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-        div[data-testid="stFileUploader"] section > div {
-            background-color: #30475e !important;
-            color: #30475e !important;
-            border-radius: 8px;
-            padding: 0.75rem;
+            background-color: #e6eef7;
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 2px solid #7a9ab8;
             text-align: center;
-            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            font-size: 1rem;
+            color: #2a3e50;
+            font-family: 'Segoe UI', sans-serif;
+            animation: fadeIn 0.5s ease-in-out;
         }
+        
+        div[data-testid="stFileUploader"]:hover {
+            background-color: #d4e4f1;
+            border-color: #4a80a8;
+            transform: scale(1.01);
+            box-shadow: 0 0 12px rgba(122, 154, 184, 0.35);
+            cursor: pointer;
+        }
+        
+        div[data-testid="stFileUploader"]::before {
+            content: "📁 Upload your file";
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #345d7e;
+        }
+        
 
                 
     </style>
