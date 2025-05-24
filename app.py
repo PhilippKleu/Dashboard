@@ -23,12 +23,16 @@ DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_
 
 # === Streamlit Style ===
 st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathways", layout="wide")
+# === body, .stApp background color website ===
+# === html, body, background color website ===
+
 st.markdown("""
     <style>
+        body, .stApp {
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', sans-serif;
+        } 
         
-        html, body, [class*="css"] {
-            color: #2c2c2c;
-        }
         .stContainer {
             background-color: #ffffff;
             border-radius: 16px;
