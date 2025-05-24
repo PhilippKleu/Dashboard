@@ -42,9 +42,7 @@ st.markdown("""
         }
         
         
-        .stSlider>div>div>div>div {
-            background: #888888;
-        }
+        
         input[type=range]::-webkit-slider-thumb {
             background: #888888;
         }
