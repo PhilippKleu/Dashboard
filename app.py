@@ -1577,7 +1577,7 @@ with tab1:
     st.divider()
     # === Weitere Metriken anzeigen ===
     # Beispiel-Daten
-    st.markdown("### 📈 Additional Metrics")
+    st.markdown("### Additional Metrics")
     
     # Auswahl des Plottyps
     
@@ -1728,7 +1728,7 @@ with tab1:
         
     # === Daten als Tabelle anzeigen ===
     st.divider()
-    st.markdown("### 📄 Show remaining vertices as table")
+    st.markdown("### Show remaining vertices as table")
     
     if filtered_data.empty and (
         st.session_state['convex_combinations'].empty 
