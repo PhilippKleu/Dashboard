@@ -270,15 +270,15 @@ if not st.session_state.get("excel_loaded", False):
                 except Exception as e:
                     st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
                 
-            with col_sub2:
-                k_value = st.number_input(
-                            "Number of representative vertices to retain (KMeans)",
-                            min_value=50,
-                            max_value=5000,
-                            value=1000,
-                            step=50,
-                            key="clustering_k"
-                        )
+        with col_up2:
+            k_value = st.number_input(
+                        "Number of representative vertices to retain (KMeans)",
+                        min_value=50,
+                        max_value=5000,
+                        value=1000,
+                        step=50,
+                        key="clustering_k"
+                    )
                 
 
     if st.session_state.get("excel_error"):
