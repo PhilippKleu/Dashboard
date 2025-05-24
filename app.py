@@ -221,19 +221,19 @@ if not st.session_state.get("excel_loaded", False):
                         st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
 
             with col_sub2:
-                k_value = st.number_input(
-                    "Number of representative vertices to retain (KMeans)",
-                    min_value=50,
-                    max_value=5000,
-                    value=1000,
-                    step=50,
-                    key="clustering_k"
-                )
+                
                 if st.button("📊 Apply KMeans to Excel vertices to retain a set number of representatives."):
                     try:
                         df = pd.read_excel(uploaded_file)
                         amount_vertices_requested = int(k_value)
-                
+                        k_value = st.number_input(
+                            "Number of representative vertices to retain (KMeans)",
+                            min_value=50,
+                            max_value=5000,
+                            value=1000,
+                            step=50,
+                            key="clustering_k"
+                        )
                         coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
                         if not coeff_columns:
                             raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
