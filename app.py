@@ -50,10 +50,7 @@ st.markdown("""
         
         
         
-        input[type="text"]:focus {
-            border-color: #888888;
-            outline: none;
-        }
+        
     </style>
 """, unsafe_allow_html=True)
 
