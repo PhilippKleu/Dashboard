@@ -47,9 +47,7 @@ st.markdown("""
         
         
         
-        .stProgress > div {
-            margin-bottom: 2em;
-        }
+        
         .element-container svg {
             background-color: 	#C0C6D2 !important;
         }
