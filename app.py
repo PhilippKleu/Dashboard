@@ -69,7 +69,7 @@ st.markdown("""
             margin-bottom: 2em;
         }
         .element-container svg {
-            background-color: #E0E3E8 !important;
+            background-color: #D0D4DC !important;
         }
         input[type="text"] {
             background-color: #eaeaea;
