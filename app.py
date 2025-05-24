@@ -33,12 +33,7 @@ st.markdown("""
             font-family: 'Segoe UI', sans-serif;
         } 
         
-        .stContainer {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-        }
+        
         .stButton>button {
             background-color: #6e6e6e;
             color: white;
