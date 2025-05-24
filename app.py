@@ -336,7 +336,7 @@ with tab1:
         ratio = st.session_state.get("column_ratio")
         col1, spacer, col2 = st.columns([0.5+ratio, 0.1, 1.5-ratio])
         with col1:
-            st.markdown("### 🧐 Select and Filter Technologies")
+            st.markdown("### Select and Filter Technologies")
             col_select, col_reset = st.columns([4, 1])
             with col_select:
                 selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
@@ -711,7 +711,7 @@ with tab1:
                     )
             
                 st.pyplot(fig_value)
-            st.markdown("### ⏳ Installed Capacities Over Time")
+            st.markdown("### Installed Capacities Over Time")
         
             n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
             n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
@@ -961,7 +961,7 @@ with tab1:
         
     else:
        
-        st.markdown("### 🧐 Select and Filter Technologies")
+        st.markdown("### Select and Filter Technologies")
         
         col_select, col_reset = st.columns([4, 1])
         with col_select:
@@ -1339,7 +1339,7 @@ with tab1:
                 )
         
             st.pyplot(fig_value)
-        st.markdown("### ⏳ Installed Capacities Over Time")
+        st.markdown("### Installed Capacities Over Time")
     
         n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
         n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
