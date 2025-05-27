@@ -442,7 +442,7 @@ with tab1:
         
             filtered_data = selected_data.loc[current_indices] if ordered_techs else pd.DataFrame(index=current_indices)
             # === Konvexe Kombinationen ===
-            with st.sidebar.expander("➕ Convex Combination Settings"):
+            with st.sidebar.expander("Convex Combination Settings"):
                 st.number_input(
                     "Total number of convex combinations",
                     min_value=10,
