@@ -171,7 +171,7 @@ if not st.session_state.get("excel_loaded", False):
 
     if uploaded_file is not None:
         st.subheader("Excel Upload")
-        st.markdown("Choose Option:")
+        
     
         option = st.selectbox(
             "Choose Option:",
