@@ -601,7 +601,7 @@ with tab1:
             
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
                     plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                    st.caption(f"⚡️ Hinweis: Zeige zufällig {st.session_state['max_plot_vertices']} von {len(current_indices)} gültigen Vertices.")
+                    st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
                     plot_indices_val = current_indices
             
@@ -731,7 +731,7 @@ with tab1:
         
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                st.caption(f"⚡️ Hinweis: Zeige zufällig {st.session_state['max_plot_vertices']} von {len(current_indices)} gültigen Vertices.")
+                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 plot_indices = current_indices
         
@@ -1229,7 +1229,7 @@ with tab1:
         
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                st.caption(f"⚡️ Hinweis: Zeige zufällig {st.session_state['max_plot_vertices']} von {len(current_indices)} gültigen Vertices.")
+                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 plot_indices_val = current_indices
         
@@ -1359,7 +1359,7 @@ with tab1:
     
         if len(current_indices) > st.session_state["max_plot_vertices"]:
             plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-            st.caption(f"⚡️ Hinweis: Zeige zufällig {st.session_state['max_plot_vertices']} von {len(current_indices)} gültigen Vertices.")
+            st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
         else:
             plot_indices = current_indices
     
