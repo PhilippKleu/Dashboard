@@ -171,55 +171,65 @@ if not st.session_state.get("excel_loaded", False):
 
     if uploaded_file is not None:
         st.subheader("🔀 Optional Clustering Before Analysis")
-        st.markdown("Choose Option:")
-        if st.button("📥 Read in all vertices from excel file"):
-            try:
-                df = pd.read_excel(uploaded_file)
-                st.session_state["uploaded_excel"] = df.copy()
-                st.session_state["excel_loaded"] = True
-                st.session_state["excel_error"] = None
-                st.rerun()
-            except Exception as e:
-                st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
-       
-        col_up1, col_up2 = st.columns(2)
-        
-        with col_up1:
-            
-            if st.button("📊 Apply KMeans to Excel vertices to retain a set number of representatives."):
+        st.markdown("Wähle eine Option:")
+    
+        option = st.selectbox(
+            "Auswahl der Lademethode:",
+            ["", "📥 Read-in all vertices", "📊 Apply clustering to retain representative vertices"]
+        )
+    
+        if option == "📥 Read-in all vertices":
+            if st.button("Read-in Excel File"):
+                try:
+                    df = pd.read_excel(uploaded_file)
+                    st.session_state["uploaded_excel"] = df.copy()
+                    st.session_state["excel_loaded"] = True
+                    st.session_state["excel_error"] = None
+                    st.rerun()
+                except Exception as e:
+                    st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
+    
+        elif option == "📊 Apply clustering to retain representative vertices":
+            k_value = st.number_input(
+                "Number of representative vertices to retain (KMeans)",
+                min_value=50,
+                max_value=5000,
+                value=1000,
+                step=50,
+                key="clustering_k"
+            )
+    
+            if st.button("Apply Clustering and Read-in"):
                 try:
                     df = pd.read_excel(uploaded_file)
                     amount_vertices_requested = int(k_value)
-                    
+    
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
                     if not coeff_columns:
                         raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
-            
+    
                     last_coeff_col = coeff_columns[-1]
                     last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
                     df_first_part = df.loc[:last_index_with_minus1].copy()
                     df_remaining = df.loc[last_index_with_minus1 + 1:].copy()
-            
+    
                     if amount_vertices_requested >= len(df):
-                        # Fall 1: Zahl größer oder gleich Gesamtanzahl → alles laden
                         st.session_state["uploaded_excel"] = df.copy()
                         st.session_state["excel_loaded"] = True
                         st.session_state["excel_error"] = None
                         st.rerun()
-            
+    
                     elif amount_vertices_requested <= len(df_first_part):
-                        # Fall 2: Zahl kleiner als erste Vertices → nur diese laden
                         st.session_state["uploaded_excel"] = df_first_part.copy()
                         st.session_state["excel_loaded"] = True
                         st.session_state["excel_error"] = None
                         st.rerun()
-            
+    
                     else:
-                        # Fall 3: KMeans nötig
                         cluster_columns = [col for col in df.columns if col.startswith("VALUE_") or col.startswith("MAA_")]
                         df_remaining_unique = df_remaining.drop_duplicates(subset=cluster_columns)
                         remaining_target = amount_vertices_requested - len(df_first_part)
-            
+    
                         if len(df_remaining_unique) > remaining_target:
                             X = df_remaining_unique[cluster_columns].fillna(0).to_numpy()
                             kmeans = KMeans(n_clusters=remaining_target, random_state=42, n_init="auto")
@@ -228,25 +238,15 @@ if not st.session_state.get("excel_loaded", False):
                             df_clustered = df_remaining.loc[representative_indices].copy()
                         else:
                             df_clustered = df_remaining_unique.copy()
-            
+    
                         df_final = pd.concat([df_first_part, df_clustered], ignore_index=True)
                         st.session_state["uploaded_excel"] = df_final.copy()
                         st.session_state["excel_loaded"] = True
                         st.session_state["excel_error"] = None
                         st.rerun()
-            
+    
                 except Exception as e:
-                    st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
-                
-        with col_up2:
-            k_value = st.number_input(
-                        "Number of representative vertices to retain (KMeans)",
-                        min_value=50,
-                        max_value=5000,
-                        value=1000,
-                        step=50,
-                        key="clustering_k"
-                    )
+                     st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
                 
 
     if st.session_state.get("excel_error"):
