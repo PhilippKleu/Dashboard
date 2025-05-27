@@ -302,6 +302,15 @@ with st.sidebar.expander("⚙️ General Settings", expanded=True):
             key="column_ratio"
         )
     st.number_input(
+        "Number of columns in plot layout",
+        min_value=1,
+        max_value=10,
+        step=1,
+        key="n_cols_plots"
+    )
+
+with st.sidebar.expander("📊 Plot Options"):
+    st.number_input(
         "Max vertices to display in plots",
         min_value=1,
         max_value=total_vertices_available,
@@ -309,15 +318,7 @@ with st.sidebar.expander("⚙️ General Settings", expanded=True):
         step=1,
         key="max_plot_vertices"
     )
-
-with st.sidebar.expander("📊 Plot Options"):
-    st.number_input(
-        "Number of columns in plot layout",
-        min_value=1,
-        max_value=10,
-        step=1,
-        key="n_cols_plots"
-    )
+    
     st.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
     st.checkbox("Show original flexibility ranges (red shaded)", value=False, key="show_original_ranges")
 
