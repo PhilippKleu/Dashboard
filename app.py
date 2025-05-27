@@ -170,7 +170,7 @@ if not st.session_state.get("excel_loaded", False):
     uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
 
     if uploaded_file is not None:
-        st.subheader("Excel Upload")
+        st.subheader("Excel Read-In method")
         
     
         option = st.selectbox(
