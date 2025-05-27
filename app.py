@@ -175,7 +175,7 @@ if not st.session_state.get("excel_loaded", False):
     
         option = st.selectbox(
             "Choose Option:",
-            ["📥 Read-in all vertices", "📊 Apply clustering to retain representative vertices"]
+            ["","📥 Read-in all vertices", "📊 Apply clustering to retain representative vertices"]
         )
     
         if option == "📥 Read-in all vertices":
