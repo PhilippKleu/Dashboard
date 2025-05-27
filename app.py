@@ -283,7 +283,7 @@ st.sidebar.markdown("## ⚙️ Settings")
 
 # === Sidebar: Strukturierte Einstellungen ===
 
-with st.sidebar.expander("⚙️ General Settings", expanded=True):
+with st.sidebar.expander("Layout Options", expanded=True):
     
     total_vertices_available = len(tech_data)
     st.radio(
@@ -309,7 +309,7 @@ with st.sidebar.expander("⚙️ General Settings", expanded=True):
         key="n_cols_plots"
     )
 
-with st.sidebar.expander("📊 Plot Options"):
+with st.sidebar.expander("Plot Options"):
     st.number_input(
         "Max vertices to display in plots",
         min_value=1,
@@ -321,11 +321,9 @@ with st.sidebar.expander("📊 Plot Options"):
     
     st.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
     st.checkbox("Show original flexibility ranges (red shaded)", value=False, key="show_original_ranges")
+    st.checkbox("Enable density plots", key="show_density")  
 
-with st.sidebar.expander("🌈 Density Plots"):
-    st.checkbox("Enable density plots", key="show_density")
-
-with st.sidebar.expander("📌 Additional Metrics"):
+with st.sidebar.expander("Additional Metrics"):
     st.radio(
         "Plot type for additional metrics",
         ["Violinplot", "Streudiagramm"],
