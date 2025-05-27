@@ -333,7 +333,7 @@ with st.sidebar.expander("Additional Metrics"):
 
 
 # === Different Tabs ===
-tab1, tab2,tab3 = st.tabs(["📊 Decision Tool", "⚙️ Explanation","📥 Download Results"])
+tab1, tab2,tab3 = st.tabs(["📊 Decision Tool", "❓ Explanation","📥 Download Results"])
 
 # === Auswahl & Filter-UI ===
 with tab1: 
