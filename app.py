@@ -170,12 +170,12 @@ if not st.session_state.get("excel_loaded", False):
     uploaded_file = st.file_uploader("Upload a .xlsx file", type=["xlsx"])
 
     if uploaded_file is not None:
-        st.subheader("🔀 Optional Clustering Before Analysis")
-        st.markdown("Wähle eine Option:")
+        st.subheader("Excel Upload")
+        st.markdown("Choose Option:")
     
         option = st.selectbox(
-            "Auswahl der Lademethode:",
-            ["", "📥 Read-in all vertices", "📊 Apply clustering to retain representative vertices"]
+            "Choose Option:",
+            ["📥 Read-in all vertices", "📊 Apply clustering to retain representative vertices"]
         )
     
         if option == "📥 Read-in all vertices":
