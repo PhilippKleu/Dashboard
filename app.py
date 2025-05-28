@@ -1805,7 +1805,7 @@ with tab2:
    
     st.markdown("This tool allows users to interactively explore, analyze, and export data-driven decisions.")
     st.markdown("""
-    <div style="border: 2px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9;">
+    <div style="border: 2px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 600px; margin: auto;">
         <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png" width="100%">
         <p style="text-align: center; font-style: italic; margin-top: 5px;">Main dashboard interface</p>
     </div>
