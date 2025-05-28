@@ -1797,7 +1797,7 @@ with tab1:
                 st.dataframe(convex_with_all, use_container_width=True)
 
 with tab2:
-    st.title("📘 Explanation")
+    st.markdown("## Layout Overview")
 
     # =====================
     # SECTION: Overview
