@@ -157,38 +157,41 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix, additional_da
 
     for tech in ordered_techs:
         key = f"slider_{tech}"
-        
-        # Spaltenname bestimmen
+
         if tech in technologies:
             col = f"{prefix}{tech}"
-            in_data = col in data.columns
+            source = 'data'
         elif tech in additional_cols:
             col = tech
-            in_data = additional_data is not None and col in additional_data.columns
+            source = 'additional'
         else:
             continue
 
-        # Wenn kein gültiger Sliderwert vorhanden, überspringen
         if key not in session_state or session_state[key] is None:
             continue
 
         min_val, max_val = session_state[key]
 
-        # Filter anwenden, je nachdem ob Spalte im Haupt- oder Additional-Frame ist
-        if in_data:
-            if col in data.columns:
-                filtered_indices = filtered_indices[
-                    (data.loc[filtered_indices, col] >= min_val) &
-                    (data.loc[filtered_indices, col] <= max_val)
-                ]
-            elif additional_data is not None and col in additional_data.columns:
-                filtered_indices = filtered_indices[
-                    (additional_data.loc[filtered_indices, col] >= min_val) &
-                    (additional_data.loc[filtered_indices, col] <= max_val)
-                ]
+        # Debug info
+        st.write(f"🔍 Filtering {tech}: [{min_val}, {max_val}]")
+
+        if source == 'data' and col in data.columns:
+            col_vals = data[col]
+        elif source == 'additional' and additional_data is not None and col in additional_data.columns:
+            col_vals = additional_data[col]
+        else:
+            st.warning(f"⚠️ Column {col} not found for {tech}")
+            continue
+
+        mask = (col_vals >= min_val) & (col_vals <= max_val)
+        matching_indices = col_vals[mask].index
+
+        # Schnittmenge mit vorherigen Filterergebnissen
+        filtered_indices = filtered_indices.intersection(matching_indices)
+
+        st.write(f"✅ {tech}: {len(filtered_indices)} vertices remaining after filter")
 
     filtered_main = data.loc[filtered_indices].reset_index(drop=True)
-    
     if additional_data is not None:
         filtered_additional = additional_data.loc[filtered_indices].reset_index(drop=True)
         return filtered_main, filtered_additional
