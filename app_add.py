@@ -1782,7 +1782,7 @@ with tab1:
     else:
         # === Original-Vertices ===
         st.markdown("#### Original Vertices")
-        filtered_full_data = tech_data.loc[current_indices] if not current_indices.empty else pd.DataFrame()
+        filtered_full_data = vertex_df.loc[current_indices, maa_cols] if not current_indices.empty else pd.DataFrame()
         if filtered_data.empty:
             st.dataframe(filtered_full_data, use_container_width=True)
         else:
