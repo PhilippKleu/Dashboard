@@ -374,10 +374,15 @@ with tab1:
             convex_data = pd.DataFrame()
         
             filtered_cols = [MAA_PREFIX + tech for tech in ordered_techs]
-            selected_data = pd.concat([
-                tech_data[[MAA_PREFIX + t for t in ordered_techs if t in technologies]],
-                vertex_df[[t for t in ordered_techs if t in additional_cols]]
-            ], axis=1) if ordered_techs else pd.DataFrame(index=tech_data.index)
+            selected_tech_cols = []
+            if ordered_techs:
+                if any(t in technologies for t in ordered_techs):
+                    selected_tech_cols.extend([MAA_PREFIX + t for t in ordered_techs if t in technologies])
+                if any(t in additional_cols for t in ordered_techs):
+                    selected_tech_cols.extend([t for t in ordered_techs if t in additional_cols])
+                selected_data = vertex_df[selected_tech_cols]
+            else:
+                selected_data = pd.DataFrame(index=vertex_df.index)
             current_indices = selected_data.index if ordered_techs else tech_data.index
         
             # === Slider-Filter anwenden ===
@@ -1619,7 +1624,7 @@ with tab1:
         )
     
         if selected_metrics:
-            additional_data = vertex_df.loc[tech_data.index, selected_metrics]
+            additional_data = vertex_df.loc[:, selected_metrics]
             filtered_additional = additional_data.loc[current_indices]
     
             if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
