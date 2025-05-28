@@ -1799,8 +1799,7 @@ with tab1:
 with tab2: 
     st.image(
         "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
-        caption="Screenshot der aktuellen Version (Branch: develope)",
-        use_column_width=True
+        caption="Screenshot der aktuellen Version (Branch: develope)"
     )
     """
     ### 🧠 Technology Decision Tool – Overview & Usage
