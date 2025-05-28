@@ -66,6 +66,7 @@ def initialize_session_state():
         'max_plot_vertices': 5,  # optional auch gleich hier
         "column_ratio" : 0.5,
         'layout_mode': "Two-column layout",
+        "n_vertices_convex" : 5
     }
     for key, val in defaults.items():
         if key not in st.session_state:
