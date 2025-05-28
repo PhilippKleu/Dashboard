@@ -147,9 +147,10 @@ def get_additional_columns(df):
     ]
 
 # === Einheitliche Filterlogik für Vertex- oder Konvexdaten ===
-def apply_tech_filters(data, session_state, ordered_techs, prefix):
+def apply_tech_filters(data, session_state, ordered_techs, prefix, additional_data=None):
     if data.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame() if additional_data is not None else pd.DataFrame()
+
     filtered_indices = data.index
     for tech in ordered_techs:
         key = f"slider_{tech}"
@@ -158,7 +159,7 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
         elif tech in additional_cols:
             col = tech
         else:
-            continue  # Unbekannte Variable überspringen
+            continue
 
         if key in session_state and col in data.columns:
             min_val, max_val = session_state[key]
@@ -166,7 +167,18 @@ def apply_tech_filters(data, session_state, ordered_techs, prefix):
                 (data.loc[filtered_indices, col] >= min_val) &
                 (data.loc[filtered_indices, col] <= max_val)
             ]
-    return data.loc[filtered_indices].reset_index(drop=True)
+        elif additional_data is not None and col in additional_data.columns:
+            min_val, max_val = session_state[key]
+            filtered_indices = filtered_indices[
+                (additional_data.loc[filtered_indices, col] >= min_val) &
+                (additional_data.loc[filtered_indices, col] <= max_val)
+            ]
+
+    filtered_main = data.loc[filtered_indices].reset_index(drop=True)
+    if additional_data is not None:
+        filtered_additional = additional_data.loc[filtered_indices].reset_index(drop=True)
+        return filtered_main, filtered_additional
+    return filtered_main
 
 # === Titel & Initialisierung ===
 st.title(" Technology Decision Tool")
@@ -584,11 +596,12 @@ with tab1:
                     st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
         
             # === Konvexe Kombinationen filtern ===
-            filtered_convex_data = apply_tech_filters(
+            filtered_convex_data, filtered_convex_additional = apply_tech_filters(
                 st.session_state['convex_combinations'],
                 st.session_state,
                 ordered_techs,
-                prefix=MAA_PREFIX
+                prefix=MAA_PREFIX,
+                additional_data=st.session_state.get('convex_additional', pd.DataFrame())
             )
         
             filtered_convex_additional = st.session_state.get('convex_additional', pd.DataFrame())
