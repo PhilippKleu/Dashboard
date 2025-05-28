@@ -1802,7 +1802,7 @@ with tab2:
         caption="Screenshot der aktuellen Version (Branch: develope)",
         use_column_width=True
     )
-         """
+        """
     ### 🧠 Technology Decision Tool – Overview & Usage
 
     This tool supports the exploration and evaluation of **technology transition pathways**. It enables interactive filtering, visualization, and generation of new combinations. The main features include:
