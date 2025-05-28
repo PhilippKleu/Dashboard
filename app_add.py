@@ -622,9 +622,7 @@ with tab1:
                 additional_data=st.session_state.get('convex_additional', pd.DataFrame())
             )
         
-            filtered_convex_additional = st.session_state.get('convex_additional', pd.DataFrame())
-            if not filtered_convex_additional.empty and not filtered_convex_data.empty:
-                filtered_convex_additional = filtered_convex_additional.loc[filtered_convex_data.index]
+            
         with col2:
             # === Matplotlib-Style für Diagramme ===
             mpl.rcParams.update({
