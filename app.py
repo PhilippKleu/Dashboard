@@ -1662,9 +1662,15 @@ with tab1:
                 plt.tight_layout()
                 st.pyplot(fig_violin)
                 if st.session_state.get("show_density"):
-                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                    if MAA_PREFIX == "VALUE_":
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                    else:
+                        st.session_state["stored_figures"] = [("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
                 else:
-                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
+                    if MAA_PREFIX == "VALUE_":
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
+                    else:
+                        st.session_state["stored_figures"] = [ ("Installed_Capacities", fig),("Violin", fig_violin)]
             elif st.session_state.get("plot_type_selector") == "Streudiagramm":
                 fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
                 fig_scatter.patch.set_facecolor('#f4f4f4')
@@ -1722,9 +1728,15 @@ with tab1:
     
                 st.pyplot(fig_scatter)
                 if st.session_state.get("show_density"):
-                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Scatter", fig_scatter)]
+                    if MAA_PREFIX == "VALUE_":
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                    else:
+                        st.session_state["stored_figures"] = [("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
                 else:
-                    st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Scatter", fig_scatter)]
+                    if MAA_PREFIX == "VALUE_":
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
+                    else:
+                        st.session_state["stored_figures"] = [ ("Installed_Capacities", fig),("Violin", fig_violin)]
         else:
             st.info("Please select at least one metric to visualize.")
     else:
