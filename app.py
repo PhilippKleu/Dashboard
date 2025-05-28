@@ -368,9 +368,16 @@ with tab1:
             filtered_data = pd.DataFrame()
             convex_data = pd.DataFrame()
         
-            selected_data = tech_data[filtered_cols] if any(var in technologies for var in ordered_vars) else pd.DataFrame(index=tech_data.index)
+            selected_tech_cols = [MAA_PREFIX + var for var in ordered_vars if var in technologies]
+            selected_metric_cols = [var for var in ordered_vars if var in additional_cols]
             
-            current_indices = selected_data.index if ordered_vars else tech_data.index
+            # Stelle sicher, dass beide Arten korrekt geladen werden
+            selected_data = pd.concat([
+                tech_data[selected_tech_cols] if selected_tech_cols else pd.DataFrame(index=tech_data.index),
+                vertex_df[selected_metric_cols] if selected_metric_cols else pd.DataFrame(index=tech_data.index)
+            ], axis=1)
+            
+            current_indices = selected_data.index if not selected_data.empty else tech_data.index
         
             # === Slider-Filter anwenden ===
             for i, var in enumerate(ordered_vars):
