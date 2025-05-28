@@ -1802,15 +1802,15 @@ with tab2:
     # =====================
     # SECTION: Overview
     # =====================
-    with st.expander("📊 Overview – Summary of the tool"):
-        st.markdown("This tool allows users to interactively explore, analyze, and export data-driven decisions.")
-        st.image(
-            "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
-            caption="Main dashboard interface"
-        )
-        st.markdown("""
-        The dashboard includes modules for visual analytics, parameter control, and exporting results.
-        """)
+   
+    st.markdown("This tool allows users to interactively explore, analyze, and export data-driven decisions.")
+    st.image(
+        "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
+        caption="Main dashboard interface"
+    )
+    st.markdown("""
+    The dashboard includes modules for visual analytics, parameter control, and exporting results.
+    """)
     
     # =====================
     # SECTION: Decision Tool
