@@ -1797,66 +1797,70 @@ with tab1:
                 st.dataframe(convex_with_all, use_container_width=True)
 
 with tab2:
-    st.title("Dashboard Tool – Interactive Explanation")
+    st.title("📘 Dashboard Tool – Interactive Explanation")
 
-    # --- Overview ---
-    with st.expander("📊 Layout Overview"):
-        st.markdown("This section provides an overview of the application's purpose and structure.")
+    # =====================
+    # SECTION: Overview
+    # =====================
+    with st.expander("📊 Overview – Summary of the tool"):
+        st.markdown("This tool allows users to interactively explore, analyze, and export data-driven decisions.")
         st.image(
             "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
-            caption="Screenshot der aktuellen Version (Branch: develope)"
+            caption="Main dashboard interface"
         )
         st.markdown("""
-        The tool provides a structured workflow to analyze, visualize, and export relevant metrics and decision-support content based on various inputs.
+        The dashboard includes modules for visual analytics, parameter control, and exporting results.
         """)
     
-    # --- Decision Tool ---
-    with st.expander("🧠 Decision Tool – Interactive control & feedback"):
-        st.markdown("This section dives into the core analytical engine of the dashboard.")
+    # =====================
+    # SECTION: Decision Tool
+    # =====================
+    st.markdown("## 🧠 Decision Tool – Core Functionality")
     
-        # Slider Explanation
-        with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
-            st.markdown("Sliders let you control key parameters of the model in real-time.")
-            #st.image("https://example.com/slider_example.png", caption="Parameter Slider Example", use_column_width=True)
-            st.markdown("Adjusting the sliders immediately updates all visualizations and recommendations.")
+    with st.expander("🎚️ Slider Explanation – ↳ Adjust parameters dynamically"):
+        st.markdown(" Sliders control the model's key variables and trigger live updates.")
+        # Optional image
+        # st.image("https://example.com/slider.png", caption="Slider Example", use_column_width=True)
     
-        # Diagram Explanation
-        with st.expander("📈 Diagram Explanation – Visual output"):
-            st.markdown("Interactive diagrams show the impact of decisions and data distribution.")
-            #st.image("https://example.com/diagram_example.png", caption="Diagram Example", use_column_width=True)
+    with st.expander("📈 Diagram Explanation – ↳ Visual output of changes"):
+        st.markdown(" Diagrams show how different inputs affect results.")
+        # st.image("https://example.com/diagram.png", caption="Diagram Overview", use_column_width=True)
     
-        # Additional Metrics
-        with st.expander("📊 Additional Metrics – Extended analysis"):
-            st.markdown("This section highlights derived metrics that help with decision-making, such as risk scores, delta improvements, or variance.")
+    with st.expander("📊 Additional Metrics – ↳ Extended insights"):
+        st.markdown(" Displays advanced KPIs such as risk indicators and improvement scores.")
     
-        # Tables
-        with st.expander("🧾 Tables – Data views"):
-            st.markdown("Tabular displays show the raw or aggregated data that underlie the visual components.")
+    with st.expander("🧾 Tables – ↳ Detailed data views"):
+        st.markdown(" Tabular formats provide a clear look at raw or processed data.")
     
-        # Sidebar
-        with st.expander("🧰 Sidebar – Control options"):
-            st.markdown("The sidebar allows you to customize the visual output and metric display.")
+    # ---------------------
+    # Sidebar as sub-section
+    # ---------------------
+    st.markdown("### 🧰 Sidebar – Interface Options")
     
-            # Layout Options
-            with st.expander("🧱 Layout Options – Choose display format"):
-                st.markdown("Change how elements are arranged, e.g., grid or stacked layout.")
+    with st.expander("↳ 🧱 Layout Options – Control layout structure"):
+        st.markdown(" Choose between grid, column, or full-width layout settings.")
     
-            # Plot Options
-            with st.expander("📊 Plot Options – Visual tuning"):
-                st.markdown("Toggle between different plot types (e.g., line, bar, area) and tweak appearance.")
+    with st.expander("↳ 📊 Plot Options – Adjust chart types"):
+        st.markdown(" Switch between different plot styles: bar, line, area, etc.")
     
-            # Additional Metrics
-            with st.expander("📌 Additional Metrics – Enable/disable outputs"):
-                st.markdown("Control which derived metrics are visible in the main display.")
+    with st.expander("↳ 📌 Additional Metrics – Toggle metrics visibility"):
+        st.markdown(" Enable or disable optional output metrics shown in the main area.")
     
-            # Convex Combination Settings
-            with st.expander("🧮 Convex Combination Settings – Blend outputs"):
-                st.markdown("Adjust weighting of different models or scenarios using convex combinations.")
+    with st.expander("↳ 🧮 Convex Combination Settings – Weighted model blending"):
+        st.markdown(" Set weights to combine multiple decision paths or model outputs.")
     
-    # --- Export ---
-    with st.expander("📦 Export – Save your results"):
-        st.markdown("Export your analysis as PDF, CSV, or Excel. Choose what to include (plots, tables, raw data).")
-        #st.image("https://example.com/export_example.png", caption="Export Options Example", use_column_width=True)
+    
+    # =====================
+    # SECTION: Export
+    # =====================
+    with st.expander("📦 Export – Save results to file"):
+        st.markdown("""
+        Export your results in various formats:
+        - 📄 PDF Report
+        - 📊 Excel Table
+        - 📁 CSV Raw Data
+        """)
+        # st.image("https://example.com/export.png", caption="Export Options", use_column_width=True)
         
     """
     ### 🧠 Technology Decision Tool – Overview & Usage
