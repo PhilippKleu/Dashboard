@@ -1796,11 +1796,68 @@ with tab1:
                 convex_with_all = pd.concat(frames_to_concat, axis=1)
                 st.dataframe(convex_with_all, use_container_width=True)
 
-with tab2: 
-    st.image(
-        "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
-        caption="Screenshot der aktuellen Version (Branch: develope)"
-    )
+with tab2:
+    st.title("Dashboard Tool – Interactive Explanation")
+
+    # --- Overview ---
+    with st.expander("📊 Layout Overview"):
+        st.markdown("This section provides an overview of the application's purpose and structure.")
+        st.image(
+            "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
+            caption="Screenshot der aktuellen Version (Branch: develope)"
+        )
+        st.markdown("""
+        The tool provides a structured workflow to analyze, visualize, and export relevant metrics and decision-support content based on various inputs.
+        """)
+    
+    # --- Decision Tool ---
+    with st.expander("🧠 Decision Tool – Interactive control & feedback"):
+        st.markdown("This section dives into the core analytical engine of the dashboard.")
+    
+        # Slider Explanation
+        with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
+            st.markdown("Sliders let you control key parameters of the model in real-time.")
+            #st.image("https://example.com/slider_example.png", caption="Parameter Slider Example", use_column_width=True)
+            st.markdown("Adjusting the sliders immediately updates all visualizations and recommendations.")
+    
+        # Diagram Explanation
+        with st.expander("📈 Diagram Explanation – Visual output"):
+            st.markdown("Interactive diagrams show the impact of decisions and data distribution.")
+            #st.image("https://example.com/diagram_example.png", caption="Diagram Example", use_column_width=True)
+    
+        # Additional Metrics
+        with st.expander("📊 Additional Metrics – Extended analysis"):
+            st.markdown("This section highlights derived metrics that help with decision-making, such as risk scores, delta improvements, or variance.")
+    
+        # Tables
+        with st.expander("🧾 Tables – Data views"):
+            st.markdown("Tabular displays show the raw or aggregated data that underlie the visual components.")
+    
+        # Sidebar
+        with st.expander("🧰 Sidebar – Control options"):
+            st.markdown("The sidebar allows you to customize the visual output and metric display.")
+    
+            # Layout Options
+            with st.expander("🧱 Layout Options – Choose display format"):
+                st.markdown("Change how elements are arranged, e.g., grid or stacked layout.")
+    
+            # Plot Options
+            with st.expander("📊 Plot Options – Visual tuning"):
+                st.markdown("Toggle between different plot types (e.g., line, bar, area) and tweak appearance.")
+    
+            # Additional Metrics
+            with st.expander("📌 Additional Metrics – Enable/disable outputs"):
+                st.markdown("Control which derived metrics are visible in the main display.")
+    
+            # Convex Combination Settings
+            with st.expander("🧮 Convex Combination Settings – Blend outputs"):
+                st.markdown("Adjust weighting of different models or scenarios using convex combinations.")
+    
+    # --- Export ---
+    with st.expander("📦 Export – Save your results"):
+        st.markdown("Export your analysis as PDF, CSV, or Excel. Choose what to include (plots, tables, raw data).")
+        #st.image("https://example.com/export_example.png", caption="Export Options Example", use_column_width=True)
+        
     """
     ### 🧠 Technology Decision Tool – Overview & Usage
 
