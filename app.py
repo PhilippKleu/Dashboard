@@ -370,7 +370,7 @@ with tab1:
         
             selected_data = tech_data[filtered_cols] if any(var in technologies for var in ordered_vars) else pd.DataFrame(index=tech_data.index)
             
-            current_indices = selected_data.index if ordered_techs else tech_data.index
+            current_indices = selected_data.index if ordered_vars else tech_data.index
         
             # === Slider-Filter anwenden ===
             for i, var in enumerate(ordered_vars):
