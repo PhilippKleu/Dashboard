@@ -368,8 +368,8 @@ with tab1:
             filtered_data = pd.DataFrame()
             convex_data = pd.DataFrame()
         
-            filtered_cols = [MAA_PREFIX + var for var in ordered_vars if var in technologies]
-            selected_data = tech_data[filtered_cols] if ordered_techs else pd.DataFrame(index=tech_data.index)
+            selected_data = tech_data[filtered_cols] if any(var in technologies for var in ordered_vars) else pd.DataFrame(index=tech_data.index)
+            
             current_indices = selected_data.index if ordered_techs else tech_data.index
         
             # === Slider-Filter anwenden ===
