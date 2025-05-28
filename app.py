@@ -1801,9 +1801,13 @@ with tab2:
     ### 🧠 Technology Decision Tool – Overview & Usage
 
     This tool supports the exploration and evaluation of **technology transition pathways**. It enables interactive filtering, visualization, and generation of new combinations. The main features include:
-
+    
     ---
-
+    st.image(
+        "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Screenshot%202025-05-28%20152925.png",
+        caption="Screenshot der aktuellen Version (Branch: develope)",
+        use_column_width=True
+    )
     #### 🔹 1. Selection & Filtering
     - Choose any number of technologies from the dataset.
     - For each selected technology, a slider will appear to restrict its value range.
