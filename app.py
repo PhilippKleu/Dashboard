@@ -342,6 +342,7 @@ with tab1:
         col1, spacer, col2 = st.columns([0.5+ratio, 0.1, 1.5-ratio])
         with col1:
             st.markdown("### Select and Filter Technologies")
+            st.caption(f"⚡️ **Note:** Proceed sequential.")
             col_select, col_reset = st.columns([4, 1])
             with col_select:
                 selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
