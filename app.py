@@ -147,14 +147,13 @@ def get_additional_columns(df):
     ]
 
 # === Einheitliche Filterlogik für Vertex- oder Konvexdaten ===
-def apply_combined_filters(data, session_state, ordered_vars, techs, prefix):
+def apply_tech_filters(data, session_state, ordered_techs, prefix):
     if data.empty:
         return pd.DataFrame()
-
     filtered_indices = data.index
-    for var in ordered_vars:
-        col = f"{prefix}{var}" if var in techs else var
-        key = f"slider_{var}"
+    for tech in ordered_techs:
+        key = f"slider_{tech}"
+        col = f"{prefix}{tech}"
         if key in session_state and col in data.columns:
             min_val, max_val = session_state[key]
             filtered_indices = filtered_indices[
@@ -346,9 +345,8 @@ with tab1:
             st.caption(f"⚡️ **Note:** Proceed sequential.")
             col_select, col_reset = st.columns([4, 1])
             with col_select:
-                combined_options = technologies + additional_cols
-                selected_vars_raw = st.multiselect("Select variables to be constrained", combined_options)
-                ordered_vars = selected_vars_raw.copy()
+                selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
+                ordered_techs = selected_techs_raw.copy()
         
             with col_reset:
                 st.markdown("""
@@ -368,101 +366,82 @@ with tab1:
             filtered_data = pd.DataFrame()
             convex_data = pd.DataFrame()
         
-            selected_tech_cols = [MAA_PREFIX + var for var in ordered_vars if var in technologies]
-            selected_metric_cols = [var for var in ordered_vars if var in additional_cols]
-            
-            # Stelle sicher, dass beide Arten korrekt geladen werden
-            selected_data = pd.concat([
-                tech_data[selected_tech_cols] if selected_tech_cols else pd.DataFrame(index=tech_data.index),
-                vertex_df[selected_metric_cols] if selected_metric_cols else pd.DataFrame(index=tech_data.index)
-            ], axis=1)
-            
-            current_indices = selected_data.index if not selected_data.empty else tech_data.index
+            filtered_cols = [MAA_PREFIX + tech for tech in ordered_techs]
+            selected_data = tech_data[filtered_cols] if ordered_techs else pd.DataFrame(index=tech_data.index)
+            current_indices = selected_data.index if ordered_techs else tech_data.index
         
             # === Slider-Filter anwenden ===
-            for i, var in enumerate(ordered_vars):
-                if var in technologies:
-                    col = MAA_PREFIX + var
-                elif var in additional_cols:
-                    col = var
-                else:
-                    continue
-            
-                key = f"slider_{var}"
-            
-                # Vorherige Filter anwenden
+            for i, tech in enumerate(ordered_techs):
+                col = MAA_PREFIX + tech
+                key = f"slider_{tech}"
+        
                 partial_indices = selected_data.index
                 for j in range(i):
-                    prev_var = ordered_vars[j]
-                    prev_col = MAA_PREFIX + prev_var if prev_var in technologies else prev_var
-                    prev_range = st.session_state.get(
-                        f"slider_{prev_var}",
-                        (selected_data[prev_col].min(), selected_data[prev_col].max())
-                    )
+                    prev_col = MAA_PREFIX + ordered_techs[j]
+                    prev_range = st.session_state.get(f"slider_{ordered_techs[j]}", (selected_data[prev_col].min(), selected_data[prev_col].max()))
                     partial_indices = partial_indices[
                         (selected_data.loc[partial_indices, prev_col] >= prev_range[0]) &
                         (selected_data.loc[partial_indices, prev_col] <= prev_range[1])
                     ]
-            
+        
                 valid_values = selected_data.loc[partial_indices, col].dropna()
                 overall_min = selected_data[col].min()
                 overall_max = selected_data[col].max()
-            
+        
                 missing_slider = any(
-                    f"slider_{ordered_vars[j]}" not in st.session_state or st.session_state[f"slider_{ordered_vars[j]}"] is None
+                    f"slider_{ordered_techs[j]}" not in st.session_state
+                    or st.session_state[f"slider_{ordered_techs[j]}"] is None
                     for j in range(i)
                 )
-            
                 if missing_slider:
-                    st.info(f"➡️ Please configure previous sliders to activate **{var}**.")
-                    st.slider(f"{var}", float(overall_min), float(overall_max),
+                    st.info(f"➡️ Please configure previous sliders to activate **{tech}**.")
+                    st.slider(f"{tech}", float(overall_min), float(overall_max),
                               (float(overall_min), float(overall_max)), key=key, disabled=True)
                     continue
-            
+        
                 if valid_values.empty:
-                    st.warning(f"⚠️ No valid vertices remaining for {var}.")
-                    st.slider(f"{var}", float(overall_min), float(overall_max),
+                    st.warning(f"⚠️ No valid vertices remaining for {tech}.")
+                    st.slider(f"{tech}", float(overall_min), float(overall_max),
                               (float(overall_min), float(overall_max)), key=key, disabled=True)
                     continue
-            
+        
                 min_val = valid_values.min()
                 max_val = valid_values.max()
                 if min_val == max_val:
-                    st.info(f"**{var}**: No decision flexibility (constant value: {min_val:.2f})")
+                    st.info(f"**{tech}**: No decision flexibility (constant value: {min_val:.2f})")
                     st.session_state[key] = (min_val, max_val)
                     current_indices = current_indices[
                         (selected_data.loc[current_indices, col] >= min_val) &
                         (selected_data.loc[current_indices, col] <= max_val)
                     ]
                     continue
-            
+        
                 default_val = (float(min_val), float(max_val))
                 value = st.session_state.get(key, default_val)
                 value = tuple(map(float, value))
-            
+        
                 slider_value = st.slider(
-                    f"{var}",
+                    f"{tech}",
                     float(overall_min),
                     float(overall_max),
                     value=value,
                     step=0.01
                 )
                 clipped_range = (max(min_val, slider_value[0]), min(max_val, slider_value[1]))
-            
+        
                 if slider_value != clipped_range:
-                    st.warning(f"⚠️ Selection for {var} exceeds valid range ({min_val:.1f}–{max_val:.1f}). Resetting.")
+                    st.warning(f"⚠️ Selection for {tech} exceeds valid range ({min_val:.1f}–{max_val:.1f}). Resetting.")
                     if key in st.session_state:
                         del st.session_state[key]
                     st.rerun()
-            
+        
                 st.session_state[key] = clipped_range
                 current_indices = current_indices[
                     (selected_data.loc[current_indices, col] >= clipped_range[0]) &
                     (selected_data.loc[current_indices, col] <= clipped_range[1])
                 ]
-            
-            # Finales gefiltertes Ergebnis:
-            filtered_data = selected_data.loc[current_indices] if ordered_vars else pd.DataFrame(index=current_indices)
+        
+            filtered_data = selected_data.loc[current_indices] if ordered_techs else pd.DataFrame(index=current_indices)
             # === Konvexe Kombinationen ===
             with st.sidebar.expander("Convex Combination Settings"):
                 st.number_input(
@@ -579,11 +558,10 @@ with tab1:
                     st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
         
             # === Konvexe Kombinationen filtern ===
-            filtered_convex_data = apply_combined_filters(
+            filtered_convex_data = apply_tech_filters(
                 st.session_state['convex_combinations'],
                 st.session_state,
-                ordered_vars,
-                technologies,
+                ordered_techs,
                 prefix=MAA_PREFIX
             )
         
@@ -1206,7 +1184,7 @@ with tab1:
                 st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
     
         # === Konvexe Kombinationen filtern ===
-        filtered_convex_data = apply_combined_filters(
+        filtered_convex_data = apply_tech_filters(
             st.session_state['convex_combinations'],
             st.session_state,
             ordered_techs,
