@@ -344,7 +344,8 @@ with tab1:
             st.caption(f"⚡️ **Note:** Proceed sequential.")
             col_select, col_reset = st.columns([4, 1])
             with col_select:
-                selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
+                all_filter_options = technologies + additional_cols
+                selected_techs_raw = st.multiselect("Select variables to be constrained", all_filter_options)
                 ordered_techs = selected_techs_raw.copy()
         
             with col_reset:
@@ -365,24 +366,32 @@ with tab1:
             filtered_data = pd.DataFrame()
             convex_data = pd.DataFrame()
         
-            filtered_cols = [MAA_PREFIX + tech for tech in ordered_techs]
-            selected_data = tech_data[filtered_cols] if ordered_techs else pd.DataFrame(index=tech_data.index)
-            current_indices = selected_data.index if ordered_techs else tech_data.index
-        
-            # === Slider-Filter anwenden ===
+            # Separiere Technologien und Metriken
+            selected_techs = [t for t in ordered_techs if t in technologies]
+            selected_metrics = [m for m in ordered_techs if m in additional_cols]
+            
+            # Basisdaten vorbereiten
+            selected_data = pd.DataFrame(index=tech_data.index)
+            if selected_techs:
+                selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in selected_techs]]], axis=1)
+            if selected_metrics:
+                selected_data = pd.concat([selected_data, vertex_df.loc[tech_data.index, selected_metrics]], axis=1)
+            current_indices = selected_data.index
             for i, tech in enumerate(ordered_techs):
-                col = MAA_PREFIX + tech
                 key = f"slider_{tech}"
-        
+                col = f"{MAA_PREFIX}{tech}" if tech in technologies else tech
+            
+                # Vorherige Einschränkungen anwenden
                 partial_indices = selected_data.index
                 for j in range(i):
-                    prev_col = MAA_PREFIX + ordered_techs[j]
-                    prev_range = st.session_state.get(f"slider_{ordered_techs[j]}", (selected_data[prev_col].min(), selected_data[prev_col].max()))
+                    prev = ordered_techs[j]
+                    prev_col = f"{MAA_PREFIX}{prev}" if prev in technologies else prev
+                    prev_range = st.session_state.get(f"slider_{prev}", (selected_data[prev_col].min(), selected_data[prev_col].max()))
                     partial_indices = partial_indices[
                         (selected_data.loc[partial_indices, prev_col] >= prev_range[0]) &
                         (selected_data.loc[partial_indices, prev_col] <= prev_range[1])
                     ]
-        
+            
                 valid_values = selected_data.loc[partial_indices, col].dropna()
                 overall_min = selected_data[col].min()
                 overall_max = selected_data[col].max()
@@ -970,7 +979,8 @@ with tab1:
         
         col_select, col_reset = st.columns([4, 1])
         with col_select:
-            selected_techs_raw = st.multiselect("Select variables to be constrained", technologies)
+            all_filter_options = technologies + additional_cols
+            selected_techs_raw = st.multiselect("Select variables to be constrained", all_filter_options)
             ordered_techs = selected_techs_raw.copy()
     
         with col_reset:
@@ -991,24 +1001,32 @@ with tab1:
         filtered_data = pd.DataFrame()
         convex_data = pd.DataFrame()
     
-        filtered_cols = [MAA_PREFIX + tech for tech in ordered_techs]
-        selected_data = tech_data[filtered_cols] if ordered_techs else pd.DataFrame(index=tech_data.index)
-        current_indices = selected_data.index if ordered_techs else tech_data.index
-    
-        # === Slider-Filter anwenden ===
+        # Separiere Technologien und Metriken
+        selected_techs = [t for t in ordered_techs if t in technologies]
+        selected_metrics = [m for m in ordered_techs if m in additional_cols]
+        
+        # Basisdaten vorbereiten
+        selected_data = pd.DataFrame(index=tech_data.index)
+        if selected_techs:
+            selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in selected_techs]]], axis=1)
+        if selected_metrics:
+            selected_data = pd.concat([selected_data, vertex_df.loc[tech_data.index, selected_metrics]], axis=1)
+        current_indices = selected_data.index
         for i, tech in enumerate(ordered_techs):
-            col = MAA_PREFIX + tech
             key = f"slider_{tech}"
-    
+            col = f"{MAA_PREFIX}{tech}" if tech in technologies else tech
+        
+            # Vorherige Einschränkungen anwenden
             partial_indices = selected_data.index
             for j in range(i):
-                prev_col = MAA_PREFIX + ordered_techs[j]
-                prev_range = st.session_state.get(f"slider_{ordered_techs[j]}", (selected_data[prev_col].min(), selected_data[prev_col].max()))
+                prev = ordered_techs[j]
+                prev_col = f"{MAA_PREFIX}{prev}" if prev in technologies else prev
+                prev_range = st.session_state.get(f"slider_{prev}", (selected_data[prev_col].min(), selected_data[prev_col].max()))
                 partial_indices = partial_indices[
                     (selected_data.loc[partial_indices, prev_col] >= prev_range[0]) &
                     (selected_data.loc[partial_indices, prev_col] <= prev_range[1])
                 ]
-    
+        
             valid_values = selected_data.loc[partial_indices, col].dropna()
             overall_min = selected_data[col].min()
             overall_max = selected_data[col].max()
