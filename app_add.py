@@ -148,7 +148,10 @@ def get_additional_columns(df):
 
 # === Einheitliche Filterlogik für Vertex- oder Konvexdaten ===
 def apply_tech_filters(data, data_additional, session_state, ordered_techs, prefix):
+    import streamlit as st
+
     if data.empty:
+        st.write("Data is empty.")
         return pd.DataFrame()
 
     # Sicherstellen, dass beide DataFrames die gleiche Indizierung haben
@@ -166,19 +169,24 @@ def apply_tech_filters(data, data_additional, session_state, ordered_techs, pref
         key = f"slider_{tech}"
         col_data = f"{prefix}{tech}"
         col_additional = tech
-    
+
         if key in session_state:
             min_val, max_val = session_state[key]
-    
+            st.write(f"\nFiltering for tech: {tech}, Range: ({min_val}, {max_val})")
+
             if col_data in data.columns:
                 mask = (data.loc[filtered_indices, col_data] >= min_val) & \
                        (data.loc[filtered_indices, col_data] <= max_val)
                 filtered_indices = filtered_indices[mask]
-    
+                st.write(f"Filtered column in data: {col_data}")
+                st.write(f"Remaining indices: {list(filtered_indices)}")
+
             elif col_additional in data_additional.columns:
                 mask = (data_additional.loc[filtered_indices, col_additional] >= min_val) & \
                        (data_additional.loc[filtered_indices, col_additional] <= max_val)
                 filtered_indices = filtered_indices[mask]
+                st.write(f"Filtered column in data_additional: {col_additional}")
+                st.write(f"Remaining indices: {list(filtered_indices)}")
 
     return data.loc[filtered_indices].reset_index(drop=True)
 
