@@ -1775,14 +1775,14 @@ with tab1:
                 st.pyplot(fig_scatter)
                 if st.session_state.get("show_density"):
                     if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("scatter", fig_scatter)]
                     else:
-                        st.session_state["stored_figures"] = [("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
+                        st.session_state["stored_figures"] = [("Installed_Capacities", fig),("Density", fig_dichte),("scatter", fig_scatter)]
                 else:
                     if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
+                        st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("scatter", fig_scatter)]
                     else:
-                        st.session_state["stored_figures"] = [ ("Installed_Capacities", fig),("Violin", fig_violin)]
+                        st.session_state["stored_figures"] = [ ("Installed_Capacities", fig),("scatter", fig_scatter)]
         else:
             st.info("Please select at least one metric to visualize.")
     else:
