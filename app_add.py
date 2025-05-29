@@ -152,7 +152,7 @@ def apply_tech_filters(data, data_additional, session_state, ordered_techs, pref
 
     if data.empty:
         st.write("Data is empty.")
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
 
     # Sicherstellen, dass beide DataFrames die gleiche Indizierung haben
     data = data.copy()
@@ -200,7 +200,7 @@ def apply_tech_filters(data, data_additional, session_state, ordered_techs, pref
                 st.write("Filtered values:")
                 st.dataframe(col_values.loc[filtered_indices])
 
-    return data.loc[filtered_indices].reset_index(drop=True)
+    return data.loc[filtered_indices].reset_index(drop=True), data_additional.loc[filtered_indices].reset_index(drop=True)
 
 # === Titel & Initialisierung ===
 st.title(" Technology Decision Tool")
@@ -606,7 +606,7 @@ with tab1:
                     st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
         
             # === Konvexe Kombinationen filtern ===
-            filtered_convex_data = apply_tech_filters(
+            filtered_convex_data,filtered_convex_additional = apply_tech_filters(
                 st.session_state['convex_combinations'],
                 st.session_state['convex_additional'],
                 st.session_state,
@@ -614,9 +614,6 @@ with tab1:
                 prefix=MAA_PREFIX
             )
         
-            filtered_convex_additional = st.session_state.get('convex_additional', pd.DataFrame())
-            if not filtered_convex_additional.empty and not filtered_convex_data.empty:
-                filtered_convex_additional = filtered_convex_additional.loc[filtered_convex_data.index]
         with col2:
             # === Matplotlib-Style für Diagramme ===
             mpl.rcParams.update({
@@ -1242,7 +1239,7 @@ with tab1:
                 st.sidebar.info(f"**Currently {n_convex} convex combination(s)** generated.")
     
         # === Konvexe Kombinationen filtern ===
-        filtered_convex_data = apply_tech_filters(
+        filtered_convex_data,filtered_convex_additional = apply_tech_filters(
             st.session_state['convex_combinations'],
             st.session_state['convex_additional'],
             st.session_state,
@@ -1250,9 +1247,7 @@ with tab1:
             prefix=MAA_PREFIX
         )
     
-        filtered_convex_additional = st.session_state.get('convex_additional', pd.DataFrame())
-        if not filtered_convex_additional.empty and not filtered_convex_data.empty:
-            filtered_convex_additional = filtered_convex_additional.loc[filtered_convex_data.index]
+        
         st.divider()
         # === Matplotlib-Style für Diagramme ===
         mpl.rcParams.update({
