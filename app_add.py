@@ -166,21 +166,19 @@ def apply_tech_filters(data, data_additional, session_state, ordered_techs, pref
         key = f"slider_{tech}"
         col_data = f"{prefix}{tech}"
         col_additional = tech
-
+    
         if key in session_state:
             min_val, max_val = session_state[key]
-
+    
             if col_data in data.columns:
-                filtered_indices = filtered_indices[
-                    (data.loc[filtered_indices, col_data] >= min_val) &
-                    (data.loc[filtered_indices, col_data] <= max_val)
-                ]
-
+                mask = (data.loc[filtered_indices, col_data] >= min_val) & \
+                       (data.loc[filtered_indices, col_data] <= max_val)
+                filtered_indices = filtered_indices[mask]
+    
             elif col_additional in data_additional.columns:
-                filtered_indices = filtered_indices[
-                    (data_additional.loc[filtered_indices, col_additional] >= min_val) &
-                    (data_additional.loc[filtered_indices, col_additional] <= max_val)
-                ]
+                mask = (data_additional.loc[filtered_indices, col_additional] >= min_val) & \
+                       (data_additional.loc[filtered_indices, col_additional] <= max_val)
+                filtered_indices = filtered_indices[mask]
 
     return data.loc[filtered_indices].reset_index(drop=True)
 
