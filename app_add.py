@@ -147,19 +147,32 @@ def get_additional_columns(df):
     ]
 
 # === Einheitliche Filterlogik für Vertex- oder Konvexdaten ===
-def apply_tech_filters(data, session_state, ordered_techs, prefix):
+def apply_tech_filters(data, data_additional, session_state, ordered_techs, prefix):
     if data.empty:
         return pd.DataFrame()
+
     filtered_indices = data.index
+
     for tech in ordered_techs:
         key = f"slider_{tech}"
-        col = f"{prefix}{tech}"
-        if key in session_state and col in data.columns:
+        col_data = f"{prefix}{tech}"
+        col_additional = tech
+
+        if key in session_state:
             min_val, max_val = session_state[key]
-            filtered_indices = filtered_indices[
-                (data.loc[filtered_indices, col] >= min_val) &
-                (data.loc[filtered_indices, col] <= max_val)
-            ]
+
+            if col_data in data.columns:
+                filtered_indices = filtered_indices[
+                    (data.loc[filtered_indices, col_data] >= min_val) &
+                    (data.loc[filtered_indices, col_data] <= max_val)
+                ]
+
+            elif col_additional in data_additional.columns:
+                filtered_indices = filtered_indices[
+                    (data_additional.loc[filtered_indices, col_additional] >= min_val) &
+                    (data_additional.loc[filtered_indices, col_additional] <= max_val)
+                ]
+
     return data.loc[filtered_indices].reset_index(drop=True)
 
 # === Titel & Initialisierung ===
@@ -568,6 +581,7 @@ with tab1:
             # === Konvexe Kombinationen filtern ===
             filtered_convex_data = apply_tech_filters(
                 st.session_state['convex_combinations'],
+                st.session_state['convex_additional'],
                 st.session_state,
                 ordered_techs,
                 prefix=MAA_PREFIX
@@ -1203,6 +1217,7 @@ with tab1:
         # === Konvexe Kombinationen filtern ===
         filtered_convex_data = apply_tech_filters(
             st.session_state['convex_combinations'],
+            st.session_state['convex_additional'],
             st.session_state,
             ordered_techs,
             prefix=MAA_PREFIX
