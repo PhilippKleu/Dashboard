@@ -151,6 +151,15 @@ def apply_tech_filters(data, data_additional, session_state, ordered_techs, pref
     if data.empty:
         return pd.DataFrame()
 
+    # Sicherstellen, dass beide DataFrames die gleiche Indizierung haben
+    data = data.copy()
+    data_additional = data_additional.copy()
+    data.index = data.index.astype(str)
+    data_additional.index = data_additional.index.astype(str)
+    common_indices = data.index.intersection(data_additional.index)
+    data = data.loc[common_indices]
+    data_additional = data_additional.loc[common_indices]
+
     filtered_indices = data.index
 
     for tech in ordered_techs:
