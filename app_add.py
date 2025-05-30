@@ -1889,11 +1889,27 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
                 """, unsafe_allow_html=True)
     
     with st.expander("📈 Diagram Explanation – Visual output of changes"):
-        st.markdown("""
-        The generated plots illustrate how selected technologies evolve over time.  
-        They reflect capacity trends, decision flexibility, and convex combinations based on the user's input.  
-        These visuals provide direct insight into model behavior and scenario dynamics.
-        """)
+        col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+        The time series plots display how the currently valid data (vertices) evolve over time for each selected variable. Blue lines represent individual valid vertices, reflecting the outcome of all active filters.
+        
+        The shaded blue area indicates the full remaining range (min to max) of all valid data points at each point in time. This helps users understand the spread and variability of the current solution space.
+        
+        Additional plot settings can be customized via the sidebar:
+        - **Plot layout** (number of columns)
+        - **Show original range** (in red): displays the full data range before filtering
+        - **Show convex combinations**: overlays the convex results in red, if generated
+        
+        These options help to tailor the visual analysis based on user needs and enable comparison between filtered and unfiltered data distributions.
+            """)
+        with col2:
+            st.markdown("""
+                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                    <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/installed_cap.png" width="100%">
+                    <p style="text-align: center; font-style: italic; margin-top: 5px;">Slider</p>
+                </div>
+                """, unsafe_allow_html=True)
     
     with st.expander("📊 Additional Metrics – Extended insights"):
         st.markdown("""
