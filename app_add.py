@@ -2022,18 +2022,6 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             """, unsafe_allow_html=True)
     
     
-    # =====================
-    # SECTION: Export
-    # =====================
-    with st.expander("📦 Export – Save results to file"):
-        st.markdown("""
-        Export your results in various formats:
-        - 📄 PDF Report
-        - 📊 Excel Table
-        - 📁 CSV Raw Data
-        """)
-        # st.image("https://example.com/export.png", caption="Export Options", use_column_width=True)
-        
 with tab3:
     # === Export Everything in One ZIP (Plots + Tables) ===
     st.subheader("📦 Export All Results (Plots + Tables) as ZIP")
