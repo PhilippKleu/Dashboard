@@ -1843,7 +1843,7 @@ with tab2:
     # SECTION: Overview
     # =====================
    
-     st.markdown("
+    st.markdown("
         This tool consists of a structured interface with **three main tabs**:
         - **Decision Tool**: Core interactive analysis and filtering
         - **Explanation**: This overview section explaining all components
