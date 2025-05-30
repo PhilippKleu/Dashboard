@@ -1847,7 +1847,6 @@ with tab2:
         - **Decision Tool**: Core interactive analysis and filtering
         - **Explanation**: This overview section explaining all components
         - **Download Results**: Export plots and tables
-    
         On the **left side**, a collapsible **sidebar** provides configuration options for layout, plot controls, additional metrics, and convex combination settings. The **main content area** adapts dynamically based on user interaction and input selections.
         """)
     st.markdown("""
