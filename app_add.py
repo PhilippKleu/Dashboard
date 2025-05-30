@@ -1913,11 +1913,24 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
                 """, unsafe_allow_html=True)
     
     with st.expander("📊 Additional Metrics – Extended insights"):
-        st.markdown("""
-        This section displays advanced key performance indicators (KPIs).  
-        These include environmental scores, cost measures, and other derived metrics that offer additional decision support.  
-        The plots can be toggled between violin or scatter views for visual comparison.
-        """)
+        col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+                This section visualizes additional numerical metrics that are not part of the main time series data. Users can select which of these metrics to display from a list of available options.
+                
+                In the sidebar, the following display settings can be adjusted:
+                - **Plot type**: choose between a **violin plot** (distribution view) or a **scatter plot** (individual points)
+                - **Show convex combinations**: toggle whether convex results are included in the visualizations
+                
+                These plots offer deeper insights into key performance indicators (KPIs), such as costs, emissions, or other evaluation criteria, and support comparative analysis between original vertices and generated combinations.
+                    """)
+        with col2:
+            st.markdown("""
+                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                    <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/add_metrics.png" width="100%">
+                    <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
+                </div>
+                """, unsafe_allow_html=True)
     
     with st.expander("🧾 Tables – Detailed data views"):
         st.markdown("""
