@@ -1947,7 +1947,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     st.markdown("### Sidebar – Interface Options")
     
     with st.expander(" 🧱 Layout Options – Control layout structure"):
-    col1, col2 = st.columns([1, 1.5])
+        col1, col2 = st.columns([1, 1.5])
         with col1:
             st.markdown("""
             The layout can be switched between **full-width** and **two-column mode**.  
