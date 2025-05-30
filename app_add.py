@@ -1933,10 +1933,13 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     
     with st.expander("🧾 Tables – Detailed data views"):
         st.markdown("""
-        All filtered or generated data can be reviewed in tabular format.  
-        This includes both original decision vertices and convex combinations.  
-        The tables support transparency and are exportable for further offline analysis.
-        """)
+            In the tables section, the currently valid data is presented in structured form. The output is divided into two parts:
+            
+            - **Original vertices**: These are the filtered data points based on all active slider constraints.
+            - **Convex combinations**: If generated, these show weighted combinations of the original vertices.
+            
+            This separation ensures transparency between original solutions and aggregated results. All table data reflects the current filtering state and can be exported for further analysis.
+                """)
     
     # ---------------------
     # Sidebar as sub-section
