@@ -1865,11 +1865,15 @@ with tab2:
     st.markdown("## Decision Tool – Core Functionality")
     
     with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
-        st.markdown("""
-        The sliders allow users to define ranges for specific technologies or metrics.  
-        Adjusting these ranges dynamically filters the available decision vertices in real time.  
-        This enables step-by-step narrowing down of viable transition pathways.
-        """)
+        col1, col2 = st.columns([2, 1])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
+        with col1:
+            st.markdown("""
+            The sliders allow users to define ranges for specific technologies or metrics.  
+            Adjusting these ranges dynamically filters the available decision vertices in real time.  
+            This enables step-by-step narrowing down of viable transition pathways.
+            """)
+        with col2:
+            st.image("https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png", caption="Slider component", use_column_width=True)
     
     with st.expander("📈 Diagram Explanation – Visual output of changes"):
         st.markdown("""
