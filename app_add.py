@@ -1867,7 +1867,7 @@ with tab2:
     st.markdown("## Decision Tool – Core Functionality")
     
     with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
-        col1, col2 = st.columns([2, 1])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
+        col1, col2 = st.columns([1, 2])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
         with col1:
             st.markdown("""
             The sliders allow users to define ranges for specific technologies or metrics.  
@@ -1876,7 +1876,7 @@ with tab2:
             """)
         with col2:
             st.markdown("""
-                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
+                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 500px; margin: auto;">
                     <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Slider.png" width="100%">
                     <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
                 </div>
