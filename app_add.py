@@ -336,6 +336,7 @@ with st.sidebar.expander("Layout Options", expanded=True):
         "Number of columns in plot layout",
         min_value=1,
         max_value=10,
+        value=3,
         step=1,
         key="n_cols_plots"
     )
