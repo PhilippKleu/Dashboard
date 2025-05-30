@@ -1898,6 +1898,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
         
         Additional plot settings can be customized via the sidebar:
         - **Plot layout** (number of columns)
+        - **Maximum number of vertices displayed**: limits the number of individual lines in the plot for readability
         - **Show original range** (in red): displays the full data range before filtering
         - **Show convex combinations**: overlays the convex results in red, if generated
         
@@ -1907,7 +1908,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             st.markdown("""
                 <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
                     <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Installed_cap.png" width="100%">
-                    <p style="text-align: center; font-style: italic; margin-top: 5px;">Slider</p>
+                    <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
                 </div>
                 """, unsafe_allow_html=True)
     
