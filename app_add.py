@@ -1843,14 +1843,14 @@ with tab2:
     # SECTION: Overview
     # =====================
    
-     st.markdown("""
-    This tool consists of a structured interface with **three main tabs**:
-    - **Decision Tool**: Core interactive analysis and filtering
-    - **Explanation**: This overview section explaining all components
-    - **Download Results**: Export plots and tables
-
-    On the **left side**, a collapsible **sidebar** provides configuration options for layout, plot controls, additional metrics, and convex combination settings. The **main content area** adapts dynamically based on user interaction and input selections.
-    """)
+     st.markdown("
+        This tool consists of a structured interface with **three main tabs**:
+        - **Decision Tool**: Core interactive analysis and filtering
+        - **Explanation**: This overview section explaining all components
+        - **Download Results**: Export plots and tables
+    
+        On the **left side**, a collapsible **sidebar** provides configuration options for layout, plot controls, additional metrics, and convex combination settings. The **main content area** adapts dynamically based on user interaction and input selections.
+        ")
     st.markdown("""
     <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
         <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png" width="100%">
