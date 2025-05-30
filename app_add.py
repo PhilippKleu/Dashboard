@@ -1842,7 +1842,7 @@ with tab2:
     # =====================
     # SECTION: Overview
     # =====================
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 3])
     with col1:
         st.markdown("""
         This tool consists of a structured interface with **three main tabs**:
