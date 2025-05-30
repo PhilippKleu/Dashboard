@@ -1940,11 +1940,11 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             
             This separation ensures transparency between original solutions and aggregated results. All table data reflects the current filtering state and can be exported for further analysis.
                 """)
-    
+    st.divider()
     # ---------------------
     # Sidebar as sub-section
     # ---------------------
-    st.markdown("### Sidebar – Interface Options")
+    st.markdown("### Sidebar Options")
     
     with st.expander(" 🧱 Layout Options – Control layout structure"):
         col1, col2 = st.columns([1, 1.5])
