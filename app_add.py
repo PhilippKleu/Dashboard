@@ -1956,7 +1956,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             """)
         with col2:
             st.markdown("""
-            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 200px; margin: auto;">
                 <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Layout.png" width="100%">
                 <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
             </div>
@@ -1976,7 +1976,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             """)
         with col2:
             st.markdown("""
-            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 200px; margin: auto;">
                 <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Plot.png" width="100%">
                 <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
             </div>
@@ -1995,7 +1995,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             """)
         with col2:
             st.markdown("""
-            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 200px; margin: auto;">
                 <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/add_metrics2.png" width="100%">
                 <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
             </div>
@@ -2015,7 +2015,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             """)
         with col2:
             st.markdown("""
-            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 200px; margin: auto;">
                 <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Konvex.png" width="100%">
                 <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
             </div>
