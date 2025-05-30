@@ -1867,13 +1867,13 @@ with tab2:
     st.markdown("## Decision Tool – Core Functionality")
     
     with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
-        col1, col2 = st.columns([1, 2])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
+        col1, col2 = st.columns([1, 1.5])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
         with col1:
             
             st.markdown("""
 The filtering system allows users to narrow down the dataset by selecting variables and adjusting value ranges using sliders. To start, a user chooses a technology or metric. For the selected variable, a slider becomes available, letting the user limit its value range.
 
-Filtering is applied sequentially, meaning that each newly added constraint is only applied to the already filtered subset. This ensures consistent and logically ordered restriction of the decision space. For example, limiting one technology first affects all subsequent selections.
+Filtering is applied sequentially, meaning that each newly added constraint is only applied to the already filtered subset. This ensures consistent and logically ordered restriction of the dataset. For example, limiting one technology first affects all subsequent selections.
 
 Only those vertices that fulfill all active constraints remain valid. These filtered vertices are automatically reflected in the time series plots, additional metric charts, and data tables. This provides a direct visual and tabular update based on the current selection.
 
@@ -1884,7 +1884,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             st.markdown("""
                 <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 500px; margin: auto;">
                     <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Slider.png" width="100%">
-                    <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
+                    <p style="text-align: center; font-style: italic; margin-top: 5px;">Slider</p>
                 </div>
                 """, unsafe_allow_html=True)
     
