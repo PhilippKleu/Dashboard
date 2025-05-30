@@ -1922,7 +1922,6 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
                 - **Plot type**: choose between a **violin plot** (distribution view) or a **scatter plot** (individual points)
                 - **Show convex combinations**: toggle whether convex results are included in the visualizations
                 
-                These plots offer deeper insights into key performance indicators (KPIs), such as costs, emissions, or other evaluation criteria, and support comparative analysis between original vertices and generated combinations.
                     """)
         with col2:
             st.markdown("""
