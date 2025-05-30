@@ -1842,22 +1842,24 @@ with tab2:
     # =====================
     # SECTION: Overview
     # =====================
-   
-    st.markdown("""
-    This tool consists of a structured interface with **three main tabs**:
-    
-    - **Decision Tool**: Core interactive analysis and filtering of read in excel file  
-    - **Explanation**: This overview section explains all components  
-    - **Download Results**: Export diagrams and tables as zip file
-    
-    On the **left side**, a collapsible **sidebar** provides configuration options for layout, plot controls, additional metrics, and convex combination settings.
-    """)
-    st.markdown("""
-    <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
-        <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png" width="100%">
-        <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown("""
+        This tool consists of a structured interface with **three main tabs**:
+        
+        - **Decision Tool**: Core interactive analysis and filtering of read in excel file  
+        - **Explanation**: This overview section explains all components  
+        - **Download Results**: Export diagrams and tables as zip file
+        
+        On the **left side**, a collapsible **sidebar** provides configuration options for layout, plot controls, additional metrics, and convex combination settings.
+        """)
+    with col2:
+        st.markdown("""
+        <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
+            <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png" width="100%">
+            <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
+        </div>
+        """, unsafe_allow_html=True)
         
     # =====================
     # SECTION: Decision Tool
@@ -1873,7 +1875,7 @@ with tab2:
             This enables step-by-step narrowing down of viable transition pathways.
             """)
         with col2:
-            st.image("https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png", caption="Slider component", use_column_width=True)
+            st.image("https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png", caption="Slider component")
     
     with st.expander("📈 Diagram Explanation – Visual output of changes"):
         st.markdown("""
