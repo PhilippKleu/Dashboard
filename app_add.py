@@ -1792,14 +1792,7 @@ with tab1:
     # === Daten als Tabelle anzeigen ===
     st.divider()
     st.markdown("### Show remaining vertices as table")
-    '''
-    if filtered_data.empty and (
-        st.session_state['convex_combinations'].empty 
-        or not st.session_state['show_convex']
-    ):
-        st.info("No valid vertices available for the current selection.")
-    else:
-    '''
+   
     # === Original-Vertices ===
     st.markdown("#### Original Vertices")
     filtered_full_data = tech_data.loc[current_indices] if not current_indices.empty else pd.DataFrame()
@@ -1910,68 +1903,6 @@ with tab2:
         """)
         # st.image("https://example.com/export.png", caption="Export Options", use_column_width=True)
         
-    """
-    ### 🧠 Technology Decision Tool – Overview & Usage
-
-    This tool supports the exploration and evaluation of **technology transition pathways**. It enables interactive filtering, visualization, and generation of new combinations. The main features include:
-    
-    ---
-    
-    #### 🔹 1. Selection & Filtering
-    - Choose any number of technologies from the dataset.
-    - For each selected technology, a slider will appear to restrict its value range.
-    - Filtering is **sequential**: adjust one slider at a time in order. Avoid changing earlier sliders later.
-    - Result: only the vertices that meet **all constraints** are used for analysis.
-
-    ---
-
-    #### 🔹 2. Convex Combinations
-    - Generate **new in-between scenarios** based on valid vertices.
-    - These are created as convex combinations — weighted averages of selected vertices.
-    - Adjustable settings:
-        - Number of total combinations
-        - Number of vertices per combination
-        - Dirichlet alpha (controls weight spread)
-    - Installed capacities and additional metrics are also interpolated.
-
-    ---
-
-    #### 🔹 3. Visualization
-    - Time series plots show installed capacities over the years for each technology.
-    - Comparison between:
-        - Original valid vertices
-        - Convex combinations (if enabled)
-        - Original min/max value ranges (optional)
-    - Additionally: **density plots (KDE)** to reveal typical development patterns.
-
-    ---
-
-    #### 🔹 4. Additional Metrics
-    - Select and visualize additional numeric indicators (e.g. costs, emissions).
-    - A scatterplot compares:
-        - Original filtered vertices
-        - Convex combinations (optional)
-        - Global value range (min/max band)
-
-    ---
-
-    #### 🔹 5. Results Table
-    - Full display of remaining valid vertices:
-        - Selected technology values
-        - Installed capacities
-        - Additional metrics
-    - Convex combinations are listed separately (if activated).
-
-    ---
-
-    #### 📌 Notes
-    - Filtering is strictly **step-by-step** – apply constraints in order.
-    - Empty plots usually indicate over-filtering or missing data.
-    - The **maximum number of displayed vertices** can be limited in the sidebar for performance.
-
-    ---
-    
-    """
 with tab3:
     # === Export Everything in One ZIP (Plots + Tables) ===
     st.subheader("📦 Export All Results (Plots + Tables) as ZIP")
