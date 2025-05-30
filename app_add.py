@@ -1882,7 +1882,7 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
             
         with col2:
             st.markdown("""
-                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 500px; margin: auto;">
+                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 600px; margin: auto;">
                     <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Slider.png" width="100%">
                     <p style="text-align: center; font-style: italic; margin-top: 5px;">Slider</p>
                 </div>
