@@ -1877,7 +1877,7 @@ Filtering is applied sequentially, meaning that each newly added constraint is o
 
 Only those vertices that fulfill all active constraints remain valid. These filtered vertices are automatically reflected in the time series plots, additional metric charts, and data tables. This provides a direct visual and tabular update based on the current selection.
 
-At any point, the user can reset all applied filters using the “Reset” button. This clears all sliders and restores the original unfiltered dataset, allowing for a fresh start.
+At any point, the user can reset all applied filters using the Reset-button. This clears all sliders and restores the original unfiltered dataset, allowing for a fresh start.
     """)
             """)
         with col2:
