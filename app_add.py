@@ -1869,7 +1869,7 @@ with tab2:
     with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
         col1, col2 = st.columns([1, 2])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
         with col1:
-            st.markdown("""
+            
             st.markdown("""
 The filtering system allows users to narrow down the dataset by selecting variables and adjusting value ranges using sliders. To start, a user chooses a technology or metric. For the selected variable, a slider becomes available, letting the user limit its value range.
 
@@ -1879,7 +1879,7 @@ Only those vertices that fulfill all active constraints remain valid. These filt
 
 At any point, the user can reset all applied filters using the Reset-button. This clears all sliders and restores the original unfiltered dataset, allowing for a fresh start.
     """)
-            """)
+            
         with col2:
             st.markdown("""
                 <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 500px; margin: auto;">
