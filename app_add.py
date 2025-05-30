@@ -1947,44 +1947,79 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     st.markdown("### Sidebar – Interface Options")
     
     with st.expander(" 🧱 Layout Options – Control layout structure"):
-        st.markdown("""
-        The layout can be switched between **full-width** and **two-column mode**.  
-        If two-column mode is selected, the **relative width of both columns** can be adjusted using a slider.  
-        Additionally, users can define how many plots are displayed **side by side** using a column count setting.
-        """)
+    col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+            The layout can be switched between **full-width** and **two-column mode**.  
+            If two-column mode is selected, the **relative width of both columns** can be adjusted using a slider.  
+            Additionally, users can define how many plots are displayed **side by side** using a column count setting.
+            """)
+        with col2:
+            st.markdown("""
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Layout.png" width="100%">
+                <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
+            </div>
+            """, unsafe_allow_html=True)
     
     with st.expander(" 📊 Plot Options – Adjust chart types"):
-        st.markdown("""
-        In this section, several visualization settings can be configured:
+        col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+            In this section, several visualization settings can be configured:
     
-        - **Number of vertices to display** in plots can be set.  
-          _For better performance, it is recommended to show fewer vertices, especially with large datasets._
-        - Toggle the **display of convex combinations** in the plots.
-        - Enable or disable the **original (unfiltered) data range**, shown as a red shaded area for reference.
-        - Toggle the **density plots**, which show the distribution of values over time using contour shading.
-        """)
+            - **Number of vertices to display** in plots can be set.  
+              _For better performance, it is recommended to show fewer vertices, especially with large datasets._
+            - Toggle the **display of convex combinations** in the plots.
+            - Enable or disable the **original (unfiltered) data range**, shown as a red shaded area for reference.
+            - Toggle the **density plots**, which show the distribution of values over time using contour shading.
+            """)
+        with col2:
+            st.markdown("""
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Plot.png" width="100%">
+                <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
+            </div>
+            """, unsafe_allow_html=True)
     
     with st.expander(" 📌 Additional Metrics – Toggle metrics visibility"):
-        st.markdown("""
-        This section allows you to select how additional performance metrics are displayed.  
-        You can choose between:
-        
-        - **Violin plots** (to show value distribution)  
-        - **Scatter plots** (to view individual data points)
+        col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+            This section visualizes additional numerical metrics that are not part of the main time series data.  
+            Users can select which of these metrics to display from a list of available options.
     
-        The plots will include original vertices and optionally convex combinations, depending on the sidebar settings.
-        """)
+            In the sidebar, the following display settings can be adjusted:
+            - **Plot type**: choose between a **violin plot** (distribution view) or a **scatter plot** (individual points)
+            - **Show convex combinations**: toggle whether convex results are included in the visualizations
+            """)
+        with col2:
+            st.markdown("""
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/add_metrics2.png" width="100%">
+                <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
+            </div>
+            """, unsafe_allow_html=True)
     
     with st.expander(" 🧮 Convex Combination Settings – Weighted model blending"):
-        st.markdown("""
-        Here you can configure the generation of convex combinations:
+        col1, col2 = st.columns([1, 1.5])
+        with col1:
+            st.markdown("""
+            Here you can configure the generation of convex combinations:
     
-        - Define the **total number of combinations** to be generated.
-        - Set how many **vertices should be combined** per combination.
-        - Adjust the **α parameter** of the Dirichlet distribution, which controls the spread of weights.
-        - Specify how many combinations should be created **per batch** before a new set of vertices is sampled,
-          until the total number is reached.
-        """)
+            - Define the **total number of combinations** to be generated.
+            - Set how many **vertices should be combined** per combination.
+            - Adjust the **α parameter** of the Dirichlet distribution, which controls the spread of weights.
+            - Specify how many combinations should be created **per batch** before a new set of vertices is sampled,  
+              until the total number is reached.
+            """)
+        with col2:
+            st.markdown("""
+            <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 650px; margin: auto;">
+                <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Konvex.png" width="100%">
+                <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
+            </div>
+            """, unsafe_allow_html=True)
     
     
     # =====================
