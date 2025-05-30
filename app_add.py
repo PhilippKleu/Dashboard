@@ -1875,7 +1875,12 @@ with tab2:
             This enables step-by-step narrowing down of viable transition pathways.
             """)
         with col2:
-            st.image("https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png", caption="Slider component")
+            st.markdown("""
+                <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
+                    <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Slider.png" width="100%">
+                    <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
+                </div>
+                """, unsafe_allow_html=True)
     
     with st.expander("📈 Diagram Explanation – Visual output of changes"):
         st.markdown("""
