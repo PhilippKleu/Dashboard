@@ -1860,7 +1860,7 @@ with tab2:
             <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
         </div>
         """, unsafe_allow_html=True)
-        
+    st.divider()
     # =====================
     # SECTION: Decision Tool
     # =====================
