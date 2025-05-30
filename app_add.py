@@ -1855,32 +1855,42 @@ with tab2:
     st.markdown("""
     <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
         <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png" width="100%">
-        <p style="text-align: center; font-style: italic; margin-top: 5px;">Main dashboard interface</p>
+        <p style="text-align: center; font-style: italic; margin-top: 5px;">Layout Overview</p>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("""
-    The dashboard includes modules for visual analytics, parameter control, and exporting results.
-    """)
-    
+        
     # =====================
     # SECTION: Decision Tool
     # =====================
-    st.markdown("## 🧠 Decision Tool – Core Functionality")
+    st.markdown("## Decision Tool – Core Functionality")
     
-    with st.expander("🎚️ Slider Explanation – ↳ Adjust parameters dynamically"):
-        st.markdown(" Sliders control the model's key variables and trigger live updates.")
-        # Optional image
-        # st.image("https://example.com/slider.png", caption="Slider Example", use_column_width=True)
+    with st.expander("🎚️ Slider Explanation – Adjust parameters dynamically"):
+        st.markdown("""
+        The sliders allow users to define ranges for specific technologies or metrics.  
+        Adjusting these ranges dynamically filters the available decision vertices in real time.  
+        This enables step-by-step narrowing down of viable transition pathways.
+        """)
     
-    with st.expander("📈 Diagram Explanation – ↳ Visual output of changes"):
-        st.markdown(" Diagrams show how different inputs affect results.")
-        # st.image("https://example.com/diagram.png", caption="Diagram Overview", use_column_width=True)
+    with st.expander("📈 Diagram Explanation – Visual output of changes"):
+        st.markdown("""
+        The generated plots illustrate how selected technologies evolve over time.  
+        They reflect capacity trends, decision flexibility, and convex combinations based on the user's input.  
+        These visuals provide direct insight into model behavior and scenario dynamics.
+        """)
     
-    with st.expander("📊 Additional Metrics – ↳ Extended insights"):
-        st.markdown(" Displays advanced KPIs such as risk indicators and improvement scores.")
+    with st.expander("📊 Additional Metrics – Extended insights"):
+        st.markdown("""
+        This section displays advanced key performance indicators (KPIs).  
+        These include environmental scores, cost measures, and other derived metrics that offer additional decision support.  
+        The plots can be toggled between violin or scatter views for visual comparison.
+        """)
     
-    with st.expander("🧾 Tables – ↳ Detailed data views"):
-        st.markdown(" Tabular formats provide a clear look at raw or processed data.")
+    with st.expander("🧾 Tables – Detailed data views"):
+        st.markdown("""
+        All filtered or generated data can be reviewed in tabular format.  
+        This includes both original decision vertices and convex combinations.  
+        The tables support transparency and are exportable for further offline analysis.
+        """)
     
     # ---------------------
     # Sidebar as sub-section
