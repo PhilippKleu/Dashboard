@@ -1870,9 +1870,15 @@ with tab2:
         col1, col2 = st.columns([1, 2])  # Breitenverhältnis: 2/3 Text, 1/3 Bild
         with col1:
             st.markdown("""
-            The sliders allow users to define ranges for specific technologies or metrics.  
-            Adjusting these ranges dynamically filters the available decision vertices in real time.  
-            This enables step-by-step narrowing down of viable transition pathways.
+            st.markdown("""
+The filtering system allows users to narrow down the dataset by selecting variables and adjusting value ranges using sliders. To start, a user chooses a technology or metric. For the selected variable, a slider becomes available, letting the user limit its value range.
+
+Filtering is applied sequentially, meaning that each newly added constraint is only applied to the already filtered subset. This ensures consistent and logically ordered restriction of the decision space. For example, limiting one technology first affects all subsequent selections.
+
+Only those vertices that fulfill all active constraints remain valid. These filtered vertices are automatically reflected in the time series plots, additional metric charts, and data tables. This provides a direct visual and tabular update based on the current selection.
+
+At any point, the user can reset all applied filters using the “Reset” button. This clears all sliders and restores the original unfiltered dataset, allowing for a fresh start.
+    """)
             """)
         with col2:
             st.markdown("""
