@@ -1008,22 +1008,21 @@ with tab1:
                     if values_matrix.dropna(how='all').empty:
                         continue
             
-                    ax = axes[plot_idx]
-                    ax.set_facecolor('#f0f0f0')
-            
-                    data = [values_matrix[col].dropna().values for col in cols]
-            
-                    if all(len(d) > 0 for d in data):
-                        vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-            
-                    # ==== Konvexe Kombinationen ====
+                    # ==== Konvexe Kombinationen einbeziehen ====
                     if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
-                            for idx in range(len(filtered_convex_data)):
-                                values = filtered_convex_data.loc[idx, convex_cols].values
-                                if not np.isnan(values).all():
-                                    ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))
+                            convex_matrix = filtered_convex_data[convex_cols]
+                            values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
+            
+                    ax = axes[plot_idx]
+                    ax.set_facecolor('#f0f0f0')
+            
+                    # ==== Violinplot-Daten vorbereiten ====
+                    data = [values_matrix[col].dropna().values for col in cols]
+            
+                    if all(len(d) > 0 for d in data):
+                        ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
             
                     # ==== Ursprünglicher Wertebereich als rote Fläche ====
                     if st.session_state.get('show_original_ranges', False):
@@ -1054,31 +1053,23 @@ with tab1:
                 for i in range(plot_idx, len(axes)):
                     fig.delaxes(axes[i])
             
-                if 'handles_labels' in locals():
-                    handles, labels = handles_labels
-            
-                    vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
-                    convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
-            
-                    all_handles = [vertex_line, convex_line] + handles
-                    all_labels = ['Vertex', 'Convex Combination'] + labels
-            
-                    legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                    top_margin = legend_anchor_y - 0.06
+                # ==== Legende ====
+                if plot_idx > 0:
+                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
             
                     fig.legend(
-                        all_handles,
-                        all_labels,
+                        [combined_line],
+                        ['Values incl. Convex'],
                         loc='upper center',
-                        bbox_to_anchor=(0.5, legend_anchor_y),
-                        ncol=len(all_labels),
+                        bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
+                        ncol=1,
                         frameon=True,
                         fancybox=True,
                         fontsize=14
                     )
             
                     fig.subplots_adjust(
-                        top=top_margin,
+                        top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
                         hspace=0.3,
                         wspace=0.18
                     )
@@ -1823,22 +1814,21 @@ with tab1:
                 if values_matrix.dropna(how='all').empty:
                     continue
         
-                ax = axes[plot_idx]
-                ax.set_facecolor('#f0f0f0')
-        
-                data = [values_matrix[col].dropna().values for col in cols]
-        
-                if all(len(d) > 0 for d in data):
-                    vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-        
-                # ==== Konvexe Kombinationen anzeigen ====
+                # ==== Konvexe Kombinationen mit einbeziehen ====
                 if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                     convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                     if all(col in filtered_convex_data.columns for col in convex_cols):
-                        for idx in range(len(filtered_convex_data)):
-                            values = filtered_convex_data.loc[idx, convex_cols].values
-                            if not np.isnan(values).all():
-                                ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))  # Halbtransparente rote Linien
+                        convex_matrix = filtered_convex_data[convex_cols]
+                        values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
+        
+                ax = axes[plot_idx]
+                ax.set_facecolor('#f0f0f0')
+        
+                # ==== Violinplot-Daten ====
+                data = [values_matrix[col].dropna().values for col in cols]
+        
+                if all(len(d) > 0 for d in data):
+                    ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
         
                 # ==== Ursprünglicher Wertebereich (rote Fläche) ====
                 if st.session_state.get('show_original_ranges', False):
@@ -1874,31 +1864,21 @@ with tab1:
         
             # === Gemeinsame Legende ===
             if plot_idx > 0:
-                vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
-                convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
-        
-                all_handles = [vertex_line]
-                all_labels = ['Vertex']
-                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                    all_handles.append(convex_line)
-                    all_labels.append('Convex Combination')
-        
-                legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                top_margin = legend_anchor_y - 0.06
+                combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
         
                 fig.legend(
-                    all_handles,
-                    all_labels,
+                    [combined_line],
+                    ['Values incl. Convex'],
                     loc='upper center',
-                    bbox_to_anchor=(0.5, legend_anchor_y),
-                    ncol=len(all_labels),
+                    bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
+                    ncol=1,
                     frameon=True,
                     fancybox=True,
                     fontsize=14
                 )
         
                 fig.subplots_adjust(
-                    top=top_margin,
+                    top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
                     hspace=0.3,
                     wspace=0.18
                 )
