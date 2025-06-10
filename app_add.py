@@ -2020,30 +2020,30 @@ with tab1:
                 for i, col in enumerate(selected_metrics):
                     ax = axes[i]
                     ax.set_facecolor('#f0f0f0')  # Hintergrund pro Plot-Achse
-            
+                
                     values = filtered_combined[col].dropna().values
                     if len(values) == 0:
                         ax.set_visible(False)
                         continue
-            
-                    # ==== Ursprünglicher Wertebereich (rote Fläche wie im zweiten Block) ====
+                
+                    # ==== Ursprünglicher Wertebereich (ROT, HINTER VIOLIN) ====
                     if st.session_state.get("show_original_ranges", False):
                         try:
                             original_values = vertex_df[col].dropna()
                         except KeyError:
                             original_values = pd.Series(dtype=float)
-                    
+                
                         if not original_values.empty:
                             omin = original_values.min()
                             omax = original_values.max()
-                    
+                
                             ax.fill_between(
                                 [-0.5, 0.5],
                                 omin,
                                 omax,
-                                color=(1.0, 0.0, 0.0, 0.08)  # Rote transparente Fläche
+                                color=(1.0, 0.0, 0.0, 0.08)
                             )
-            
+                
                     # ==== Violinplot ====
                     vp = ax.violinplot(
                         [values],
