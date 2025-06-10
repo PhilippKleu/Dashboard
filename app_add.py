@@ -66,6 +66,7 @@ def initialize_session_state():
         'max_plot_vertices': 5,  # optional auch gleich hier
         "column_ratio" : 0.5,
         'layout_mode': "Two-column layout",
+        "plot_style": "Line Plot",
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -349,6 +350,11 @@ with st.sidebar.expander("Plot Options"):
         value=min(5, total_vertices_available),
         step=1,
         key="max_plot_vertices"
+    )
+    st.session_state["plot_style"] = st.sidebar.radio(
+        "Choose plot type",
+        options=["Line Plot", "Violin Plot"],
+        index=["Line Plot", "Violin Plot"].index(st.session_state.get("plot_style", "Line Plot"))
     )
     
     st.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
