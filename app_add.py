@@ -2019,14 +2019,14 @@ with tab1:
             
                 for i, col in enumerate(selected_metrics):
                     ax = axes[i]
-                    ax.set_facecolor('#f0f0f0')  # Hintergrund pro Plot-Achse
+                    ax.set_facecolor('#f0f0f0')
                 
                     values = filtered_combined[col].dropna().values
                     if len(values) == 0:
                         ax.set_visible(False)
                         continue
                 
-                    # ==== Ursprünglicher Wertebereich (ROT, HINTER VIOLIN) ====
+                    # ==== Ursprünglicher Wertebereich (ROT) ====
                     if st.session_state.get("show_original_ranges", False):
                         try:
                             original_values = vertex_df[col].dropna()
@@ -2038,34 +2038,39 @@ with tab1:
                             omax = original_values.max()
                 
                             ax.fill_between(
-                                [-0.5, 0.5],
+                                [1 - 0.4, 1 + 0.4],
                                 omin,
                                 omax,
-                                color=(1.0, 0.0, 0.0, 0.08)
+                                color=(1.0, 0.0, 0.0, 0.08),
+                                zorder=1
                             )
                 
                     # ==== Violinplot ====
                     vp = ax.violinplot(
                         [values],
+                        positions=[1],  # Position explizit angeben
                         showmeans=False,
                         showmedians=True,
                         showextrema=True,
                         widths=0.8
                     )
-            
+                
                     for pc in vp['bodies']:
-                        pc.set_facecolor((0.1, 0.4, 0.8, 0.7))  # Blau, leicht transparent
+                        pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
                         pc.set_edgecolor('black')
                         pc.set_alpha(0.7)
-            
+                        pc.set_zorder(2)
+                
                     if 'cmedians' in vp:
                         vp['cmedians'].set_color('black')
-            
+                
                     clean_label = (
                         col.replace("installed_capacity_", "")
                            .replace("INSTALLED_CAPACITY_", "")
                            .replace("NEW_CAPACITY_", "")
                     )
+                
+                    ax.set_xlim(0.5, 1.5)
                     ax.set_title(clean_label, fontsize=14)
                     ax.set_xticks([])
                     ax.set_ylabel("Metric Value", fontsize=13)
