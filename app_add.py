@@ -1019,9 +1019,10 @@ with tab1:
                                 ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
             
                     ax.set_title(tech.replace('_', ' ').title())
-                    ax.set_xticks(years)
-                    ax.set_xlabel("Year")
-                    ax.set_ylabel("Installed Capacity")
+                    if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
+                        ax.set_xlabel("Year")
+                    if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
+                        ax.set_ylabel("Installed Capacity")
                     ax.grid(True, linestyle="--", alpha=0.4)
                     if plot_idx == 0:
                         handles_labels = ax.get_legend_handles_labels()
