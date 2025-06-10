@@ -2026,26 +2026,23 @@ with tab1:
                         ax.set_visible(False)
                         continue
             
-                    # ==== Ursprünglicher Wertebereich als graue Fläche ====
-                    if st.session_state.get("show_original_ranges", False) and col in additional_data.columns:
-                        global_min = additional_data[col].min()
-                        global_max = additional_data[col].max()
-                        ax.fill_between(
-                            [-0.5, 0.5],
-                            global_min,
-                            global_max,
-                            color='gray',
-                            alpha=0.15
-                        )
-                        ax.text(
-                            0,
-                            global_max + (global_max * 0.02),
-                            f"{global_min:.1f}–{global_max:.1f}",
-                            ha='center',
-                            va='bottom',
-                            fontsize=8,
-                            color='black'
-                        )
+                    # ==== Ursprünglicher Wertebereich (rote Fläche wie im zweiten Block) ====
+                    if st.session_state.get("show_original_ranges", False):
+                        try:
+                            original_values = vertex_df[col].dropna()
+                        except KeyError:
+                            original_values = pd.Series(dtype=float)
+                    
+                        if not original_values.empty:
+                            omin = original_values.min()
+                            omax = original_values.max()
+                    
+                            ax.fill_between(
+                                [-0.5, 0.5],
+                                omin,
+                                omax,
+                                color=(1.0, 0.0, 0.0, 0.08)  # Rote transparente Fläche
+                            )
             
                     # ==== Violinplot ====
                     vp = ax.violinplot(
