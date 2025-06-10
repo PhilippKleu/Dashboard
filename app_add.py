@@ -1809,20 +1809,48 @@ with tab1:
                         if not np.isnan(omin) and not np.isnan(omax):
                             ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
         
-                ax.set_title(tech.replace('_', ' ').title())
                 ax.set_xticks(years)
+            ax.set_title(tech.replace('_', ' ').title())
+            if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
                 ax.set_xlabel("Year")
+            if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
                 ax.set_ylabel("Installed Capacity")
-                ax.grid(True, linestyle="--", alpha=0.4)
-                plot_idx += 1
-        
-            # Entferne nicht benötigte Subplots
-            for i in range(plot_idx, len(axes)):
-                if axes[i] in fig.axes:
-                    fig.delaxes(axes[i])
-        
-            fig.subplots_adjust(hspace=0.4, wspace=0.3)
-            st.pyplot(fig)
+            ax.grid(True, linestyle="--", alpha=0.4)
+            if plot_idx == 0:
+                handles_labels = ax.get_legend_handles_labels()
+    
+            plot_idx += 1
+
+        for i in range(plot_idx, len(axes)):
+            fig.delaxes(axes[i])
+    
+        if 'handles_labels' in locals():
+            handles, labels = handles_labels
+            vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+            all_handles = [vertex_line] + handles
+            all_labels = ['Vertex'] + labels
+    
+            legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
+            top_margin = legend_anchor_y - 0.06
+    
+            fig.legend(
+                all_handles,
+                all_labels,
+                loc='upper center',
+                bbox_to_anchor=(0.5, legend_anchor_y),
+                ncol=len(all_labels),
+                frameon=True,
+                fancybox=True,
+                fontsize=14
+            )
+    
+            fig.subplots_adjust(
+                top=top_margin,
+                hspace=0.3,
+                wspace=0.18
+            )
+        st.pyplot(fig)
+            
         # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
         
         
