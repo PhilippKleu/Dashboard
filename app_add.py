@@ -781,128 +781,128 @@ with tab1:
                 plot_indices = current_indices
         
             plot_idx = 0
-            if st.session_state.get("plot_type_selector2") == "Line Plot":
-                for tech, year_cols in sorted(tech_time_map.items()):
-                    if len(year_cols) < 1:
-                        continue
-            
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted]
-            
-                    full_values_matrix = vertex_df.loc[current_indices, cols]
-                    values_matrix = vertex_df.loc[plot_indices, cols]
-            
-                    if values_matrix.dropna(how='all').empty:
-                        continue
-            
-                    ax = axes[plot_idx]
-                    ax.set_facecolor('#f0f0f0')
-            
-                    if len(years) == 1:
-                        year = years[0]
-                        col = cols[0]
-            
-                        # Original Punkte
-                        y_values = values_matrix[col]
-                        ax.scatter([year] * len(y_values), y_values, color=(0.1, 0.4, 0.8, 0.4))
-            
-                        # Konvex Punkte
-                        if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
-                            convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}"
-                            if convex_col in filtered_convex_data.columns:
-                                convex_vals = filtered_convex_data[convex_col].dropna()
-                                ax.scatter([year] * len(convex_vals), convex_vals, color=(1.0, 0.3, 0.3, 0.4))
-            
-                        # Min/Max-Bereich
-                        min_val = full_values_matrix[col].min()
-                        max_val = full_values_matrix[col].max()
-                        ax.fill_between([year - 0.4, year + 0.4], min_val, max_val, color=(0.1, 0.4, 0.8, 0.15))
-            
-                        if st.session_state['show_original_ranges']:
-                            original_vals = vertex_df.loc[tech_data.index, col]
-                            orig_min = original_vals.min()
-                            orig_max = original_vals.max()
-                            ax.fill_between([year - 0.4, year + 0.4], orig_min, orig_max, color=(1.0, 0.0, 0.0, 0.08))
-            
-                        ax.set_xlim(year - 1, year + 1)
-                        ax.set_xticks([year])
-                    else:
-                        for i in values_matrix.index:
-                            values = values_matrix.loc[i].values
-                            ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
-            
-                        if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
-                            convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                            if all(col in filtered_convex_data.columns for col in convex_cols):
-                                for idx in range(len(filtered_convex_data)):
-                                    values = filtered_convex_data.loc[idx, convex_cols].values
-                                    if not np.isnan(values).all():
-                                        ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))
-            
-                        min_vals = full_values_matrix.min()
-                        max_vals = full_values_matrix.max()
-            
-                        if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
-                            convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                            if all(col in filtered_convex_data.columns for col in convex_cols):
-                                convex_min = filtered_convex_data[convex_cols].min()
-                                convex_max = filtered_convex_data[convex_cols].max()
-                                min_vals = np.minimum(min_vals, convex_min)
-                                max_vals = np.maximum(max_vals, convex_max)
-            
-                        ax.fill_between(years, min_vals, max_vals, color=(0.1, 0.4, 0.8, 0.15))
-            
-                        if st.session_state['show_original_ranges']:
-                            original_matrix = vertex_df.loc[tech_data.index, cols]
-                            original_min = original_matrix.min()
-                            original_max = original_matrix.max()
-                            ax.fill_between(years, original_min, original_max, color=(1.0, 0.0, 0.0, 0.08))
-            
-                        ax.set_xticks(years)
-            
-                    ax.set_title(tech.replace('_', ' ').title())
-                    if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
-                        ax.set_xlabel("Year")
-                    if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
-                        ax.set_ylabel("Installed Capacity")
-                    ax.grid(True, linestyle="--", alpha=0.4)
-            
-                    if plot_idx == 0:
-                        handles_labels = ax.get_legend_handles_labels()
-            
-                    plot_idx += 1
+            #if st.session_state.get("plot_type_selector2") == "Line Plot":
+            for tech, year_cols in sorted(tech_time_map.items()):
+                if len(year_cols) < 1:
+                    continue
         
-                for i in range(plot_idx, len(axes)):
-                    fig.delaxes(axes[i])
-            
-                if 'handles_labels' in locals():
-                    handles, labels = handles_labels
-                    vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
-                    all_handles = [vertex_line] + handles
-                    all_labels = ['Vertex'] + labels
-            
-                    legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                    top_margin = legend_anchor_y - 0.06
-            
-                    fig.legend(
-                        all_handles,
-                        all_labels,
-                        loc='upper center',
-                        bbox_to_anchor=(0.5, legend_anchor_y),
-                        ncol=len(all_labels),
-                        frameon=True,
-                        fancybox=True,
-                        fontsize=14
-                    )
-            
-                    fig.subplots_adjust(
-                        top=top_margin,
-                        hspace=0.3,
-                        wspace=0.18
-                    )
-            
-                st.pyplot(fig)
+                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+                years = [y for y, _ in years_cols_sorted]
+                cols = [col for _, col in years_cols_sorted]
+        
+                full_values_matrix = vertex_df.loc[current_indices, cols]
+                values_matrix = vertex_df.loc[plot_indices, cols]
+        
+                if values_matrix.dropna(how='all').empty:
+                    continue
+        
+                ax = axes[plot_idx]
+                ax.set_facecolor('#f0f0f0')
+        
+                if len(years) == 1:
+                    year = years[0]
+                    col = cols[0]
+        
+                    # Original Punkte
+                    y_values = values_matrix[col]
+                    ax.scatter([year] * len(y_values), y_values, color=(0.1, 0.4, 0.8, 0.4))
+        
+                    # Konvex Punkte
+                    if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
+                        convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}"
+                        if convex_col in filtered_convex_data.columns:
+                            convex_vals = filtered_convex_data[convex_col].dropna()
+                            ax.scatter([year] * len(convex_vals), convex_vals, color=(1.0, 0.3, 0.3, 0.4))
+        
+                    # Min/Max-Bereich
+                    min_val = full_values_matrix[col].min()
+                    max_val = full_values_matrix[col].max()
+                    ax.fill_between([year - 0.4, year + 0.4], min_val, max_val, color=(0.1, 0.4, 0.8, 0.15))
+        
+                    if st.session_state['show_original_ranges']:
+                        original_vals = vertex_df.loc[tech_data.index, col]
+                        orig_min = original_vals.min()
+                        orig_max = original_vals.max()
+                        ax.fill_between([year - 0.4, year + 0.4], orig_min, orig_max, color=(1.0, 0.0, 0.0, 0.08))
+        
+                    ax.set_xlim(year - 1, year + 1)
+                    ax.set_xticks([year])
+                else:
+                    for i in values_matrix.index:
+                        values = values_matrix.loc[i].values
+                        ax.plot(years, values, color=(0.1, 0.4, 0.8, 0.3))
+        
+                    if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
+                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                        if all(col in filtered_convex_data.columns for col in convex_cols):
+                            for idx in range(len(filtered_convex_data)):
+                                values = filtered_convex_data.loc[idx, convex_cols].values
+                                if not np.isnan(values).all():
+                                    ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))
+        
+                    min_vals = full_values_matrix.min()
+                    max_vals = full_values_matrix.max()
+        
+                    if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
+                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                        if all(col in filtered_convex_data.columns for col in convex_cols):
+                            convex_min = filtered_convex_data[convex_cols].min()
+                            convex_max = filtered_convex_data[convex_cols].max()
+                            min_vals = np.minimum(min_vals, convex_min)
+                            max_vals = np.maximum(max_vals, convex_max)
+        
+                    ax.fill_between(years, min_vals, max_vals, color=(0.1, 0.4, 0.8, 0.15))
+        
+                    if st.session_state['show_original_ranges']:
+                        original_matrix = vertex_df.loc[tech_data.index, cols]
+                        original_min = original_matrix.min()
+                        original_max = original_matrix.max()
+                        ax.fill_between(years, original_min, original_max, color=(1.0, 0.0, 0.0, 0.08))
+        
+                    ax.set_xticks(years)
+        
+                ax.set_title(tech.replace('_', ' ').title())
+                if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
+                    ax.set_xlabel("Year")
+                if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
+                    ax.set_ylabel("Installed Capacity")
+                ax.grid(True, linestyle="--", alpha=0.4)
+        
+                if plot_idx == 0:
+                    handles_labels = ax.get_legend_handles_labels()
+        
+                plot_idx += 1
+    
+            for i in range(plot_idx, len(axes)):
+                fig.delaxes(axes[i])
+        
+            if 'handles_labels' in locals():
+                handles, labels = handles_labels
+                vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                all_handles = [vertex_line] + handles
+                all_labels = ['Vertex'] + labels
+        
+                legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
+                top_margin = legend_anchor_y - 0.06
+        
+                fig.legend(
+                    all_handles,
+                    all_labels,
+                    loc='upper center',
+                    bbox_to_anchor=(0.5, legend_anchor_y),
+                    ncol=len(all_labels),
+                    frameon=True,
+                    fancybox=True,
+                    fontsize=14
+                )
+        
+                fig.subplots_adjust(
+                    top=top_margin,
+                    hspace=0.3,
+                    wspace=0.18
+                )
+        
+            st.pyplot(fig)
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
             
             
