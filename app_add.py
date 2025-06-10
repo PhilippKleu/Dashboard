@@ -786,9 +786,17 @@ with tab1:
                         data = [values_matrix[col].dropna().values for col in cols]
                 
                         if all(len(d) > 0 for d in data):
-                            vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
+                            ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
                 
-                        # === Ursprünglicher Bereich (rote Fläche) ===
+                        # === Konvexe Kombinationen ===
+                        if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                            if all(col in filtered_convex_data.columns for col in cols):
+                                for idx in range(len(filtered_convex_data)):
+                                    values = filtered_convex_data.loc[idx, cols].values
+                                    if not np.isnan(values).all():
+                                        ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))  # Rote Linien halbtransparent
+                
+                        # === Ursprünglicher Wertebereich (rote Fläche) ===
                         if st.session_state.get('show_original_ranges', False):
                             try:
                                 original_matrix = vertex_df.loc[tech_data.index, cols]
@@ -804,9 +812,14 @@ with tab1:
                 
                         ax.set_title(tech.replace('_', ' ').title())
                         ax.set_xticks(years)
-                        ax.set_xlabel("Year")
-                        ax.set_ylabel("VALUE_")
+                        if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
+                            ax.set_xlabel("Year")
+                        if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
+                            ax.set_ylabel("VALUE_")
                         ax.grid(True, linestyle="--", alpha=0.4)
+                
+                        if plot_idx_val == 0:
+                            handles_labels_val = ax.get_legend_handles_labels()
                 
                         plot_idx_val += 1
                 
@@ -814,18 +827,26 @@ with tab1:
                         if axes_value[i] in fig_value.axes:
                             fig_value.delaxes(axes_value[i])
                 
+                    # === Legende einfügen ===
                     if plot_idx_val > 0:
-                        value_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                        vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                        convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
+                
+                        all_handles_val = [vertex_line]
+                        all_labels_val = ['Vertex']
+                        if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                            all_handles_val.append(convex_line)
+                            all_labels_val.append('Convex Combination')
                 
                         legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                        top_margin = legend_anchor_y - 0.12
+                        top_margin = legend_anchor_y - 0.06
                 
                         fig_value.legend(
-                            [value_line],
-                            ['Vertex'],
+                            all_handles_val,
+                            all_labels_val,
                             loc='upper center',
                             bbox_to_anchor=(0.5, legend_anchor_y),
-                            ncol=1,
+                            ncol=len(all_labels_val),
                             frameon=True,
                             fancybox=True,
                             fontsize=14
