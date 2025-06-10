@@ -1588,18 +1588,25 @@ with tab1:
                     ax = axes_value[plot_idx_val]
                     ax.set_facecolor('#f0f0f0')
             
-                    # Violinplot-Daten vorbereiten
                     data = [values_matrix[col].dropna().values for col in cols]
             
                     if all(len(d) > 0 for d in data):
                         vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
             
-                    # === Ursprünglicher Bereich (rote Fläche) ===
+                    # === Konvexe Kombinationen (wie beim Line Plot) ===
+                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                        if all(col in filtered_convex_data.columns for col in cols):
+                            for idx in range(len(filtered_convex_data)):
+                                values = filtered_convex_data.loc[idx, cols].values
+                                if not np.isnan(values).all():
+                                    ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))  # Transparente rote Linie
+            
+                    # === Ursprünglicher Wertebereich (rote Fläche) ===
                     if st.session_state.get('show_original_ranges', False):
                         try:
                             original_matrix = vertex_df.loc[tech_data.index, cols]
                         except Exception:
-                            original_matrix = vertex_df[cols]  # Fallback
+                            original_matrix = vertex_df[cols]
             
                         original_min = original_matrix.min()
                         original_max = original_matrix.max()
@@ -1610,9 +1617,15 @@ with tab1:
             
                     ax.set_title(tech.replace('_', ' ').title())
                     ax.set_xticks(years)
-                    ax.set_xlabel("Year")
-                    ax.set_ylabel("VALUE_")
+            
+                    if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
+                        ax.set_xlabel("Year")
+                    if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
+                        ax.set_ylabel("VALUE_")
                     ax.grid(True, linestyle="--", alpha=0.4)
+            
+                    if plot_idx_val == 0:
+                        handles_labels_val = ax.get_legend_handles_labels()
             
                     plot_idx_val += 1
             
@@ -1621,17 +1634,24 @@ with tab1:
                         fig_value.delaxes(axes_value[i])
             
                 if plot_idx_val > 0:
-                    value_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                    vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                    convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
+            
+                    all_handles_val = [vertex_line]
+                    all_labels_val = ['Vertex']
+                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                        all_handles_val.append(convex_line)
+                        all_labels_val.append('Convex Combination')
             
                     legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                    top_margin = legend_anchor_y - 0.12
+                    top_margin = legend_anchor_y - 0.06
             
                     fig_value.legend(
-                        [value_line],
-                        ['Vertex'],
+                        all_handles_val,
+                        all_labels_val,
                         loc='upper center',
                         bbox_to_anchor=(0.5, legend_anchor_y),
-                        ncol=1,
+                        ncol=len(all_labels_val),
                         frameon=True,
                         fancybox=True,
                         fontsize=14
@@ -1809,12 +1829,21 @@ with tab1:
                 if all(len(d) > 0 for d in data):
                     vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
         
-                # ==== Ursprünglicher Wertebereich als rote Fläche ====
+                # ==== Konvexe Kombinationen anzeigen ====
+                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                    convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                    if all(col in filtered_convex_data.columns for col in convex_cols):
+                        for idx in range(len(filtered_convex_data)):
+                            values = filtered_convex_data.loc[idx, convex_cols].values
+                            if not np.isnan(values).all():
+                                ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))  # Halbtransparente rote Linien
+        
+                # ==== Ursprünglicher Wertebereich (rote Fläche) ====
                 if st.session_state.get('show_original_ranges', False):
                     try:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                     except Exception:
-                        original_matrix = vertex_df[cols]  # Fallback, wenn tech_data fehlt
+                        original_matrix = vertex_df[cols]  # Fallback
         
                     original_min = original_matrix.min()
                     original_max = original_matrix.max()
@@ -1825,9 +1854,15 @@ with tab1:
         
                 ax.set_title(tech.replace('_', ' ').title())
                 ax.set_xticks(years)
-                ax.set_xlabel("Year")
-                ax.set_ylabel("Installed Capacity")
+                if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
+                    ax.set_xlabel("Year")
+                if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
+                    ax.set_ylabel("Installed Capacity")
                 ax.grid(True, linestyle="--", alpha=0.4)
+        
+                if plot_idx == 0:
+                    handles_labels = ax.get_legend_handles_labels()
+        
                 plot_idx += 1
         
             # Entferne nicht benötigte Subplots
@@ -1835,7 +1870,37 @@ with tab1:
                 if axes[i] in fig.axes:
                     fig.delaxes(axes[i])
         
-            fig.subplots_adjust(hspace=0.4, wspace=0.3)
+            # === Gemeinsame Legende ===
+            if plot_idx > 0:
+                vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
+        
+                all_handles = [vertex_line]
+                all_labels = ['Vertex']
+                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                    all_handles.append(convex_line)
+                    all_labels.append('Convex Combination')
+        
+                legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
+                top_margin = legend_anchor_y - 0.06
+        
+                fig.legend(
+                    all_handles,
+                    all_labels,
+                    loc='upper center',
+                    bbox_to_anchor=(0.5, legend_anchor_y),
+                    ncol=len(all_labels),
+                    frameon=True,
+                    fancybox=True,
+                    fontsize=14
+                )
+        
+                fig.subplots_adjust(
+                    top=top_margin,
+                    hspace=0.3,
+                    wspace=0.18
+                )
+        
             st.pyplot(fig)
         # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
         
