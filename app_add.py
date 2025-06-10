@@ -644,7 +644,7 @@ with tab1:
                 fig_value.patch.set_facecolor('#f4f4f4')
                 axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
             
-                if len(current_indices) > st.session_state["max_plot_vertices"]:
+                if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                     plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                     st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
@@ -865,7 +865,7 @@ with tab1:
             fig.patch.set_facecolor('#f4f4f4')
             axes = axes.flatten() if n_techs > 1 else [axes]
         
-            if len(current_indices) > st.session_state["max_plot_vertices"]:
+            if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                 plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
@@ -1456,7 +1456,7 @@ with tab1:
             fig_value.patch.set_facecolor('#f4f4f4')
             axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
         
-            if len(current_indices) > st.session_state["max_plot_vertices"]:
+            if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                 plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
@@ -1673,7 +1673,7 @@ with tab1:
         fig.patch.set_facecolor('#f4f4f4')
         axes = axes.flatten() if n_techs > 1 else [axes]
     
-        if len(current_indices) > st.session_state["max_plot_vertices"]:
+        if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
             plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
             st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
         else:
