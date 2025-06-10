@@ -781,8 +781,8 @@ with tab1:
                 plot_indices = current_indices
         
             plot_idx = 0
-            for tech, year_cols in sorted(tech_time_map.items()):
-                if st.session_state.get("plot_type_selector2") == "Line Plot":
+            if st.session_state.get("plot_type_selector2") == "Line Plot":
+                for tech, year_cols in sorted(tech_time_map.items()):
                     if len(year_cols) < 1:
                         continue
             
