@@ -342,20 +342,21 @@ with st.sidebar.expander("Layout Options", expanded=True):
     )
 
 with st.sidebar.expander("Plot Options"):
-    st.number_input(
-        "Max vertices to display in plots",
-        min_value=1,
-        max_value=total_vertices_available,
-        value=min(5, total_vertices_available),
-        step=1,
-        key="max_plot_vertices"
-    )
     st.radio(
         "Choose plot type",
         options=["Line Plot", "Violin Plot"],
         index=0,
         key="plot_type_selector2"
     )
+    if st.session_state.plot_type_selector2 == "Line Plot":
+        st.number_input(
+            "Max vertices to display in plots",
+            min_value=1,
+            max_value=total_vertices_available,
+            value=min(5, total_vertices_available),
+            step=1,
+            key="max_plot_vertices"
+        )
     
     st.checkbox("Show convex combinations in all plots", value=True, key="show_convex")
     st.checkbox("Show original flexibility ranges (red shaded)", value=False, key="show_original_ranges")
