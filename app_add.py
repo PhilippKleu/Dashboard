@@ -909,35 +909,49 @@ with tab1:
                 for tech, year_cols in sorted(tech_time_map.items()):
                     if len(year_cols) < 1:
                         continue
-                
+            
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, _ in years_cols_sorted]
                     cols = [col for _, col in years_cols_sorted]
-                
+            
                     values_matrix = vertex_df.loc[plot_indices, cols]
                     if values_matrix.dropna(how='all').empty:
                         continue
-                
+            
                     ax = axes[plot_idx]
                     ax.set_facecolor('#f0f0f0')
-                
+            
                     data = [values_matrix[col].dropna().values for col in cols]
-                
+            
                     if all(len(d) > 0 for d in data):
                         vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-                
+            
+                    # ==== Ursprünglicher Wertebereich als rote Fläche ====
+                    if st.session_state.get('show_original_ranges', False):
+                        try:
+                            original_matrix = vertex_df.loc[tech_data.index, cols]
+                        except Exception:
+                            original_matrix = vertex_df[cols]  # Fallback, wenn tech_data fehlt
+            
+                        original_min = original_matrix.min()
+                        original_max = original_matrix.max()
+            
+                        for y, omin, omax in zip(years, original_min, original_max):
+                            if not np.isnan(omin) and not np.isnan(omax):
+                                ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
+            
                     ax.set_title(tech.replace('_', ' ').title())
                     ax.set_xticks(years)
                     ax.set_xlabel("Year")
                     ax.set_ylabel("Installed Capacity")
                     ax.grid(True, linestyle="--", alpha=0.4)
                     plot_idx += 1
-                
+            
                 # Entferne nicht benötigte Subplots
                 for i in range(plot_idx, len(axes)):
                     if axes[i] in fig.axes:
                         fig.delaxes(axes[i])
-                
+            
                 fig.subplots_adjust(hspace=0.4, wspace=0.3)
                 st.pyplot(fig)
                 
