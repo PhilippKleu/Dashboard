@@ -1987,11 +1987,6 @@ with tab1:
     # Beispiel-Daten
     st.markdown("### Additional Metrics")
     
-    # Auswahl des Plottyps
-    
-    
-    # Checkbox für Konvexe Kombinationen
-    
     if additional_cols:
         selected_metrics = st.multiselect(
             "📌 Select additional metrics to visualize",
@@ -2013,24 +2008,46 @@ with tab1:
                 n_metrics = len(selected_metrics)
                 n_cols = min(max_cols, n_metrics)
                 n_rows = -(-n_metrics // max_cols)  # Ceiling division
-                
+            
                 fig_violin, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
                 fig_violin.patch.set_facecolor('#f4f4f4')  # Hintergrund der gesamten Figur
-                
+            
                 if n_metrics == 1:
                     axes = [axes]
                 else:
                     axes = axes.flatten()
-                
+            
                 for i, col in enumerate(selected_metrics):
                     ax = axes[i]
                     ax.set_facecolor('#f0f0f0')  # Hintergrund pro Plot-Achse
-                
+            
                     values = filtered_combined[col].dropna().values
                     if len(values) == 0:
                         ax.set_visible(False)
                         continue
-                
+            
+                    # ==== Ursprünglicher Wertebereich als graue Fläche ====
+                    if st.session_state.get("show_original_ranges", False) and col in additional_data.columns:
+                        global_min = additional_data[col].min()
+                        global_max = additional_data[col].max()
+                        ax.fill_between(
+                            [-0.5, 0.5],
+                            global_min,
+                            global_max,
+                            color='gray',
+                            alpha=0.15
+                        )
+                        ax.text(
+                            0,
+                            global_max + (global_max * 0.02),
+                            f"{global_min:.1f}–{global_max:.1f}",
+                            ha='center',
+                            va='bottom',
+                            fontsize=8,
+                            color='black'
+                        )
+            
+                    # ==== Violinplot ====
                     vp = ax.violinplot(
                         [values],
                         showmeans=False,
@@ -2038,15 +2055,15 @@ with tab1:
                         showextrema=True,
                         widths=0.8
                     )
-                
+            
                     for pc in vp['bodies']:
                         pc.set_facecolor((0.1, 0.4, 0.8, 0.7))  # Blau, leicht transparent
                         pc.set_edgecolor('black')
                         pc.set_alpha(0.7)
-                
+            
                     if 'cmedians' in vp:
                         vp['cmedians'].set_color('black')
-                
+            
                     clean_label = (
                         col.replace("installed_capacity_", "")
                            .replace("INSTALLED_CAPACITY_", "")
@@ -2057,13 +2074,15 @@ with tab1:
                     ax.set_ylabel("Metric Value", fontsize=13)
                     ax.tick_params(axis='y', labelsize=12)
                     ax.grid(True, linestyle="--", alpha=0.4)
-                
+            
                 # Unsichtbare Achsen ausblenden
                 for j in range(i + 1, len(axes)):
                     axes[j].set_visible(False)
-                
+            
                 plt.tight_layout()
                 st.pyplot(fig_violin)
+            
+                # === Speicherung ===
                 if st.session_state.get("show_density"):
                     if MAA_PREFIX == "VALUE_":
                         st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Density", fig_dichte),("Violin", fig_violin)]
@@ -2073,7 +2092,7 @@ with tab1:
                     if MAA_PREFIX == "VALUE_":
                         st.session_state["stored_figures"] = [("Operational_Variables", fig_value), ("Installed_Capacities", fig),("Violin", fig_violin)]
                     else:
-                        st.session_state["stored_figures"] = [ ("Installed_Capacities", fig),("Violin", fig_violin)]
+                        st.session_state["stored_figures"] = [("Installed_Capacities", fig),("Violin", fig_violin)]
             elif st.session_state.get("plot_type_selector") == "Streudiagramm":
                 fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
                 fig_scatter.patch.set_facecolor('#f4f4f4')
