@@ -1004,12 +1004,21 @@ with tab1:
                     if all(len(d) > 0 for d in data):
                         vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
             
+                    # ==== Konvexe Kombinationen ====
+                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                        if all(col in filtered_convex_data.columns for col in convex_cols):
+                            for idx in range(len(filtered_convex_data)):
+                                values = filtered_convex_data.loc[idx, convex_cols].values
+                                if not np.isnan(values).all():
+                                    ax.plot(years, values, color=(1.0, 0.3, 0.3, 0.3))
+            
                     # ==== Ursprünglicher Wertebereich als rote Fläche ====
                     if st.session_state.get('show_original_ranges', False):
                         try:
                             original_matrix = vertex_df.loc[tech_data.index, cols]
                         except Exception:
-                            original_matrix = vertex_df[cols]  # Fallback, wenn tech_data fehlt
+                            original_matrix = vertex_df[cols]
             
                         original_min = original_matrix.min()
                         original_max = original_matrix.max()
@@ -1024,19 +1033,23 @@ with tab1:
                     if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
                         ax.set_ylabel("Installed Capacity")
                     ax.grid(True, linestyle="--", alpha=0.4)
+            
                     if plot_idx == 0:
                         handles_labels = ax.get_legend_handles_labels()
             
                     plot_idx += 1
-        
+            
                 for i in range(plot_idx, len(axes)):
                     fig.delaxes(axes[i])
             
                 if 'handles_labels' in locals():
                     handles, labels = handles_labels
+            
                     vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
-                    all_handles = [vertex_line] + handles
-                    all_labels = ['Vertex'] + labels
+                    convex_line = mlines.Line2D([], [], color=(1.0, 0.3, 0.3), alpha=0.8, label='Convex Combination')
+            
+                    all_handles = [vertex_line, convex_line] + handles
+                    all_labels = ['Vertex', 'Convex Combination'] + labels
             
                     legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
                     top_margin = legend_anchor_y - 0.06
@@ -1057,6 +1070,7 @@ with tab1:
                         hspace=0.3,
                         wspace=0.18
                     )
+            
                 st.pyplot(fig)
                 
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
