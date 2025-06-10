@@ -64,7 +64,7 @@ def initialize_session_state():
         'excel_error': None,
         'n_cols_plots': 3,  # <--- HIER Standardwert für Plot-Spaltenanzahl
         'max_plot_vertices': 5,  # optional auch gleich hier
-        "column_ratio" : 0.5,
+        "column_ratio" : 0.3,
         'layout_mode': "Two-column layout",
     }
     for key, val in defaults.items():
@@ -328,7 +328,7 @@ with st.sidebar.expander("Layout Options", expanded=True):
             "Column ratio (Right vs Left)",
             min_value=0.1,
             max_value=0.9,
-            value=0.5,
+            value=0.3,
             step=0.01,
             key="column_ratio"
         )
