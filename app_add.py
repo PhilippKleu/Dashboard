@@ -764,7 +764,8 @@ with tab1:
                     st.pyplot(fig_value)
                 else:
                     plot_idx_val = 0
-                    
+                
+                    for tech, year_cols in sorted(value_time_map.items()):
                         if len(year_cols) < 1 or not any(col.startswith(MAA_PREFIX + tech) for _, col in year_cols):
                             continue
                 
@@ -779,7 +780,7 @@ with tab1:
                         if values_matrix.dropna(how='all').empty:
                             continue
                 
-                        # Konvex-Daten vorbereiten (optional hinzunehmen)
+                        # Konvexe Kombinationen einfügen
                         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                             if all(col in filtered_convex_data.columns for col in cols):
                                 convex_matrix = filtered_convex_data[cols]
@@ -794,12 +795,12 @@ with tab1:
                         if all(len(d) > 0 for d in data):
                             ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
                 
-                        # === Ursprünglicher Wertebereich (rote Fläche) ===
+                        # Ursprünglicher Wertebereich (rote Fläche)
                         if st.session_state.get('show_original_ranges', False):
                             try:
                                 original_matrix = vertex_df.loc[tech_data.index, cols]
                             except Exception:
-                                original_matrix = vertex_df[cols]  # Fallback
+                                original_matrix = vertex_df[cols]
                 
                             original_min = original_matrix.min()
                             original_max = original_matrix.max()
@@ -810,10 +811,12 @@ with tab1:
                 
                         ax.set_title(tech.replace('_', ' ').title())
                         ax.set_xticks(years)
+                
                         if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
                             ax.set_xlabel("Year")
                         if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
                             ax.set_ylabel("VALUE_")
+                
                         ax.grid(True, linestyle="--", alpha=0.4)
                 
                         if plot_idx_val == 0:
@@ -825,7 +828,7 @@ with tab1:
                         if axes_value[i] in fig_value.axes:
                             fig_value.delaxes(axes_value[i])
                 
-                    # === Legende ===
+                    # Legende
                     if plot_idx_val > 0:
                         vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
                 
