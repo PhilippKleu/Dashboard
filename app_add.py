@@ -903,6 +903,44 @@ with tab1:
                     )
             
                 st.pyplot(fig)
+
+            else:
+                plot_idx = 0
+                for tech, year_cols in sorted(tech_time_map.items()):
+                    if len(year_cols) < 1:
+                        continue
+                
+                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+                    years = [y for y, _ in years_cols_sorted]
+                    cols = [col for _, col in years_cols_sorted]
+                
+                    values_matrix = vertex_df.loc[plot_indices, cols]
+                    if values_matrix.dropna(how='all').empty:
+                        continue
+                
+                    ax = axes[plot_idx]
+                    ax.set_facecolor('#f0f0f0')
+                
+                    data = [values_matrix[col].dropna().values for col in cols]
+                
+                    if all(len(d) > 0 for d in data):
+                        vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
+                
+                    ax.set_title(tech.replace('_', ' ').title())
+                    ax.set_xticks(years)
+                    ax.set_xlabel("Year")
+                    ax.set_ylabel("Installed Capacity")
+                    ax.grid(True, linestyle="--", alpha=0.4)
+                    plot_idx += 1
+                
+                # Entferne nicht benötigte Subplots
+                for i in range(plot_idx, len(axes)):
+                    if axes[i] in fig.axes:
+                        fig.delaxes(axes[i])
+                
+                fig.subplots_adjust(hspace=0.4, wspace=0.3)
+                st.pyplot(fig)
+                
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
             
             
