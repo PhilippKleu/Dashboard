@@ -648,6 +648,7 @@ with tab1:
                     plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                     st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
+                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                     plot_indices_val = current_indices
 
                 if st.session_state.get("plot_type_selector2") == "Line Plot": 
@@ -868,6 +869,7 @@ with tab1:
                 plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
+                st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
@@ -1458,6 +1460,7 @@ with tab1:
                 plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
+                st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices_val = current_indices
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 plot_idx_val = 0
@@ -1674,6 +1677,7 @@ with tab1:
             plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
             st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
         else:
+            st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
             plot_indices = current_indices
     
         
