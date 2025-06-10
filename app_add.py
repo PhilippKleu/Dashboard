@@ -1017,7 +1017,7 @@ with tab1:
                         for y, omin, omax in zip(years, original_min, original_max):
                             if not np.isnan(omin) and not np.isnan(omax):
                                 ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-            
+                        ax.set_xticks(years)
                     ax.set_title(tech.replace('_', ' ').title())
                     if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
                         ax.set_xlabel("Year")
