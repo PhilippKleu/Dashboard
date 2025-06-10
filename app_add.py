@@ -873,36 +873,36 @@ with tab1:
             
                     plot_idx += 1
         
-                    for i in range(plot_idx, len(axes)):
-                        fig.delaxes(axes[i])
-                
-                    if 'handles_labels' in locals():
-                        handles, labels = handles_labels
-                        vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
-                        all_handles = [vertex_line] + handles
-                        all_labels = ['Vertex'] + labels
-                
-                        legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
-                        top_margin = legend_anchor_y - 0.06
-                
-                        fig.legend(
-                            all_handles,
-                            all_labels,
-                            loc='upper center',
-                            bbox_to_anchor=(0.5, legend_anchor_y),
-                            ncol=len(all_labels),
-                            frameon=True,
-                            fancybox=True,
-                            fontsize=14
-                        )
-                
-                        fig.subplots_adjust(
-                            top=top_margin,
-                            hspace=0.3,
-                            wspace=0.18
-                        )
-                
-                    st.pyplot(fig)
+                for i in range(plot_idx, len(axes)):
+                    fig.delaxes(axes[i])
+            
+                if 'handles_labels' in locals():
+                    handles, labels = handles_labels
+                    vertex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Vertex')
+                    all_handles = [vertex_line] + handles
+                    all_labels = ['Vertex'] + labels
+            
+                    legend_anchor_y = 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)
+                    top_margin = legend_anchor_y - 0.06
+            
+                    fig.legend(
+                        all_handles,
+                        all_labels,
+                        loc='upper center',
+                        bbox_to_anchor=(0.5, legend_anchor_y),
+                        ncol=len(all_labels),
+                        frameon=True,
+                        fancybox=True,
+                        fontsize=14
+                    )
+            
+                    fig.subplots_adjust(
+                        top=top_margin,
+                        hspace=0.3,
+                        wspace=0.18
+                    )
+            
+                st.pyplot(fig)
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
             
             
