@@ -988,25 +988,49 @@ with tab1:
                         ), row=row, col=col)
                 
                 # Layout
+                # Layout global anpassen
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
                     title=dict(
                         text="Installed Capacities Over Time (All Technologies)",
-                        font=dict(size=20),
-                        x=0.5
+                        font=dict(size=20, family="Arial", color="#333"),
+                        x=0.5,
+                        xanchor="center"
                     ),
-                    font=dict(size=14),
-                    plot_bgcolor='#f4f4f4',
-                    paper_bgcolor='#ffffff',
-                    margin=dict(l=30, r=30, t=80, b=40),
-                    hovermode="closest"
+                    font=dict(size=13, family="Arial", color="#333"),
+                    paper_bgcolor="#ffffff",
+                    plot_bgcolor="#f4f4f4",
+                    hovermode="closest",
+                    margin=dict(l=40, r=40, t=80, b=50),
+                    showlegend=False  # Legenden bei Bedarf aktivieren
                 )
                 
-                # Achsen-Layout
-                fig.update_xaxes(title_text="Year", tickfont=dict(size=12), showgrid=True, gridcolor='rgba(0,0,0,0.1)')
-                fig.update_yaxes(title_text="Capacity", tickfont=dict(size=12), showgrid=True, gridcolor='rgba(0,0,0,0.1)')
+                # Achsen-Design (alle Subplots)
+                fig.update_xaxes(
+                    title_text="Year",
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor="rgba(0,0,0,0.1)",
+                    zeroline=False,
+                    tickfont=dict(size=12),
+                    titlefont=dict(size=13)
+                )
+                fig.update_yaxes(
+                    title_text="Capacity",
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor="rgba(0,0,0,0.1)",
+                    zeroline=False,
+                    tickfont=dict(size=12),
+                    titlefont=dict(size=13)
+                )
                 
+                # Subplot-Titel dezent gestalten
+                for ann in fig['layout']['annotations']:
+                    ann['font'] = dict(size=14, color='#222', family="Arial")
+                
+                # Plot ausgeben
                 st.plotly_chart(fig, use_container_width=True)
 
             else:
