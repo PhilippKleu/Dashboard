@@ -879,6 +879,8 @@ with tab1:
                 plot_indices = vertex_df.loc[current_indices].sample(
                     n=st.session_state["max_plot_vertices"], replace=False, random_state=42
                 ).index
+                additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
+                filtered_additional = additional_data.loc[current_indices]
                 # 1. Gültige Technologien ermitteln
                 valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
                 sorted_valid_techs = sorted(valid_techs)  # für konsistente Reihenfolge
