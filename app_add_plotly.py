@@ -18,6 +18,7 @@ from io import BytesIO
 from zipfile import ZipFile
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import plotly.express as px
 
 
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
@@ -903,31 +904,31 @@ with tab1:
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
             
+                # Hauptplot aufbauen
                 for idx, tech in enumerate(sorted_valid_techs):
                     year_cols = tech_time_map[tech]
                     if len(year_cols) < 1:
                         continue
-            
+                
                     row = idx // n_cols + 1
                     col = idx % n_cols + 1
-            
+                
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, _ in years_cols_sorted]
                     cols = [col for _, col in years_cols_sorted]
-            
+                
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-            
+                
                     if values_matrix.dropna(how='all').empty:
                         continue
-            
-                    # Vertex-Linien zeichnen
+                
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
-            
+                
                         time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
-            
+                
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
                             extra_info = "<br>".join([
@@ -936,9 +937,9 @@ with tab1:
                             ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
-            
+                
                         tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
-            
+                
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
@@ -946,10 +947,11 @@ with tab1:
                             name=f"{tech} - Vertex {i}",
                             line=dict(color='rgba(26, 102, 204, 0.3)'),
                             text=[tooltip_text] * len(years),
+                            customdata=[i] * len(years),  # <-- Vertex-ID für Clicktracking
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
-            
+                
                     # Konvexkombinationen
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
@@ -965,7 +967,7 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
-            
+                
                     # Min/Max-Bereich
                     min_vals = full_values_matrix.min()
                     max_vals = full_values_matrix.max()
@@ -978,7 +980,7 @@ with tab1:
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
-            
+                
                     # Originalbereich
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
@@ -993,19 +995,58 @@ with tab1:
                             hoverinfo='skip',
                             showlegend=False
                         ), row=row, col=col)
-            
-                # Layout finalisieren (ursprünglich)
+                
+                # Layout-Styling
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
-                    title_text="Installed Capacities Over Time (All Technologies)",
+                    title=dict(
+                        text="Installed Capacities Over Time (All Technologies)",
+                        font=dict(size=20, family="Arial", color="#333"),
+                        x=0.5
+                    ),
+                    font=dict(size=13, family="Arial", color="#333"),
+                    paper_bgcolor="#ffffff",
+                    plot_bgcolor="#f4f4f4",
                     hovermode="closest",
-                    plot_bgcolor="#f8f8f8",
-                    margin=dict(l=30, r=30, t=50, b=30)
+                    margin=dict(l=40, r=40, t=80, b=50),
+                    showlegend=False
                 )
-            
-                # Plot anzeigen
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_xaxes(
+                    title_text="Year",
+                    showgrid=True,
+                    gridcolor="rgba(0,0,0,0.1)",
+                    tickfont=dict(size=12)
+                )
+                fig.update_yaxes(
+                    title_text="Capacity",
+                    showgrid=True,
+                    gridcolor="rgba(0,0,0,0.1)",
+                    tickfont=dict(size=12)
+                )
+                for ann in fig['layout']['annotations']:
+                    ann['font'] = dict(size=14, color='#222', family="Arial")
+                
+                # Interaktive Darstellung
+                clicked_point = st.plotly_chart(fig, use_container_width=True, click_event=True)
+                
+                # Detail-Plot für geklickte Linie
+                if clicked_point and "points" in clicked_point and clicked_point["points"]:
+                    vertex_id = clicked_point["points"][0]["customdata"]
+                    st.markdown(f"### 🔍 Detailansicht für Vertex {vertex_id}")
+                
+                    vertex_values = vertex_df.loc[vertex_id]
+                    year_value_pairs = [(col.split("_")[-1], vertex_values[col])
+                                        for col in vertex_df.columns if col.startswith("VALUE_")]
+                    year_value_pairs = [(int(y), v) for y, v in year_value_pairs if pd.notna(v)]
+                
+                    if year_value_pairs:
+                        df_detail = pd.DataFrame(year_value_pairs, columns=["Year", "Value"])
+                        fig_detail = px.line(df_detail, x="Year", y="Value",
+                                             title=f"Entwicklung von Vertex {vertex_id}")
+                        st.plotly_chart(fig_detail, use_container_width=True)
+                    else:
+                        st.info("Keine Zeitdaten für diesen Vertex verfügbar.")
 
             else:
                 plot_idx = 0
