@@ -2181,26 +2181,39 @@ with tab1:
     # === Daten als Tabelle anzeigen ===
     st.divider()
     st.markdown("### Show remaining vertices as table")
-   
+    
     # === Original-Vertices ===
     st.markdown("#### Original Vertices")
+    
+    # Falls keine Daten vorhanden sind
     filtered_full_data = tech_data.loc[current_indices] if not current_indices.empty else pd.DataFrame()
+    
     if filtered_data.empty:
         st.dataframe(filtered_full_data, use_container_width=True)
     else:
-        frames_to_concat = [filtered_full_data.reset_index(drop=True)]
-
+        # Kopie, um Spalte hinzuzufügen, ohne Original zu verändern
+        filtered_full_data = filtered_full_data.copy()
+    
+        # Vertex-Indizes explizit als Spalte einfügen
+        filtered_full_data["Vertex Index"] = filtered_full_data.index
+    
+        frames_to_concat = [filtered_full_data]
+    
         # Füge Installed Capacity-Spalten hinzu, falls VALUE_-Modus
         if MAA_PREFIX == "VALUE_":
             installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
             installed_part = vertex_df.loc[filtered_full_data.index, installed_cols]
             frames_to_concat.append(installed_part.reset_index(drop=True))
-
+    
+        # Füge zusätzliche Metriken hinzu
         if additional_cols:
             additional_metrics_part = vertex_df.loc[filtered_full_data.index, additional_cols]
             frames_to_concat.append(additional_metrics_part.reset_index(drop=True))
-
+    
+        # Alles zusammenführen
         full_with_all = pd.concat(frames_to_concat, axis=1)
+    
+        # Tabelle anzeigen
         st.dataframe(full_with_all, use_container_width=True)
 
     # === Konvexe Kombinationen ===
