@@ -17,6 +17,7 @@ import seaborn as sns
 from io import BytesIO
 from zipfile import ZipFile
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
