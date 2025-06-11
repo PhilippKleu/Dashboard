@@ -876,6 +876,9 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
+                plot_indices = vertex_df.loc[current_indices].sample(
+                    n=st.session_state["max_plot_vertices"], replace=False, random_state=42
+                ).index
                 # 1. Gültige Technologien ermitteln
                 valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
                 sorted_valid_techs = sorted(valid_techs)  # für konsistente Reihenfolge
