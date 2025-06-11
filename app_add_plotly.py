@@ -886,6 +886,8 @@ with tab1:
                 )
                 
                 # Plotting pro Technologie
+                additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
+                filtered_additional = additional_data.loc[current_indices]
                 for idx, (tech, year_cols) in enumerate(sorted(tech_time_map.items())):
                     if len(year_cols) < 1:
                         continue
@@ -904,19 +906,29 @@ with tab1:
                         continue
                 
                     # Vertex-Linien
-                    # Vertex-Linien mit gesamtem Verlauf als Text
+                    
                     for i in values_matrix.index:
-                        # Tooltip mit allen Stützpunkten dieser Linie
-                        tooltip_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
-                
+                        # Tooltip mit Zeitreihe
+                        time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
+                        
+                        # Zusätzliche Metriken (falls vorhanden)
+                        if i in filtered_additional.index:
+                            extra_data = filtered_additional.loc[i]
+                            extra_info = "<br>".join([f"{col}: {extra_data[col]:.2f}" if pd.notna(extra_data[col]) else f"{col}: n/a"
+                                                      for col in filtered_additional.columns])
+                        else:
+                            extra_info = "Keine Zusatzdaten verfügbar"
+                        
+                        tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
+                    
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
                             mode='lines',
                             name=f"{tech} - Vertex {i}",
                             line=dict(color='rgba(26, 102, 204, 0.3)'),
-                            text=[tooltip_text] * len(years),   # gleiches Tooltip an jedem Punkt
-                            hoverinfo='text',                  # zeige nur den Text
+                            text=[tooltip_text] * len(years),
+                            hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
                 
