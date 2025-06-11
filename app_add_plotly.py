@@ -875,10 +875,19 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                # Plot-Logik für jede Technologie
-                for tech, year_cols in sorted(tech_time_map.items()):
+                # Subplots vorbereiten
+                fig = make_subplots(
+                    rows=n_rows, cols=n_cols,
+                    subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
+                )
+                
+                # Plotting pro Technologie
+                for idx, (tech, year_cols) in enumerate(sorted(tech_time_map.items())):
                     if len(year_cols) < 1:
                         continue
+                
+                    row = idx // n_cols + 1
+                    col = idx % n_cols + 1
                 
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, _ in years_cols_sorted]
@@ -890,19 +899,16 @@ with tab1:
                     if values_matrix.dropna(how='all').empty:
                         continue
                 
-                    fig = go.Figure()
-                
-                    # Einzelne Vertex-Linien
+                    # Vertex-Linien
                     for i in values_matrix.index:
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
                             mode='lines',
                             line=dict(color='rgba(26, 102, 204, 0.3)'),
-                            name=f"Vertex {i}",
                             hovertemplate='Year: %{x}<br>Value: %{y}<extra></extra>',
                             showlegend=False
-                        ))
+                        ), row=row, col=col)
                 
                     # Konvexkombinationen
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
@@ -916,10 +922,9 @@ with tab1:
                                         y=vals,
                                         mode='lines',
                                         line=dict(color='rgba(255, 50, 50, 0.4)', dash='dot'),
-                                        name=f"Convex {i}",
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
-                                    ))
+                                    ), row=row, col=col)
                 
                     # Min/Max-Bereich
                     min_vals = full_values_matrix.min()
@@ -931,11 +936,10 @@ with tab1:
                         fillcolor='rgba(26, 102, 204, 0.15)',
                         line=dict(color='rgba(255,255,255,0)'),
                         hoverinfo='skip',
-                        name='Range',
                         showlegend=False
-                    ))
+                    ), row=row, col=col)
                 
-                    # Originalbereich (optional)
+                    # Originalbereich
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                         original_min = original_matrix.min()
@@ -947,22 +951,21 @@ with tab1:
                             fillcolor='rgba(255, 0, 0, 0.08)',
                             line=dict(color='rgba(255,255,255,0)'),
                             hoverinfo='skip',
-                            name='Original Range',
                             showlegend=False
-                        ))
+                        ), row=row, col=col)
                 
-                    # Layout
-                    fig.update_layout(
-                        title=f"{tech.replace('_', ' ').title()}",
-                        xaxis_title="Year",
-                        yaxis_title="Installed Capacity",
-                        hovermode="x unified",
-                        plot_bgcolor='#f8f8f8',
-                        margin=dict(l=40, r=40, t=60, b=40),
-                        height=350,
-                    )
+                # Layout
+                fig.update_layout(
+                    height=350 * n_rows,
+                    width=300 * n_cols,
+                    title_text="Installed Capacities Over Time (All Technologies)",
+                    hovermode="x unified",
+                    plot_bgcolor="#f8f8f8",
+                    margin=dict(l=30, r=30, t=50, b=30)
+                )
                 
-                    st.plotly_chart(fig, use_container_width=True)
+                # Plot anzeigen
+                st.plotly_chart(fig, use_container_width=True)
 
             else:
                 plot_idx = 0
