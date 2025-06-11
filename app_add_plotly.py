@@ -883,7 +883,7 @@ with tab1:
                 
                 # Breiter-als-hoch-Verhältnis sicherstellen (Seitenverhältnis z. B. 1.5:1)
                 plot_width_per_col = 6  # Basisbreite pro Spalte
-                aspect_ratio = 0.5
+                aspect_ratio = n_cols
                 fig_width = plot_width_per_col * n_cols
                 fig_height = fig_width / aspect_ratio  # Automatisch kleiner als fig_width
                 
