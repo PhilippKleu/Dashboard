@@ -878,8 +878,31 @@ with tab1:
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 # Subplots vorbereiten
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-                n_cols = st.session_state.get("n_cols_plots", 3)
-                n_rows = int(np.ceil(n_techs / n_cols))
+                # Dynamische Spalten-/Zeilenberechnung für breiteres Layout
+                max_cols = st.session_state.get("n_cols_plots", 5)
+                plot_width_per_col = 6
+                plot_height_per_row = 3.5
+                
+                # Start mit maximaler Spaltenanzahl (oder weniger bei wenigen Technologien)
+                best_cols = min(max_cols, n_techs)
+                best_rows = int(np.ceil(n_techs / best_cols))
+                
+                # Solange Layout nicht breiter als hoch ist, Spalten erhöhen oder anpassen
+                for cols in range(1, n_techs + 1):
+                    rows = int(np.ceil(n_techs / cols))
+                    fig_w = cols * plot_width_per_col
+                    fig_h = rows * plot_height_per_row
+                    if fig_w > fig_h:
+                        best_cols = cols
+                        best_rows = rows
+                        break  # erste passende Kombination gefunden
+                
+                n_cols = best_cols
+                n_rows = best_rows
+                plot_width_per_col = 6
+                plot_height_per_row = 3.5
+                fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
+                fig_height = plot_height_per_row * n_rows
                 fig = make_subplots(
                     rows=n_rows, cols=n_cols,
                     subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
