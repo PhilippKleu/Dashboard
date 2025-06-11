@@ -878,39 +878,25 @@ with tab1:
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 # Subplots vorbereiten
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-                # Dynamische Spalten-/Zeilenberechnung für breiteres Layout
-                max_cols = st.session_state.get("n_cols_plots", 5)
-                plot_width_per_col = 6
-                plot_height_per_row = 3.5
+                n_cols = st.session_state.get("n_cols_plots", 3)
+                n_rows = int(np.ceil(n_techs / n_cols))
                 
-                # Start mit maximaler Spaltenanzahl (oder weniger bei wenigen Technologien)
-                best_cols = min(max_cols, n_techs)
-                best_rows = int(np.ceil(n_techs / best_cols))
+                # Breiter-als-hoch-Verhältnis sicherstellen (Seitenverhältnis z. B. 1.5:1)
+                plot_width_per_col = 6  # Basisbreite pro Spalte
+                aspect_ratio = 1.5
+                fig_width = plot_width_per_col * n_cols
+                fig_height = fig_width / aspect_ratio  # Automatisch kleiner als fig_width
                 
-                # Solange Layout nicht breiter als hoch ist, Spalten erhöhen oder anpassen
-                for cols in range(1, n_techs + 1):
-                    rows = int(np.ceil(n_techs / cols))
-                    fig_w = cols * plot_width_per_col
-                    fig_h = rows * plot_height_per_row
-                    if fig_w > fig_h:
-                        best_cols = cols
-                        best_rows = rows
-                        break  # erste passende Kombination gefunden
-                
-                n_cols = best_cols
-                n_rows = best_rows
-                plot_width_per_col = 6
-                plot_height_per_row = 3.5
-                fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
-                fig_height = plot_height_per_row * n_rows
                 fig = make_subplots(
-                    rows=n_rows, cols=n_cols,
+                    rows=n_rows,
+                    cols=n_cols,
                     subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
                 )
                 
                 # Plotting pro Technologie
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
+                
                 for idx, (tech, year_cols) in enumerate(sorted(tech_time_map.items())):
                     if len(year_cols) < 1:
                         continue
@@ -929,21 +915,20 @@ with tab1:
                         continue
                 
                     # Vertex-Linien
-                    
                     for i in values_matrix.index:
-                        # Tooltip mit Zeitreihe
                         time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
                         
-                        # Zusätzliche Metriken (falls vorhanden)
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
-                            extra_info = "<br>".join([f"{col}: {extra_data[col]:.2f}" if pd.notna(extra_data[col]) else f"{col}: n/a"
-                                                      for col in filtered_additional.columns])
+                            extra_info = "<br>".join([
+                                f"{col}: {extra_data[col]:.2f}" if pd.notna(extra_data[col]) else f"{col}: n/a"
+                                for col in filtered_additional.columns
+                            ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
                         
                         tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
-                    
+                
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
@@ -1001,10 +986,10 @@ with tab1:
                 
                 # Layout
                 fig.update_layout(
-                    height=350 * n_rows,
-                    width=300 * n_cols,
+                    height=fig_height * 100,  # px (100px pro "Einheit")
+                    width=fig_width * 100,    # px
                     title_text="Installed Capacities Over Time (All Technologies)",
-                    hovermode="closest",  # <- wichtig für gezieltes Einzel-Hovern
+                    hovermode="closest",
                     plot_bgcolor="#f8f8f8",
                     margin=dict(l=30, r=30, t=50, b=30)
                 )
