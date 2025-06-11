@@ -876,55 +876,55 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                # Gültige Technologien ermitteln (mindestens eine Spalte vorhanden)
-                valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
-                
-                n_techs = len(valid_techs)
-                n_cols = st.session_state.get("n_cols_plots", 3)
-                n_rows = int(np.ceil(n_techs / n_cols))
-                
-                plot_width_per_col = 6
-                aspect_ratio = n_cols
-                fig_width = plot_width_per_col * n_cols
-                fig_height = fig_width / aspect_ratio
-                
                 # Subplots vorbereiten mit korrekten Titeln
+                n_cols = st.session_state.get("n_cols_plots", 3)
+                plot_width_per_col = 6
+                plot_height_per_row = 3.5
+                
+                # Gültige Technologien ermitteln
+                valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
+                sorted_valid_techs = sorted(valid_techs)
+                
+                n_techs = len(sorted_valid_techs)
+                n_rows = ceil(n_techs / n_cols)
+                
+                fig_width = plot_width_per_col * n_cols
+                fig_height = plot_height_per_row * n_rows
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
-                    subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs]
+                    subplot_titles=[tech.replace("_", " ").title() for tech in sorted_valid_techs]
                 )
-                
+            
                 # Zusatzdaten vorbereiten
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
-                
-                # Schleife über gültige Technologien
-                for idx, tech in enumerate(sorted(valid_techs)):
+            
+                for idx, tech in enumerate(sorted_valid_techs):
                     year_cols = tech_time_map[tech]
                     if len(year_cols) < 1:
                         continue
-                
+            
                     row = idx // n_cols + 1
                     col = idx % n_cols + 1
-                
+            
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, _ in years_cols_sorted]
                     cols = [col for _, col in years_cols_sorted]
-                
+            
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-                
+            
                     if values_matrix.dropna(how='all').empty:
                         continue
-                
+            
                     # Vertex-Linien
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
-                
+            
                         time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
-                
+            
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
                             extra_info = "<br>".join([
@@ -933,9 +933,9 @@ with tab1:
                             ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
-                
+            
                         tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
-                
+            
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
@@ -946,7 +946,7 @@ with tab1:
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
-                
+            
                     # Konvexkombinationen
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
@@ -962,7 +962,7 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
-                
+            
                     # Min/Max-Bereich
                     min_vals = full_values_matrix.min()
                     max_vals = full_values_matrix.max()
@@ -975,7 +975,7 @@ with tab1:
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
-                
+            
                     # Originalbereich
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
@@ -990,7 +990,7 @@ with tab1:
                             hoverinfo='skip',
                             showlegend=False
                         ), row=row, col=col)
-                
+            
                 # Layout finalisieren
                 fig.update_layout(
                     height=fig_height * 100,
@@ -1000,7 +1000,7 @@ with tab1:
                     plot_bgcolor="#f8f8f8",
                     margin=dict(l=30, r=30, t=50, b=30)
                 )
-                
+            
                 # Plot anzeigen
                 st.plotly_chart(fig, use_container_width=True)
 
