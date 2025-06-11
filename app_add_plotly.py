@@ -876,8 +876,10 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                # Subplots vorbereiten
-                n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+                # Gültige Technologien ermitteln (mindestens eine Spalte vorhanden)
+                valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
+                
+                n_techs = len(valid_techs)
                 n_cols = st.session_state.get("n_cols_plots", 3)
                 n_rows = int(np.ceil(n_techs / n_cols))
                 
@@ -886,16 +888,20 @@ with tab1:
                 fig_width = plot_width_per_col * n_cols
                 fig_height = fig_width / aspect_ratio
                 
+                # Subplots vorbereiten mit korrekten Titeln
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
-                    subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
+                    subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs]
                 )
                 
+                # Zusatzdaten vorbereiten
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
                 
-                for idx, (tech, year_cols) in enumerate(sorted(tech_time_map.items())):
+                # Schleife über gültige Technologien
+                for idx, tech in enumerate(sorted(valid_techs)):
+                    year_cols = tech_time_map[tech]
                     if len(year_cols) < 1:
                         continue
                 
@@ -915,7 +921,7 @@ with tab1:
                     # Vertex-Linien
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
-                            continue  # <<< Diese Zeile verhindert das Zeichnen leerer Vertices
+                            continue
                 
                         time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
                 
@@ -985,7 +991,7 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
                 
-                # Layout
+                # Layout finalisieren
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
