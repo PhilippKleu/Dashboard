@@ -2191,13 +2191,7 @@ with tab1:
     if filtered_data.empty:
         st.dataframe(filtered_full_data, use_container_width=True)
     else:
-        # Kopie, um Spalte hinzuzufügen, ohne Original zu verändern
-        filtered_full_data = filtered_full_data.copy()
-    
-        # Vertex-Indizes explizit als Spalte einfügen
-        filtered_full_data["Vertex Index"] = filtered_full_data.index
-    
-        frames_to_concat = [filtered_full_data]
+        frames_to_concat = [filtered_full_data]  # Index bleibt erhalten
     
         # Füge Installed Capacity-Spalten hinzu, falls VALUE_-Modus
         if MAA_PREFIX == "VALUE_":
@@ -2212,8 +2206,8 @@ with tab1:
     
         # Alles zusammenführen
         full_with_all = pd.concat(frames_to_concat, axis=1)
-    
-        # Tabelle anzeigen
+        
+        # Tabelle anzeigen – mit originalem Index
         st.dataframe(full_with_all, use_container_width=True)
 
     # === Konvexe Kombinationen ===
