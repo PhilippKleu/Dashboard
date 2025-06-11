@@ -877,6 +877,9 @@ with tab1:
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 # Subplots vorbereiten
+                n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+                n_cols = st.session_state.get("n_cols_plots", 3)
+                n_rows = int(np.ceil(n_techs / n_cols))
                 fig = make_subplots(
                     rows=n_rows, cols=n_cols,
                     subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
