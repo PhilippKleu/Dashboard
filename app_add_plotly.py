@@ -876,20 +876,20 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                # Subplots vorbereiten mit korrekten Titeln
-                n_cols = st.session_state.get("n_cols_plots", 3)
-                plot_width_per_col = 6
-                plot_height_per_row = 3.5
-                
-                # Gültige Technologien ermitteln
+                # 1. Gültige Technologien ermitteln
                 valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
-                sorted_valid_techs = sorted(valid_techs)
+                sorted_valid_techs = sorted(valid_techs)  # für konsistente Reihenfolge
                 
+                # 2. Plotgrößen berechnen (ursprüngliches Layout)
                 n_techs = len(sorted_valid_techs)
-                n_rows = ceil(n_techs / n_cols)
+                n_cols = st.session_state.get("n_cols_plots", 3)
+                n_rows = int(np.ceil(n_techs / n_cols))
                 
+                plot_width_per_col = 6
+                aspect_ratio = n_cols
                 fig_width = plot_width_per_col * n_cols
-                fig_height = plot_height_per_row * n_rows
+                fig_height = fig_width / aspect_ratio
+                # Subplots vorbereiten mit korrekt sortierten Titeln
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
@@ -918,7 +918,7 @@ with tab1:
                     if values_matrix.dropna(how='all').empty:
                         continue
             
-                    # Vertex-Linien
+                    # Vertex-Linien zeichnen
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
@@ -991,7 +991,7 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
             
-                # Layout finalisieren
+                # Layout finalisieren (ursprünglich)
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
