@@ -937,7 +937,7 @@ with tab1:
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
             
-                        tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
+                        tooltip_text = f"<b>Vertex {i -1}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
             
                         fig.add_trace(go.Scatter(
                             x=years,
