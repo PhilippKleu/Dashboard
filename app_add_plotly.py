@@ -904,13 +904,20 @@ with tab1:
                         continue
                 
                     # Vertex-Linien
+                    # Vertex-Linien mit detailliertem Hover
                     for i in values_matrix.index:
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
                             mode='lines',
+                            name=f"{tech} - Vertex {i}",
                             line=dict(color='rgba(26, 102, 204, 0.3)'),
-                            hovertemplate='Year: %{x}<br>Value: %{y}<extra></extra>',
+                            hovertemplate=(
+                                f"<b>Technology:</b> {tech}<br>" +
+                                "<b>Vertex:</b> " + str(i) + "<br>" +
+                                "Year: %{x}<br>" +
+                                "Capacity: %{y}<extra></extra>"
+                            ),
                             showlegend=False
                         ), row=row, col=col)
                 
@@ -963,7 +970,7 @@ with tab1:
                     height=350 * n_rows,
                     width=300 * n_cols,
                     title_text="Installed Capacities Over Time (All Technologies)",
-                    hovermode="x unified",
+                    hovermode="closest",
                     plot_bgcolor="#f8f8f8",
                     margin=dict(l=30, r=30, t=50, b=30)
                 )
