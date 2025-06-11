@@ -2197,17 +2197,17 @@ with tab1:
         if MAA_PREFIX == "VALUE_":
             installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
             installed_part = vertex_df.loc[filtered_full_data.index, installed_cols]
-            frames_to_concat.append(installed_part.reset_index(drop=True))
+            frames_to_concat.append(installed_part)  # KEIN reset_index
     
         # Füge zusätzliche Metriken hinzu
         if additional_cols:
             additional_metrics_part = vertex_df.loc[filtered_full_data.index, additional_cols]
-            frames_to_concat.append(additional_metrics_part.reset_index(drop=True))
+            frames_to_concat.append(additional_metrics_part)  # KEIN reset_index
     
-        # Alles zusammenführen
+        # Alles korrekt entlang der Indizes zusammenführen
         full_with_all = pd.concat(frames_to_concat, axis=1)
-        
-        # Tabelle anzeigen – mit originalem Index
+    
+        # Tabelle anzeigen
         st.dataframe(full_with_all, use_container_width=True)
 
     # === Konvexe Kombinationen ===
