@@ -881,11 +881,10 @@ with tab1:
                 n_cols = st.session_state.get("n_cols_plots", 3)
                 n_rows = int(np.ceil(n_techs / n_cols))
                 
-                # Breiter-als-hoch-Verhältnis sicherstellen (Seitenverhältnis z. B. 1.5:1)
-                plot_width_per_col = 6  # Basisbreite pro Spalte
+                plot_width_per_col = 6
                 aspect_ratio = n_cols
                 fig_width = plot_width_per_col * n_cols
-                fig_height = fig_width / aspect_ratio  # Automatisch kleiner als fig_width
+                fig_height = fig_width / aspect_ratio
                 
                 fig = make_subplots(
                     rows=n_rows,
@@ -893,7 +892,6 @@ with tab1:
                     subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map.keys()]
                 )
                 
-                # Plotting pro Technologie
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
                 
@@ -916,8 +914,11 @@ with tab1:
                 
                     # Vertex-Linien
                     for i in values_matrix.index:
+                        if values_matrix.loc[i].dropna().empty:
+                            continue  # <<< Diese Zeile verhindert das Zeichnen leerer Vertices
+                
                         time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
-                        
+                
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
                             extra_info = "<br>".join([
@@ -926,7 +927,7 @@ with tab1:
                             ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
-                        
+                
                         tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
                 
                         fig.add_trace(go.Scatter(
@@ -986,8 +987,8 @@ with tab1:
                 
                 # Layout
                 fig.update_layout(
-                    height=fig_height * 100,  # px (100px pro "Einheit")
-                    width=fig_width * 100,    # px
+                    height=fig_height * 100,
+                    width=fig_width * 100,
                     title_text="Installed Capacities Over Time (All Technologies)",
                     hovermode="closest",
                     plot_bgcolor="#f8f8f8",
