@@ -886,7 +886,7 @@ with tab1:
                     "subplot_height_multiplier": 1.0,
                 
                     "horizontal_spacing": 0.08,
-                    "vertical_spacing": 0.10,
+                    "vertical_spacing": 0.09,
                 
                     "main_color": '#1a66cc',
                     "dim_color": '#1a66cc',
