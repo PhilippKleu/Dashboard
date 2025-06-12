@@ -940,9 +940,10 @@ with tab1:
                     "title_size": title_size,
                     "annotation_size": annotation_size,
                 }
-            
+                valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
                 year_cols = tech_time_map[valid_techs[0]]
                 _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+                
             
                 plot_indices = select_representative_vertices_by_kmeans(
                     df=vertex_df,
@@ -951,7 +952,7 @@ with tab1:
                     index_subset=current_indices
                 )
             
-                valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+               
                 n_techs = len(valid_techs)
                 n_cols = PLOT_CONFIG["n_cols"]
                 n_rows = int(np.ceil(n_techs / n_cols))
