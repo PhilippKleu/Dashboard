@@ -858,16 +858,7 @@ with tab1:
                 
             st.markdown("### Installed Capacities Over Time")
         
-            n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-            n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
-            plot_width_per_col = 6
-            plot_height_per_row = 3.5
-            fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
-            fig_height = plot_height_per_row * n_rows
-        
-            fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
-            fig.patch.set_facecolor('#f4f4f4')
-            axes = axes.flatten() if n_techs > 1 else [axes]
+            
         
             if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                 plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
@@ -1038,6 +1029,16 @@ with tab1:
                 st.plotly_chart(fig, use_container_width=True)
 
             else:
+                n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+                n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
+                plot_width_per_col = 6
+                plot_height_per_row = 3.5
+                fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
+                fig_height = plot_height_per_row * n_rows
+            
+                fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
+                fig.patch.set_facecolor('#f4f4f4')
+                axes = axes.flatten() if n_techs > 1 else [axes]
                 plot_idx = 0
                 for tech, year_cols in sorted(tech_time_map.items()):
                     if len(year_cols) < 1:
