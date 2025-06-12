@@ -1010,12 +1010,21 @@ with tab1:
                     width=fig_width * 100,
                     title=dict(
                         text="Installed Capacities Over Time (All Technologies)",
-                        font=dict(size=PLOT_CONFIG["title_size"], family=PLOT_CONFIG["font_family"], color=PLOT_CONFIG["font_color"]),
+                        font=dict(
+                            size=PLOT_CONFIG["title_size"],
+                            family=PLOT_CONFIG["font_family"],
+                            color=PLOT_CONFIG["font_color"]
+                        ),
                         x=0.5
                     ),
-                    font=dict(size=PLOT_CONFIG["font_size"], family=PLOT_CONFIG["font_family"], color=PLOT_CONFIG["font_color"]),
-                    paper_bgcolor="#ffffff",
-                    plot_bgcolor=PLOT_CONFIG["background_color"],
+                    font=dict(
+                        size=PLOT_CONFIG["font_size"],
+                        family=PLOT_CONFIG["font_family"],
+                        color=PLOT_CONFIG["font_color"]
+                    ),
+                    # 💡 Diese zwei Zeilen definieren die Hintergrundfarben:
+                    paper_bgcolor=PLOT_CONFIG["background_color"],  # Gesamtfläche
+                    plot_bgcolor=PLOT_CONFIG["background_color"],   # Subplot-Fläche
                     hovermode="closest",
                     margin=dict(l=40, r=40, t=80, b=50),
                     showlegend=False
