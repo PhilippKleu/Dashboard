@@ -977,65 +977,37 @@ with tab1:
                             val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
                             st.markdown(f"**{key}**: {val_display}")
                 
-                            # Vergleich zum Mittelwert über alle Daten
                             if pd.notna(val):
                                 col_vals = full_additional[key].dropna()
-                                min_val = col_vals.min()
-                                max_val = col_vals.max()
-                                mean_val = col_vals.mean()
+                                if not col_vals.empty:
+                                    # Quartile und Bereich berechnen
+                                    q1 = col_vals.quantile(0.25)
+                                    q2 = col_vals.quantile(0.5)
+                                    q3 = col_vals.quantile(0.75)
+                                    min_val = col_vals.min()
+                                    max_val = col_vals.max()
                 
-                                # Plotly Balken-Visualisierung
-                                bar_fig = go.Figure()
+                                    # Kompakte Visualisierung mit Matplotlib
+                                    fig, ax = plt.subplots(figsize=(3.5, 0.3))  # kompakte Breite, schmale Höhe
                 
-                                # Skala als Linie
-                                bar_fig.add_trace(go.Scatter(
-                                    x=[min_val, max_val],
-                                    y=[0, 0],
-                                    mode='lines',
-                                    line=dict(color='lightgray', width=6),
-                                    showlegend=False,
-                                    hoverinfo='skip'
-                                ))
+                                    # Basislinie (Wertebereich)
+                                    ax.hlines(0, min_val, max_val, color="lightgray", linewidth=6)
                 
-                                # Marker: Wert von diesem Vertex
-                                bar_fig.add_trace(go.Scatter(
-                                    x=[val],
-                                    y=[0],
-                                    mode='markers+text',
-                                    marker=dict(color='blue', size=12),
-                                    text=[f"{val:.2f}"],
-                                    textposition="top center",
-                                    showlegend=False,
-                                    hovertemplate=f"{key}: {val:.2f}<extra></extra>"
-                                ))
+                                    # Quartilsstriche (Q1, Q2, Q3)
+                                    for q in [q1, q2, q3]:
+                                        ax.vlines(q, -0.1, 0.1, color="gray", linewidth=1)
                 
-                                # Marker: Mittelwert
-                                bar_fig.add_trace(go.Scatter(
-                                    x=[mean_val],
-                                    y=[0],
-                                    mode='markers',
-                                    marker=dict(color='orange', symbol='x', size=10),
-                                    showlegend=False,
-                                    hovertemplate=f"Mittelwert: {mean_val:.2f}<extra></extra>"
-                                ))
+                                    # Wert des aktuellen Vertex als Punkt
+                                    ax.plot(val, 0, 'o', color='blue')
                 
-                                bar_fig.update_layout(
-                                    xaxis=dict(
-                                        range=[min_val, max_val],
-                                        showticklabels=False,
-                                        showgrid=False,
-                                        zeroline=False
-                                    ),
-                                    yaxis=dict(
-                                        visible=False
-                                    ),
-                                    height=50,
-                                    margin=dict(l=10, r=10, t=10, b=10),
-                                    plot_bgcolor="white",
-                                    paper_bgcolor="white"
-                                )
+                                    # Achsen ausblenden
+                                    ax.set_xlim(min_val, max_val)
+                                    ax.set_yticks([])
+                                    ax.set_xticks([])
+                                    for spine in ax.spines.values():
+                                        spine.set_visible(False)
                 
-                                st.plotly_chart(bar_fig, use_container_width=True)
+                                    st.pyplot(fig)
                     else:
                         st.write("Keine Zusatzdaten verfügbar")
             
