@@ -57,6 +57,53 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def select_representative_vertices_by_kmeans(
+    df: pd.DataFrame,
+    cols: list,
+    n_vertices: int,
+    index_subset=None,
+    random_state: int = 42
+) -> list:
+    """
+    Wählt repräsentative Vertices per k-Means-Clustering basierend auf den angegebenen Spalten.
+
+    Args:
+        df (pd.DataFrame): Vollständiges DataFrame mit Vertex-Daten.
+        cols (list): Spalten, die für das Clustering verwendet werden (z. B. Zeitreihendaten).
+        n_vertices (int): Gewünschte Anzahl an Vertices.
+        index_subset (optional): Teilmenge von Indizes zur Auswahl (z. B. current_indices).
+        random_state (int): Reproduzierbarkeit des Clusters.
+
+    Returns:
+        list: Liste mit ausgewählten Vertex-Indizes.
+    """
+    if index_subset is not None:
+        data = df.loc[index_subset, cols]
+    else:
+        data = df[cols]
+
+    # Fehlende Werte mit 0 ersetzen (oder ggf. eine andere Strategie verwenden)
+    data = data.fillna(0)
+
+    # Begrenze Anzahl Cluster auf max. Anzahl verfügbarer Zeilen
+    n_clusters = min(len(data), n_vertices)
+
+    if n_clusters == 0:
+        return []
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state)
+    labels = kmeans.fit_predict(data)
+
+    selected_indices = []
+    for i in range(n_clusters):
+        cluster_points = data[labels == i]
+        if not cluster_points.empty:
+            center = kmeans.cluster_centers_[i]
+            distances = np.linalg.norm(cluster_points.values - center, axis=1)
+            closest_idx = cluster_points.index[np.argmin(distances)]
+            selected_indices.append(closest_idx)
+
+    return selected_indices
 # === Initialisiere Session State ===
 def initialize_session_state():
     defaults = {
@@ -897,9 +944,15 @@ with tab1:
                     "annotation_size": annotation_size,
                 }
             
-                plot_indices = vertex_df.loc[current_indices].sample(
-                    n=st.session_state["max_plot_vertices"], replace=False, random_state=42
-                ).index
+                year_cols = tech_time_map[valid_techs[0]]  # Beispiel: Spaltenbasis für Clustering
+                _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+                
+                plot_indices = select_representative_vertices_by_kmeans(
+                    df=vertex_df,
+                    cols=list(cols),
+                    n_vertices=st.session_state["max_plot_vertices"],
+                    index_subset=current_indices
+                )
             
                 valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
                 n_techs = len(valid_techs)
