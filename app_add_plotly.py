@@ -1031,11 +1031,10 @@ with tab1:
                 )
             
                 # === Rahmen + Hintergrund pro Subplot setzen === #
-                for idx in range(len(valid_techs)):
-                    row = idx // n_cols + 1
-                    col = idx % n_cols + 1
-            
-                    fig.update_xaxes(
+                for i in range(1, len(valid_techs) + 1):
+                    axis_suffix = "" if i == 1 else str(i)
+                
+                    fig.layout[f"xaxis{axis_suffix}"].update(
                         showgrid=True,
                         gridcolor="rgba(0,0,0,0.1)",
                         backgroundcolor=PLOT_CONFIG["background_color"],
@@ -1043,11 +1042,10 @@ with tab1:
                         showline=True,
                         linecolor="rgba(0,0,0,0.3)",
                         linewidth=1,
-                        ticks="outside",
-                        row=row,
-                        col=col
+                        ticks="outside"
                     )
-                    fig.update_yaxes(
+                
+                    fig.layout[f"yaxis{axis_suffix}"].update(
                         showgrid=True,
                         gridcolor="rgba(0,0,0,0.1)",
                         backgroundcolor=PLOT_CONFIG["background_color"],
@@ -1055,9 +1053,7 @@ with tab1:
                         showline=True,
                         linecolor="rgba(0,0,0,0.3)",
                         linewidth=1,
-                        ticks="outside",
-                        row=row,
-                        col=col
+                        ticks="outside"
                     )
             
                 # === Achsentitel und Annotationen === #
