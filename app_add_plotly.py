@@ -870,63 +870,49 @@ with tab1:
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_cols = st.session_state.get("n_cols_plots", 3)
-
-                # Dynamisch berechnete Schriftgrößen je nach Spaltenanzahl
-                base_font_size = max(10, 13 - (n_cols - 1))  # kleiner bei mehr Spalten, Minimum 10
+            
+                base_font_size = max(10, 13 - (n_cols - 1))
                 annotation_size = max(10, 14 - (n_cols - 1))
                 title_size = max(14, 20 - (n_cols - 1))
-                
+            
                 PLOT_CONFIG = {
                     "n_cols": n_cols,
-                
-                    # Breitere Spalten für größeren Plotbereich
                     "plot_width_per_col": 9 * 1 / n_cols,
-                
-                    # Höherer Subplot-Bereich
                     "subplot_height_multiplier": 1.0,
-                
                     "horizontal_spacing": 0.08,
                     "vertical_spacing": 0.09,
-                
-                    "main_color": '#1a66cc',
-                    "dim_color": '#1a66cc',
-                    "convex_color": "rgba(255, 50, 50, 0.4)",
+            
+                    # Farben mit Transparenz
+                    "main_color": "rgba(26, 102, 204, 0.8)",      # Blau, stärker sichtbar
+                    "dim_color": "rgba(26, 102, 204, 0.3)",       # Blau, blasser
+                    "convex_color": "rgba(255, 50, 50, 0.4)",     # Rot, halbtransparent
                     "range_fill_color": "rgba(26, 102, 204, 0.15)",
                     "original_range_color": "rgba(255, 0, 0, 0.08)",
                     "background_color": '#f4f4f4',
-                
+            
                     "font_family": "Arial",
                     "font_color": "#333",
-                
-                    # Dynamisch angepasste Schriftgrößen
                     "font_size": base_font_size,
                     "title_size": title_size,
                     "annotation_size": annotation_size,
                 }
-                
-                # === Vorauswahl von Vertices === #
+            
                 plot_indices = vertex_df.loc[current_indices].sample(
                     n=st.session_state["max_plot_vertices"], replace=False, random_state=42
                 ).index
-                
-                # === Gültige Technologien ermitteln === #
+            
                 valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
-                
-                # === Grid-Größe berechnen === #
                 n_techs = len(valid_techs)
                 n_cols = PLOT_CONFIG["n_cols"]
                 n_rows = int(np.ceil(n_techs / n_cols))
                 fig_width = PLOT_CONFIG["plot_width_per_col"] * n_cols
                 fig_height = PLOT_CONFIG["subplot_height_multiplier"] * fig_width
-                
-                # === Dropdown zur Vertex-Auswahl === #
+            
                 selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
-                
-                # === Zusatzdaten vorbereiten === #
+            
                 filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
                 full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
-                
-                # === Subplot-Vorlage erstellen === #
+            
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
@@ -934,34 +920,32 @@ with tab1:
                     horizontal_spacing=PLOT_CONFIG["horizontal_spacing"],
                     vertical_spacing=PLOT_CONFIG["vertical_spacing"]
                 )
-                
-                # === Schleife durch Technologien === #
+            
                 for idx, tech in enumerate(valid_techs):
                     year_cols = tech_time_map[tech]
                     if not year_cols:
                         continue
-                
+            
                     row, col = divmod(idx, n_cols)
                     row += 1
                     col += 1
-                
+            
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years, cols = zip(*years_cols_sorted)
-                
+            
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-                
+            
                     if values_matrix.dropna(how='all').empty:
                         continue
-                
-                    # === Linien pro Vertex zeichnen === #
+            
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
-                
+            
                         time_series = values_matrix.loc[i].values
                         time_series_text = "<br>".join([f"{y}: {v:.2f}" for y, v in zip(years, time_series)])
-                
+            
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
                             extra_info = "<br>".join([
@@ -970,20 +954,21 @@ with tab1:
                             ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
-                
+            
                         is_selected = i == selected_vertex
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=time_series,
                             mode='lines',
-                            line=dict(color=PLOT_CONFIG["main_color"] if is_selected else PLOT_CONFIG["dim_color"],
-                                      width=3 if is_selected else 1),
+                            line=dict(
+                                color=PLOT_CONFIG["main_color"] if is_selected else PLOT_CONFIG["dim_color"],
+                                width=3 if is_selected else 1
+                            ),
                             text=[f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"] * len(years),
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
-                
-                    # === Konvexkombinationen === #
+            
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
@@ -998,8 +983,7 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
-                
-                    # === Min/Max-Bereich === #
+            
                     min_vals = full_values_matrix.min()
                     max_vals = full_values_matrix.max()
                     fig.add_trace(go.Scatter(
@@ -1011,8 +995,7 @@ with tab1:
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
-                
-                    # === Originalbereiche (optional) === #
+            
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                         fig.add_trace(go.Scatter(
@@ -1024,8 +1007,7 @@ with tab1:
                             hoverinfo='skip',
                             showlegend=False
                         ), row=row, col=col)
-                
-                # === Layout-Anpassung === #
+            
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
@@ -1049,14 +1031,12 @@ with tab1:
                     margin=dict(l=40, r=40, t=80, b=50),
                     showlegend=False
                 )
-                
-                # === Achsenrahmen und Stil anwenden === #
+            
                 for i in range(1, len(valid_techs) + 1):
                     suffix = "" if i == 1 else str(i)
-                
                     xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
                     yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
-                
+            
                     if isinstance(xaxis, XAxis):
                         xaxis.update(
                             showgrid=True,
@@ -1067,7 +1047,6 @@ with tab1:
                             linewidth=1,
                             ticks="outside"
                         )
-                
                     if isinstance(yaxis, YAxis):
                         yaxis.update(
                             showgrid=True,
@@ -1078,8 +1057,7 @@ with tab1:
                             linewidth=1,
                             ticks="outside"
                         )
-                
-                # === Annotationen stylen === #
+            
                 for ann in fig['layout']['annotations']:
                     ann['y'] += 0.01
                     ann['font'] = dict(
@@ -1087,8 +1065,7 @@ with tab1:
                         color='#222',
                         family=PLOT_CONFIG["font_family"]
                     )
-                
-                # === Anzeige === #
+            
                 st.plotly_chart(fig, use_container_width=True)
 
             else:
