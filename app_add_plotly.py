@@ -1072,25 +1072,29 @@ with tab1:
                     row = idx // n_cols + 1
                     col = idx % n_cols + 1
             
+                    # Daten vorbereiten für echten Violinplot (alle Jahre zusammen als kategorische X)
+                    combined_data = []
+                    year_labels = []
+            
                     for y_idx, year in enumerate(years):
                         data = values_matrix.iloc[:, y_idx].dropna()
-                        if data.empty:
-                            continue
+                        combined_data.extend(data.values)
+                        year_labels.extend([str(year)] * len(data))
             
+                    if combined_data:
                         fig.add_trace(go.Violin(
-                            y=data,
-                            x=[year] * len(data),
-                            name=str(year),
-                            showlegend=False,
-                            points=False,
+                            y=combined_data,
+                            x=year_labels,
+                            name=tech,
                             box_visible=True,
                             meanline_visible=True,
-                            line_color='rgba(26, 102, 204, 0.8)',
-                            fillcolor='rgba(26, 102, 204, 0.2)',
-                            spanmode='hard'
+                            line_color='rgba(26, 102, 204, 1)',
+                            fillcolor='rgba(26, 102, 204, 0.3)',
+                            spanmode='hard',
+                            showlegend=False
                         ), row=row, col=col)
             
-                    # Ursprüngliche Wertebereiche als Linien visualisieren
+                    # Ursprünglicher Bereich (optional als Range-Linie)
                     if st.session_state.get('show_original_ranges', False):
                         try:
                             original_matrix = vertex_df.loc[tech_data.index, cols]
@@ -1103,10 +1107,10 @@ with tab1:
                         for y, omin, omax in zip(years, original_min, original_max):
                             if not np.isnan(omin) and not np.isnan(omax):
                                 fig.add_trace(go.Scatter(
-                                    x=[y, y],
+                                    x=[str(y), str(y)],
                                     y=[omin, omax],
                                     mode='lines',
-                                    line=dict(color='rgba(255, 0, 0, 0.5)', width=8),
+                                    line=dict(color='rgba(255, 0, 0, 0.4)', width=8),
                                     hoverinfo='skip',
                                     showlegend=False
                                 ), row=row, col=col)
@@ -1126,16 +1130,16 @@ with tab1:
                     margin=dict(l=40, r=40, t=80, b=50)
                 )
             
+                fig.update_xaxes(
+                    title_text="Year",
+                    type="category",
+                    showgrid=True,
+                    tickfont=dict(size=12)
+                )
                 fig.update_yaxes(
                     title_text="Capacity",
                     showgrid=True,
                     gridcolor="rgba(0,0,0,0.1)",
-                    tickfont=dict(size=12)
-                )
-            
-                fig.update_xaxes(
-                    title_text="Year",
-                    showgrid=True,
                     tickfont=dict(size=12)
                 )
             
