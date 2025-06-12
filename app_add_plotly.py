@@ -889,7 +889,7 @@ with tab1:
                     "vertical_spacing": 0.11,
                 
                     "main_color": '#1a66cc',
-                    "dim_color": '#f4f4f4',
+                    "dim_color": '#1a66cc',
                     "convex_color": "rgba(255, 50, 50, 0.4)",
                     "range_fill_color": "rgba(26, 102, 204, 0.15)",
                     "original_range_color": "rgba(255, 0, 0, 0.08)",
