@@ -888,7 +888,7 @@ with tab1:
                     "horizontal_spacing": 0.08,
                     "vertical_spacing": 0.11,
                 
-                    "main_color": '#f4f4f4',
+                    "main_color": '#1a66cc',
                     "dim_color": '#f4f4f4',
                     "convex_color": "rgba(255, 50, 50, 0.4)",
                     "range_fill_color": "rgba(26, 102, 204, 0.15)",
