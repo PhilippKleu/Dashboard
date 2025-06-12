@@ -1031,9 +1031,24 @@ with tab1:
                 )
             
                 # === Rahmen + Hintergrund pro Subplot setzen === #
-                for axis_key in fig.layout:
-                    if axis_key.startswith("xaxis") or axis_key.startswith("yaxis"):
-                        fig.layout[axis_key].update(
+                for i in range(1, len(valid_techs) + 1):
+                    axis_suffix = "" if i == 1 else str(i)
+                    xaxis_key = f"xaxis{axis_suffix}"
+                    yaxis_key = f"yaxis{axis_suffix}"
+                
+                    if xaxis_key in fig.layout:
+                        fig.layout[xaxis_key].update(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            backgroundcolor=PLOT_CONFIG["background_color"],
+                            mirror=True,
+                            showline=True,
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside"
+                        )
+                    if yaxis_key in fig.layout:
+                        fig.layout[yaxis_key].update(
                             showgrid=True,
                             gridcolor="rgba(0,0,0,0.1)",
                             backgroundcolor=PLOT_CONFIG["background_color"],
