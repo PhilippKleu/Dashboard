@@ -1030,9 +1030,10 @@ with tab1:
                 # Interaktive Darstellung
                 clicked_point = st.plotly_chart(fig, use_container_width=True, click_event=True)
                 
-                # Detail-Plot für geklickte Linie
-                if clicked_point and "points" in clicked_point and clicked_point["points"]:
-                    vertex_id = clicked_point["points"][0]["customdata"]
+                click_data = st.get_last_plotly_event("plotly_click")
+
+                if click_data and "points" in click_data:
+                    vertex_id = click_data["points"][0]["customdata"]
                     st.markdown(f"### 🔍 Detailansicht für Vertex {vertex_id}")
                 
                     vertex_values = vertex_df.loc[vertex_id]
