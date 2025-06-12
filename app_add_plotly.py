@@ -972,9 +972,70 @@ with tab1:
                     st.markdown("### ℹ️ Zusatzinformationen")
                     if selected_vertex in filtered_additional.index:
                         extra_data = filtered_additional.loc[selected_vertex]
+                
                         for key, val in extra_data.items():
                             val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
-                            st.markdown(f"- **{key}**: {val_display}")
+                            st.markdown(f"**{key}**: {val_display}")
+                
+                            # Vergleich zum Mittelwert über alle Daten
+                            if pd.notna(val):
+                                col_vals = full_additional[key].dropna()
+                                min_val = col_vals.min()
+                                max_val = col_vals.max()
+                                mean_val = col_vals.mean()
+                
+                                # Plotly Balken-Visualisierung
+                                bar_fig = go.Figure()
+                
+                                # Skala als Linie
+                                bar_fig.add_trace(go.Scatter(
+                                    x=[min_val, max_val],
+                                    y=[0, 0],
+                                    mode='lines',
+                                    line=dict(color='lightgray', width=6),
+                                    showlegend=False,
+                                    hoverinfo='skip'
+                                ))
+                
+                                # Marker: Wert von diesem Vertex
+                                bar_fig.add_trace(go.Scatter(
+                                    x=[val],
+                                    y=[0],
+                                    mode='markers+text',
+                                    marker=dict(color='blue', size=12),
+                                    text=[f"{val:.2f}"],
+                                    textposition="top center",
+                                    showlegend=False,
+                                    hovertemplate=f"{key}: {val:.2f}<extra></extra>"
+                                ))
+                
+                                # Marker: Mittelwert
+                                bar_fig.add_trace(go.Scatter(
+                                    x=[mean_val],
+                                    y=[0],
+                                    mode='markers',
+                                    marker=dict(color='orange', symbol='x', size=10),
+                                    showlegend=False,
+                                    hovertemplate=f"Mittelwert: {mean_val:.2f}<extra></extra>"
+                                ))
+                
+                                bar_fig.update_layout(
+                                    xaxis=dict(
+                                        range=[min_val, max_val],
+                                        showticklabels=False,
+                                        showgrid=False,
+                                        zeroline=False
+                                    ),
+                                    yaxis=dict(
+                                        visible=False
+                                    ),
+                                    height=50,
+                                    margin=dict(l=10, r=10, t=10, b=10),
+                                    plot_bgcolor="white",
+                                    paper_bgcolor="white"
+                                )
+                
+                                st.plotly_chart(bar_fig, use_container_width=True)
                     else:
                         st.write("Keine Zusatzdaten verfügbar")
             
