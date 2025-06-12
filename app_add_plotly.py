@@ -962,54 +962,45 @@ with tab1:
                 filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
                 full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
             
-                # Zwei Spalten: Auswahl und Zusatzinfos
-                col1, col2 = st.columns([1, 1])
-            
-                with col1:
-                    selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
-            
-                with col2:
-                    st.markdown("### ℹ️ Zusatzinformationen")
-                    if selected_vertex in filtered_additional.index:
-                        extra_data = filtered_additional.loc[selected_vertex]
+                # Nur Auswahl-Dropdown
+                selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
                 
-                        for key, val in extra_data.items():
+                # Zusatzinformationen unterhalb in zwei Spalten
+                st.markdown("### ℹ️ Zusatzinformationen")
+                
+                if selected_vertex in filtered_additional.index:
+                    extra_data = filtered_additional.loc[selected_vertex]
+                
+                    col1, col2 = st.columns(2)
+                    extra_items = list(extra_data.items())
+                
+                    for i in range(0, len(extra_items), 2):
+                        for col, (key, val) in zip([col1, col2], extra_items[i:i+2]):
                             val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
-                            st.markdown(f"**{key}**: {val_display}")
+                            col.markdown(f"**{key}**: {val_display}")
                 
                             if pd.notna(val):
                                 col_vals = full_additional[key].dropna()
                                 if not col_vals.empty:
-                                    # Quartile und Bereich berechnen
                                     q1 = col_vals.quantile(0.25)
                                     q2 = col_vals.quantile(0.5)
                                     q3 = col_vals.quantile(0.75)
                                     min_val = col_vals.min()
                                     max_val = col_vals.max()
                 
-                                    # Kompakte Visualisierung mit Matplotlib
-                                    fig, ax = plt.subplots(figsize=(3.5, 0.3))  # kompakte Breite, schmale Höhe
-                
-                                    # Basislinie (Wertebereich)
+                                    fig, ax = plt.subplots(figsize=(3.5, 0.3))
                                     ax.hlines(0, min_val, max_val, color="lightgray", linewidth=6)
-                
-                                    # Quartilsstriche (Q1, Q2, Q3)
                                     for q in [q1, q2, q3]:
                                         ax.vlines(q, -0.1, 0.1, color="gray", linewidth=1)
-                
-                                    # Wert des aktuellen Vertex als Punkt
                                     ax.plot(val, 0, 'o', color='blue')
-                
-                                    # Achsen ausblenden
                                     ax.set_xlim(min_val, max_val)
                                     ax.set_yticks([])
                                     ax.set_xticks([])
                                     for spine in ax.spines.values():
                                         spine.set_visible(False)
-                
-                                    st.pyplot(fig)
-                    else:
-                        st.write("Keine Zusatzdaten verfügbar")
+                                    col.pyplot(fig)
+                else:
+                    st.write("Keine Zusatzdaten verfügbar")
             
                 fig = make_subplots(
                     rows=n_rows,
