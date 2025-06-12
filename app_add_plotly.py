@@ -879,7 +879,7 @@ with tab1:
                 
                     # Multipliziert die gesamte Breite, um die Höhe des gesamten Figures zu bestimmen
                     # -> Erhöhe dies, um die vertikale Größe/Subplot-Höhe zu vergrößern
-                    "subplot_height_multiplier": 1.5,
+                    "subplot_height_multiplier": 1,
 
                     # Abstand zwischen Spalten im Subplot-Grid (0 = direkt aneinander, 1 = maximal weit)
                     "horizontal_spacing": 0.08,
