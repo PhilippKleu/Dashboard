@@ -877,33 +877,37 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
+                # Beispielhafte Vorauswahl (anpassen an deine Session/Daten)
                 plot_indices = vertex_df.loc[current_indices].sample(
                     n=st.session_state["max_plot_vertices"], replace=False, random_state=42
                 ).index
+                
                 # 1. Gültige Technologien ermitteln
                 valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
-                sorted_valid_techs = sorted(valid_techs)  # für konsistente Reihenfolge
+                sorted_valid_techs = sorted(valid_techs)
                 
-                # 2. Plotgrößen berechnen (ursprüngliches Layout)
+                # 2. Plotgrößen berechnen
                 n_techs = len(sorted_valid_techs)
                 n_cols = st.session_state.get("n_cols_plots", 3)
                 n_rows = int(np.ceil(n_techs / n_cols))
-                
                 plot_width_per_col = 6
-                aspect_ratio = n_cols
                 fig_width = plot_width_per_col * n_cols
-                fig_height = fig_width / aspect_ratio
-                # Subplots vorbereiten mit korrekt sortierten Titeln
+                fig_height = fig_width / n_cols
+                
+                # Dropdown-Menü zur Vertex-Auswahl
+                selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
+                
+                # Subplots vorbereiten
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
                     subplot_titles=[tech.replace("_", " ").title() for tech in sorted_valid_techs]
                 )
-            
+                
                 # Zusatzdaten vorbereiten
                 additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
                 filtered_additional = additional_data.loc[current_indices]
-            
+                
                 # Hauptplot aufbauen
                 for idx, tech in enumerate(sorted_valid_techs):
                     year_cols = tech_time_map[tech]
@@ -940,14 +944,17 @@ with tab1:
                 
                         tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
                 
+                        is_selected = i == selected_vertex
+                        color = 'rgba(26, 102, 204, 1.0)' if is_selected else 'rgba(26, 102, 204, 0.15)'
+                        width = 3 if is_selected else 1
+                
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=values_matrix.loc[i].values,
                             mode='lines',
                             name=f"{tech} - Vertex {i}",
-                            line=dict(color='rgba(26, 102, 204, 0.3)'),
+                            line=dict(color=color, width=width),
                             text=[tooltip_text] * len(years),
-                            customdata=[i] * len(years),  # <-- Vertex-ID für Clicktracking
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
@@ -996,7 +1003,7 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
                 
-                # Layout-Styling
+                # Layout finalisieren
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
@@ -1004,7 +1011,7 @@ with tab1:
                         text="Installed Capacities Over Time (All Technologies)",
                         font=dict(size=20, family="Arial", color="#333"),
                         x=0.5
-                    ),
+                ),
                     font=dict(size=13, family="Arial", color="#333"),
                     paper_bgcolor="#ffffff",
                     plot_bgcolor="#f4f4f4",
@@ -1027,109 +1034,8 @@ with tab1:
                 for ann in fig['layout']['annotations']:
                     ann['font'] = dict(size=14, color='#222', family="Arial")
                 
-                # Interaktive Darstellung
-                clicked_point = st.plotly_chart(fig, use_container_width=True, click_event=True)
-                
-                click_data = st.get_last_plotly_event("plotly_click")
-
-                if click_data and "points" in click_data:
-                    vertex_id = click_data["points"][0]["customdata"]
-                    st.markdown(f"### 🔍 Detailansicht für Vertex {vertex_id}")
-                
-                    vertex_values = vertex_df.loc[vertex_id]
-                    year_value_pairs = [(col.split("_")[-1], vertex_values[col])
-                                        for col in vertex_df.columns if col.startswith("VALUE_")]
-                    year_value_pairs = [(int(y), v) for y, v in year_value_pairs if pd.notna(v)]
-                
-                    if year_value_pairs:
-                        df_detail = pd.DataFrame(year_value_pairs, columns=["Year", "Value"])
-                        fig_detail = px.line(df_detail, x="Year", y="Value",
-                                             title=f"Entwicklung von Vertex {vertex_id}")
-                        st.plotly_chart(fig_detail, use_container_width=True)
-                    else:
-                        st.info("Keine Zeitdaten für diesen Vertex verfügbar.")
-
-            else:
-                plot_idx = 0
-                for tech, year_cols in sorted(tech_time_map.items()):
-                    if len(year_cols) < 1:
-                        continue
-            
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted]
-            
-                    values_matrix = vertex_df.loc[plot_indices, cols]
-                    if values_matrix.dropna(how='all').empty:
-                        continue
-            
-                    # ==== Konvexe Kombinationen einbeziehen ====
-                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                        if all(col in filtered_convex_data.columns for col in convex_cols):
-                            convex_matrix = filtered_convex_data[convex_cols]
-                            values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
-            
-                    ax = axes[plot_idx]
-                    ax.set_facecolor('#f0f0f0')
-            
-                    # ==== Violinplot-Daten vorbereiten ====
-                    data = [values_matrix[col].dropna().values for col in cols]
-            
-                    if all(len(d) > 0 for d in data):
-                        ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-            
-                    # ==== Ursprünglicher Wertebereich als rote Fläche ====
-                    if st.session_state.get('show_original_ranges', False):
-                        try:
-                            original_matrix = vertex_df.loc[tech_data.index, cols]
-                        except Exception:
-                            original_matrix = vertex_df[cols]
-            
-                        original_min = original_matrix.min()
-                        original_max = original_matrix.max()
-            
-                        for y, omin, omax in zip(years, original_min, original_max):
-                            if not np.isnan(omin) and not np.isnan(omax):
-                                ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-            
-                    ax.set_title(tech.replace('_', ' ').title())
-                    if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
-                        ax.set_xlabel("Year")
-                    if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
-                        ax.set_ylabel("Installed Capacity")
-                    ax.grid(True, linestyle="--", alpha=0.4)
-            
-                    if plot_idx == 0:
-                        handles_labels = ax.get_legend_handles_labels()
-            
-                    plot_idx += 1
-            
-                for i in range(plot_idx, len(axes)):
-                    fig.delaxes(axes[i])
-            
-                # ==== Legende ====
-                if plot_idx > 0:
-                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-            
-                    fig.legend(
-                        [combined_line],
-                        ['Values incl. Convex'],
-                        loc='upper center',
-                        bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
-                        ncol=1,
-                        frameon=True,
-                        fancybox=True,
-                        fontsize=14
-                    )
-            
-                    fig.subplots_adjust(
-                        top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
-                        hspace=0.3,
-                        wspace=0.18
-                    )
-            
-                st.pyplot(fig)
+                # Anzeige des Plots
+                st.plotly_chart(fig, use_container_width=True)
                 
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
             
