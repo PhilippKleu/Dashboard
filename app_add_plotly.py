@@ -994,7 +994,7 @@ with tab1:
                                         x=years,
                                         y=vals,
                                         mode='lines',
-                                        line=dict(color=PLOT_CONFIG["convex_color"],
+                                        line=dict(color=PLOT_CONFIG["convex_color"]),
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
