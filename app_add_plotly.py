@@ -928,15 +928,12 @@ with tab1:
                     "subplot_height_multiplier": 1.0,
                     "horizontal_spacing": 0.08,
                     "vertical_spacing": 0.09,
-            
-                    # Farben mit Transparenz
-                    "main_color": "rgba(26, 102, 204, 0.8)",      # Blau, stärker sichtbar
-                    "dim_color": "rgba(26, 102, 204, 0.3)",       # Blau, blasser
-                    "convex_color": "rgba(255, 50, 50, 0.4)",     # Rot, halbtransparent
+                    "main_color": "rgba(26, 102, 204, 0.8)",
+                    "dim_color": "rgba(26, 102, 204, 0.3)",
+                    "convex_color": "rgba(255, 50, 50, 0.4)",
                     "range_fill_color": "rgba(26, 102, 204, 0.15)",
                     "original_range_color": "rgba(255, 0, 0, 0.08)",
                     "background_color": '#f4f4f4',
-            
                     "font_family": "Arial",
                     "font_color": "#333",
                     "font_size": base_font_size,
@@ -944,9 +941,9 @@ with tab1:
                     "annotation_size": annotation_size,
                 }
             
-                year_cols = tech_time_map[valid_techs[0]]  # Beispiel: Spaltenbasis für Clustering
+                year_cols = tech_time_map[valid_techs[0]]
                 _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-                
+            
                 plot_indices = select_representative_vertices_by_kmeans(
                     df=vertex_df,
                     cols=list(cols),
@@ -961,10 +958,24 @@ with tab1:
                 fig_width = PLOT_CONFIG["plot_width_per_col"] * n_cols
                 fig_height = PLOT_CONFIG["subplot_height_multiplier"] * fig_width
             
-                selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
-            
                 filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
                 full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
+            
+                # Zwei Spalten: Auswahl und Zusatzinfos
+                col1, col2 = st.columns([1, 1])
+            
+                with col1:
+                    selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
+            
+                with col2:
+                    st.markdown("### ℹ️ Zusatzinformationen")
+                    if selected_vertex in filtered_additional.index:
+                        extra_data = filtered_additional.loc[selected_vertex]
+                        for key, val in extra_data.items():
+                            val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
+                            st.markdown(f"- **{key}**: {val_display}")
+                    else:
+                        st.write("Keine Zusatzdaten verfügbar")
             
                 fig = make_subplots(
                     rows=n_rows,
