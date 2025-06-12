@@ -1029,6 +1029,32 @@ with tab1:
                     margin=dict(l=40, r=40, t=80, b=50),
                     showlegend=False
                 )
+                # === Rahmen um jeden einzelnen Subplot === #
+                for i in range(1, n_rows * n_cols + 1):
+                    axis_suffix = '' if i == 1 else str(i)
+                    
+                    fig.update_layout({
+                        f"xaxis{axis_suffix}": dict(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            backgroundcolor=PLOT_CONFIG["background_color"],
+                            mirror=True,  # Rahmen oben + unten
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside",
+                            showline=True
+                        ),
+                        f"yaxis{axis_suffix}": dict(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            backgroundcolor=PLOT_CONFIG["background_color"],
+                            mirror=True,  # Rahmen rechts + links
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside",
+                            showline=True
+                        )
+                    })
                 
                 fig.update_xaxes(
                     title_text="Year",
