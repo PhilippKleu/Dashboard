@@ -869,56 +869,39 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                PLOT_CONFIG = {
-                    # Anzahl der Spalten im Subplot-Grid (mehr Spalten = breiteres Layout, kleinere Subplots pro Technologie)
-                    "n_cols": st.session_state.get("n_cols_plots", 3),
-                    
-                    # Breite jeder einzelnen Spalte in Zoll (wirkt sich direkt auf die Gesamtbreite des Plots aus)
-                    # -> Ändere dies, um horizontale Abstände bzw. Breite der Subplots zu verändern!
-                    "plot_width_per_col": 8*1/st.session_state.get("n_cols_plots", 3),
-                
-                    # Multipliziert die gesamte Breite, um die Höhe des gesamten Figures zu bestimmen
-                    # -> Erhöhe dies, um die vertikale Größe/Subplot-Höhe zu vergrößern
-                    "subplot_height_multiplier": 0.75,
+                n_cols = st.session_state.get("n_cols_plots", 3)
 
-                    # Abstand zwischen Spalten im Subplot-Grid (0 = direkt aneinander, 1 = maximal weit)
-                    "horizontal_spacing": 0.08,
+                # Dynamisch berechnete Schriftgrößen je nach Spaltenanzahl
+                base_font_size = max(10, 13 - (n_cols - 1))  # kleiner bei mehr Spalten, Minimum 10
+                annotation_size = max(10, 14 - (n_cols - 1))
+                title_size = max(14, 20 - (n_cols - 1))
                 
-                    # Abstand zwischen Zeilen im Subplot-Grid
+                PLOT_CONFIG = {
+                    "n_cols": n_cols,
+                
+                    # Breitere Spalten für größeren Plotbereich
+                    "plot_width_per_col": 9 * 1 / n_cols,
+                
+                    # Höherer Subplot-Bereich
+                    "subplot_height_multiplier": 1.0,
+                
+                    "horizontal_spacing": 0.08,
                     "vertical_spacing": 0.1,
                 
-                    # Hauptfarbe für hervorgehobene Linien (z.B. ausgewählter Vertex)
                     "main_color": '#f4f4f4',
-                
-                    # Standardfarbe für nicht hervorgehobene Linien (gedimmt)
                     "dim_color": '#f4f4f4',
-                
-                    # Farbe der Linien von Konvexkombinationen (z.B. Modelllinien)
                     "convex_color": "rgba(255, 50, 50, 0.4)",
-                
-                    # Farbe zur Markierung des Min/Max-Bereichs der aktuellen Daten
                     "range_fill_color": "rgba(26, 102, 204, 0.15)",
-                
-                    # Farbe für den ursprünglichen Wertebereich (z. B. Referenzdaten aus Trainingsdaten)
                     "original_range_color": "rgba(255, 0, 0, 0.08)",
-                
-                    # Hintergrundfarbe des gesamten Plots (inkl. Plotfläche & Papier)
                     "background_color": '#f4f4f4',
                 
-                    # Schriftart für alle Texte im Plot
                     "font_family": "Arial",
-                
-                    # Standard-Schriftfarbe
                     "font_color": "#333",
                 
-                    # Standard-Schriftgröße (Achsen, Werte etc.)
-                    "font_size": 13,
-                
-                    # Größe des Titels oben über dem Gesamtplot
-                    "title_size": 20,
-                
-                    # Schriftgröße der Subplot-Titel (z.B. Technologietitel)
-                    "annotation_size": 14,
+                    # Dynamisch angepasste Schriftgrößen
+                    "font_size": base_font_size,
+                    "title_size": title_size,
+                    "annotation_size": annotation_size,
                 }
                 
                 # === Vorauswahl von Vertices === #
