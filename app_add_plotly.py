@@ -1037,22 +1037,9 @@ with tab1:
                 # Anzeige des Plots
                 st.plotly_chart(fig, use_container_width=True)
 
-            elif st.session_state.get("plot_type_selector2") == "Violin Plot":
-                valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
-                sorted_valid_techs = sorted(valid_techs)
-                n_techs = len(sorted_valid_techs)
-            
-                n_cols = st.session_state.get("n_cols_plots", 3)
-                n_rows = int(np.ceil(n_techs / n_cols))
-            
-                fig = make_subplots(
-                    rows=n_rows,
-                    cols=n_cols,
-                    subplot_titles=[tech.replace("_", " ").title() for tech in sorted_valid_techs]
-                )
-            
-                for idx, tech in enumerate(sorted_valid_techs):
-                    year_cols = tech_time_map[tech]
+            else:
+                plot_idx = 0
+                for tech, year_cols in sorted(tech_time_map.items()):
                     if len(year_cols) < 1:
                         continue
             
@@ -1061,40 +1048,26 @@ with tab1:
                     cols = [col for _, col in years_cols_sorted]
             
                     values_matrix = vertex_df.loc[plot_indices, cols]
+                    if values_matrix.dropna(how='all').empty:
+                        continue
             
-                    # Konvexkombinationen hinzufügen
+                    # ==== Konvexe Kombinationen einbeziehen ====
                     if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
                             convex_matrix = filtered_convex_data[convex_cols]
                             values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
             
-                    row = idx // n_cols + 1
-                    col = idx % n_cols + 1
+                    ax = axes[plot_idx]
+                    ax.set_facecolor('#f0f0f0')
             
-                    # Daten vorbereiten für echten Violinplot (alle Jahre zusammen als kategorische X)
-                    combined_data = []
-                    year_labels = []
+                    # ==== Violinplot-Daten vorbereiten ====
+                    data = [values_matrix[col].dropna().values for col in cols]
             
-                    for y_idx, year in enumerate(years):
-                        data = values_matrix.iloc[:, y_idx].dropna()
-                        combined_data.extend(data.values)
-                        year_labels.extend([str(year)] * len(data))
+                    if all(len(d) > 0 for d in data):
+                        ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
             
-                    if combined_data:
-                        fig.add_trace(go.Violin(
-                            y=combined_data,
-                            x=year_labels,
-                            name=tech,
-                            box_visible=True,
-                            meanline_visible=True,
-                            line_color='rgba(26, 102, 204, 1)',
-                            fillcolor='rgba(26, 102, 204, 0.3)',
-                            spanmode='hard',
-                            showlegend=False
-                        ), row=row, col=col)
-            
-                    # Ursprünglicher Bereich (optional als Range-Linie)
+                    # ==== Ursprünglicher Wertebereich als rote Fläche ====
                     if st.session_state.get('show_original_ranges', False):
                         try:
                             original_matrix = vertex_df.loc[tech_data.index, cols]
@@ -1106,47 +1079,45 @@ with tab1:
             
                         for y, omin, omax in zip(years, original_min, original_max):
                             if not np.isnan(omin) and not np.isnan(omax):
-                                fig.add_trace(go.Scatter(
-                                    x=[str(y), str(y)],
-                                    y=[omin, omax],
-                                    mode='lines',
-                                    line=dict(color='rgba(255, 0, 0, 0.4)', width=8),
-                                    hoverinfo='skip',
-                                    showlegend=False
-                                ), row=row, col=col)
+                                ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
             
-                fig.update_layout(
-                    height=300 * n_rows,
-                    width=300 * n_cols,
-                    title=dict(
-                        text="Installed Capacities Over Time (Violin Plots)",
-                        font=dict(size=20, family="Arial", color="#333"),
-                        x=0.5
-                    ),
-                    font=dict(size=13, family="Arial", color="#333"),
-                    paper_bgcolor="#ffffff",
-                    plot_bgcolor="#f4f4f4",
-                    hovermode="closest",
-                    margin=dict(l=40, r=40, t=80, b=50)
-                )
+                    ax.set_title(tech.replace('_', ' ').title())
+                    if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
+                        ax.set_xlabel("Year")
+                    if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
+                        ax.set_ylabel("Installed Capacity")
+                    ax.grid(True, linestyle="--", alpha=0.4)
             
-                fig.update_xaxes(
-                    title_text="Year",
-                    type="category",
-                    showgrid=True,
-                    tickfont=dict(size=12)
-                )
-                fig.update_yaxes(
-                    title_text="Capacity",
-                    showgrid=True,
-                    gridcolor="rgba(0,0,0,0.1)",
-                    tickfont=dict(size=12)
-                )
+                    if plot_idx == 0:
+                        handles_labels = ax.get_legend_handles_labels()
             
-                for ann in fig['layout']['annotations']:
-                    ann['font'] = dict(size=14, color='#222', family="Arial")
+                    plot_idx += 1
             
-                st.plotly_chart(fig, use_container_width=True)
+                for i in range(plot_idx, len(axes)):
+                    fig.delaxes(axes[i])
+            
+                # ==== Legende ====
+                if plot_idx > 0:
+                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
+            
+                    fig.legend(
+                        [combined_line],
+                        ['Values incl. Convex'],
+                        loc='upper center',
+                        bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
+                        ncol=1,
+                        frameon=True,
+                        fancybox=True,
+                        fontsize=14
+                    )
+            
+                    fig.subplots_adjust(
+                        top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
+                        hspace=0.3,
+                        wspace=0.18
+                    )
+            
+                st.pyplot(fig)
             
             # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
             
