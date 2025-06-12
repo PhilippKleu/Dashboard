@@ -868,49 +868,64 @@ with tab1:
                 plot_indices = current_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                # Beispielhafte Vorauswahl (anpassen an deine Session/Daten)
+                # === Konfigurationen (oben zentral einstellbar) === #
+                PLOT_CONFIG = {
+                    "n_cols": st.session_state.get("n_cols_plots", 3),
+                    "plot_width_per_col": 6,
+                    "main_color": "rgba(26, 102, 204, 1.0)",
+                    "dim_color": "rgba(26, 102, 204, 0.15)",
+                    "convex_color": "rgba(255, 50, 50, 0.4)",
+                    "range_fill_color": "rgba(26, 102, 204, 0.15)",
+                    "original_range_color": "rgba(255, 0, 0, 0.08)",
+                    "background_color": "#f4f4f4",
+                    "font_family": "Arial",
+                    "font_color": "#333",
+                    "font_size": 13,
+                    "title_size": 20,
+                    "annotation_size": 14,
+                }
+                
+                # === Vorauswahl von Vertices === #
                 plot_indices = vertex_df.loc[current_indices].sample(
                     n=st.session_state["max_plot_vertices"], replace=False, random_state=42
                 ).index
                 
-                # 1. Gültige Technologien ermitteln
-                valid_techs = [tech for tech, v in tech_time_map.items() if len(v) >= 1]
-                sorted_valid_techs = sorted(valid_techs)
+                # === Gültige Technologien ermitteln === #
+                valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
                 
-                # 2. Plotgrößen berechnen
-                n_techs = len(sorted_valid_techs)
-                n_cols = st.session_state.get("n_cols_plots", 3)
+                # === Grid-Größe berechnen === #
+                n_techs = len(valid_techs)
+                n_cols = PLOT_CONFIG["n_cols"]
                 n_rows = int(np.ceil(n_techs / n_cols))
-                plot_width_per_col = 6
-                fig_width = plot_width_per_col * n_cols
+                fig_width = PLOT_CONFIG["plot_width_per_col"] * n_cols
                 fig_height = fig_width / n_cols
                 
-                # Dropdown-Menü zur Vertex-Auswahl
+                # === Dropdown zur Vertex-Auswahl === #
                 selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
                 
-                # Subplots vorbereiten
+                # === Zusatzdaten vorbereiten === #
+                filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
+                full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
+                
+                # === Subplot-Vorlage erstellen === #
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
-                    subplot_titles=[tech.replace("_", " ").title() for tech in sorted_valid_techs]
+                    subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs]
                 )
                 
-                # Zusatzdaten vorbereiten
-                additional_data = vertex_df.loc[tech_data.index, additional_cols[:5]]
-                filtered_additional = additional_data.loc[current_indices]
-                
-                # Hauptplot aufbauen
-                for idx, tech in enumerate(sorted_valid_techs):
+                # === Schleife durch Technologien === #
+                for idx, tech in enumerate(valid_techs):
                     year_cols = tech_time_map[tech]
-                    if len(year_cols) < 1:
+                    if not year_cols:
                         continue
                 
-                    row = idx // n_cols + 1
-                    col = idx % n_cols + 1
+                    row, col = divmod(idx, n_cols)
+                    row += 1
+                    col += 1
                 
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted]
+                    years, cols = zip(*years_cols_sorted)
                 
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
@@ -918,11 +933,13 @@ with tab1:
                     if values_matrix.dropna(how='all').empty:
                         continue
                 
+                    # === Linien pro Vertex zeichnen === #
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
                 
-                        time_series_text = "<br>".join([f"{x}: {y:.2f}" for x, y in zip(years, values_matrix.loc[i].values)])
+                        time_series = values_matrix.loc[i].values
+                        time_series_text = "<br>".join([f"{y}: {v:.2f}" for y, v in zip(years, time_series)])
                 
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
@@ -933,24 +950,19 @@ with tab1:
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
                 
-                        tooltip_text = f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"
-                
                         is_selected = i == selected_vertex
-                        color = 'rgba(26, 102, 204, 1.0)' if is_selected else 'rgba(26, 102, 204, 0.15)'
-                        width = 3 if is_selected else 1
-                
                         fig.add_trace(go.Scatter(
                             x=years,
-                            y=values_matrix.loc[i].values,
+                            y=time_series,
                             mode='lines',
-                            name=f"{tech} - Vertex {i}",
-                            line=dict(color=color, width=width),
-                            text=[tooltip_text] * len(years),
+                            line=dict(color=PLOT_CONFIG["main_color"] if is_selected else PLOT_CONFIG["dim_color"],
+                                      width=3 if is_selected else 1),
+                            text=[f"<b>Vertex {i}</b><br>{extra_info}<br><br><b>Time Series:</b><br>{time_series_text}"] * len(years),
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
                 
-                    # Konvexkombinationen
+                    # === Konvexkombinationen === #
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
@@ -961,55 +973,54 @@ with tab1:
                                         x=years,
                                         y=vals,
                                         mode='lines',
-                                        line=dict(color='rgba(255, 50, 50, 0.4)', dash='dot'),
+                                        line=dict(color=PLOT_CONFIG["convex_color"], dash='dot'),
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
                 
-                    # Min/Max-Bereich
+                    # === Min/Max-Bereich === #
                     min_vals = full_values_matrix.min()
                     max_vals = full_values_matrix.max()
                     fig.add_trace(go.Scatter(
-                        x=years + years[::-1],
-                        y=list(min_vals) + list(max_vals[::-1]),
+                        x=list(years) + list(reversed(years)),
+                        y=list(min_vals) + list(reversed(max_vals)),
                         fill='toself',
-                        fillcolor='rgba(26, 102, 204, 0.15)',
+                        fillcolor=PLOT_CONFIG["range_fill_color"],
                         line=dict(color='rgba(255,255,255,0)'),
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
                 
-                    # Originalbereich
+                    # === Originalbereiche (optional) === #
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
-                        original_min = original_matrix.min()
-                        original_max = original_matrix.max()
                         fig.add_trace(go.Scatter(
-                            x=years + years[::-1],
-                            y=list(original_min) + list(original_max[::-1]),
+                            x=list(years) + list(reversed(years)),
+                            y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
                             fill='toself',
-                            fillcolor='rgba(255, 0, 0, 0.08)',
+                            fillcolor=PLOT_CONFIG["original_range_color"],
                             line=dict(color='rgba(255,255,255,0)'),
                             hoverinfo='skip',
                             showlegend=False
                         ), row=row, col=col)
                 
-                # Layout finalisieren
+                # === Layout-Anpassung === #
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
                     title=dict(
                         text="Installed Capacities Over Time (All Technologies)",
-                        font=dict(size=20, family="Arial", color="#333"),
+                        font=dict(size=PLOT_CONFIG["title_size"], family=PLOT_CONFIG["font_family"], color=PLOT_CONFIG["font_color"]),
                         x=0.5
-                ),
-                    font=dict(size=13, family="Arial", color="#333"),
+                    ),
+                    font=dict(size=PLOT_CONFIG["font_size"], family=PLOT_CONFIG["font_family"], color=PLOT_CONFIG["font_color"]),
                     paper_bgcolor="#ffffff",
-                    plot_bgcolor="#f4f4f4",
+                    plot_bgcolor=PLOT_CONFIG["background_color"],
                     hovermode="closest",
                     margin=dict(l=40, r=40, t=80, b=50),
                     showlegend=False
                 )
+                
                 fig.update_xaxes(
                     title_text="Year",
                     showgrid=True,
@@ -1022,10 +1033,11 @@ with tab1:
                     gridcolor="rgba(0,0,0,0.1)",
                     tickfont=dict(size=12)
                 )
-                for ann in fig['layout']['annotations']:
-                    ann['font'] = dict(size=14, color='#222', family="Arial")
                 
-                # Anzeige des Plots
+                for ann in fig['layout']['annotations']:
+                    ann['font'] = dict(size=PLOT_CONFIG["annotation_size"], color='#222', family=PLOT_CONFIG["font_family"])
+                
+                # === Anzeige === #
                 st.plotly_chart(fig, use_container_width=True)
 
             else:
