@@ -1081,7 +1081,7 @@ with tab1:
                 
                 # === Annotationen stylen === #
                 for ann in fig['layout']['annotations']:
-                    ann['y'] += 0.015
+                    ann['y'] += 0.01
                     ann['font'] = dict(
                         size=PLOT_CONFIG["annotation_size"],
                         color='#222',
