@@ -875,7 +875,7 @@ with tab1:
                     
                     # Breite jeder einzelnen Spalte in Zoll (wirkt sich direkt auf die Gesamtbreite des Plots aus)
                     # -> Ändere dies, um horizontale Abstände bzw. Breite der Subplots zu verändern!
-                    "plot_width_per_col": 6*1/st.session_state.get("n_cols_plots", 3),
+                    "plot_width_per_col": 8*1/st.session_state.get("n_cols_plots", 3),
                 
                     # Multipliziert die gesamte Breite, um die Höhe des gesamten Figures zu bestimmen
                     # -> Erhöhe dies, um die vertikale Größe/Subplot-Höhe zu vergrößern
