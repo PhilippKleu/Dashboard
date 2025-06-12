@@ -1031,32 +1031,35 @@ with tab1:
                     showlegend=False
                 )
             
-                # === Rahmen + Hintergrund pro Subplot setzen === #
                 for i in range(1, len(valid_techs) + 1):
                     suffix = "" if i == 1 else str(i)
-                    for ax_type, axis_class in [("xaxis", XAxis), ("yaxis", YAxis)]:
-                        axis = getattr(fig.layout, f"{ax_type}{suffix}", None)
-                        if isinstance(axis, axis_class):
-                            axis.update(
-                                showgrid=True,
-                                gridcolor="rgba(0,0,0,0.1)",
-                                backgroundcolor=PLOT_CONFIG["background_color"],
-                                mirror=True,
-                                showline=True,
-                                linecolor="rgba(0,0,0,0.3)",
-                                linewidth=1,
-                                ticks="outside"
-                            )
-                            
-                                # === Achsentitel und Annotationen === #
-                                fig.update_xaxes(
-                                    title_text="Year",
-                                    tickfont=dict(size=12)
-                                )
-                                fig.update_yaxes(
-                                    title_text="Capacity",
-                                    tickfont=dict(size=12)
-                                )
+                
+                    xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
+                    yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
+                
+                    if isinstance(xaxis, XAxis):
+                        xaxis.update(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            backgroundcolor=PLOT_CONFIG["background_color"],
+                            mirror=True,
+                            showline=True,
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside"
+                        )
+                
+                    if isinstance(yaxis, YAxis):
+                        yaxis.update(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            backgroundcolor=PLOT_CONFIG["background_color"],
+                            mirror=True,
+                            showline=True,
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside"
+                        )
             
                 for ann in fig['layout']['annotations']:
                     ann['font'] = dict(
