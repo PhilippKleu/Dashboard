@@ -1018,7 +1018,8 @@ with tab1:
                             family=PLOT_CONFIG["font_family"],
                             color=PLOT_CONFIG["font_color"]
                         ),
-                        x=0.5
+                        x=0,
+                        xanchor="left"
                     ),
                     font=dict(
                         size=PLOT_CONFIG["font_size"],
