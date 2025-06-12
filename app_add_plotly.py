@@ -965,8 +965,6 @@ with tab1:
                 # Nur Auswahl-Dropdown
                 selected_vertex = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=plot_indices)
                 
-                # Zusatzinformationen unterhalb in zwei Spalten
-                st.markdown("### ℹ️ Zusatzinformationen")
                 
                 if selected_vertex in filtered_additional.index:
                     extra_data = filtered_additional.loc[selected_vertex]
