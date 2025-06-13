@@ -964,7 +964,7 @@ with tab1:
                 # Dropdown ohne Vorauswahl
                 vertex_placeholder = "— Bitte auswählen —"
                 options_with_placeholder = [vertex_placeholder] + list(plot_indices)
-                selected_label = st.selectbox("🔍 Wähle einen Vertex zur Hervorhebung", options=options_with_placeholder)
+                selected_label = st.selectbox("Choose a displayed Vertex to highlight.", options=options_with_placeholder)
                 selected_vertex = selected_label if selected_label != vertex_placeholder else None
             
                 # Zusatzinformationen unterhalb in 2 Spalten anzeigen
