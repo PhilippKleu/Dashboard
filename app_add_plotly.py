@@ -917,11 +917,11 @@ with tab1:
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_cols = st.session_state.get("n_cols_plots", 3)
-            
+
                 base_font_size = max(10, 13 - (n_cols - 1))
                 annotation_size = max(10, 14 - (n_cols - 1))
                 title_size = max(14, 20 - (n_cols - 1))
-            
+                
                 PLOT_CONFIG = {
                     "n_cols": n_cols,
                     "plot_width_per_col": 9 * 1 / n_cols,
@@ -940,45 +940,58 @@ with tab1:
                     "title_size": title_size,
                     "annotation_size": annotation_size,
                 }
-            
-                valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+                
+                valid_techs_all = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+                
+                # Auswahl durch den Nutzer
+                selected_techs = st.multiselect(
+                    "Technologien auswählen, die angezeigt werden sollen:",
+                    options=valid_techs_all,
+                    default=valid_techs_all,
+                    help="Wählen Sie eine oder mehrere Technologien aus."
+                )
+                
+                valid_techs = selected_techs
+                
+                if not valid_techs:
+                    st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
+                    st.stop()
+                
                 year_cols = tech_time_map[valid_techs[0]]
                 _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-            
+                
                 plot_indices = select_representative_vertices_by_kmeans(
                     df=vertex_df,
                     cols=list(cols),
                     n_vertices=st.session_state["max_plot_vertices"],
                     index_subset=current_indices
                 )
-            
+                
                 n_techs = len(valid_techs)
                 n_cols = PLOT_CONFIG["n_cols"]
                 n_rows = int(np.ceil(n_techs / n_cols))
                 fig_width = PLOT_CONFIG["plot_width_per_col"] * n_cols
                 fig_height = PLOT_CONFIG["subplot_height_multiplier"] * fig_width
-            
+                
                 filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
                 full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
-            
-                # Dropdown ohne Vorauswahl
+                
                 vertex_placeholder = "— Please selected —"
                 options_with_placeholder = [vertex_placeholder] + list(plot_indices)
                 selected_label = st.selectbox("Choose a displayed Vertex to highlight.", options=options_with_placeholder)
                 selected_vertex = selected_label if selected_label != vertex_placeholder else None
-            
-                # Zusatzinformationen unterhalb in 2 Spalten anzeigen
+                
                 if selected_vertex is not None and selected_vertex in filtered_additional.index:
                     st.markdown("### ℹ️ Zusatzinformationen")
                     extra_data = filtered_additional.loc[selected_vertex]
                     col1, col2 = st.columns(2)
                     extra_items = list(extra_data.items())
-            
+                
                     for i in range(0, len(extra_items), 2):
                         for col, (key, val) in zip([col1, col2], extra_items[i:i+2]):
                             val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
                             col.markdown(f"**{key}**: {val_display}")
-            
+                
                             if pd.notna(val):
                                 col_vals = full_additional[key].dropna()
                                 if not col_vals.empty:
@@ -987,7 +1000,7 @@ with tab1:
                                     q3 = col_vals.quantile(0.75)
                                     min_val = col_vals.min()
                                     max_val = col_vals.max()
-            
+                
                                     fig, ax = plt.subplots(figsize=(3.5, 0.3))
                                     ax.hlines(0, min_val, max_val, color="lightgray", linewidth=6)
                                     for q in [q1, q2, q3]:
@@ -1000,8 +1013,6 @@ with tab1:
                                         spine.set_visible(False)
                                     col.pyplot(fig)
                 
-            
-                # Plot-Erstellung
                 fig = make_subplots(
                     rows=n_rows,
                     cols=n_cols,
@@ -1009,32 +1020,32 @@ with tab1:
                     horizontal_spacing=PLOT_CONFIG["horizontal_spacing"],
                     vertical_spacing=PLOT_CONFIG["vertical_spacing"]
                 )
-            
+                
                 for idx, tech in enumerate(valid_techs):
                     year_cols = tech_time_map[tech]
                     if not year_cols:
                         continue
-            
+                
                     row, col = divmod(idx, n_cols)
                     row += 1
                     col += 1
-            
+                
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years, cols = zip(*years_cols_sorted)
-            
+                
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-            
+                
                     if values_matrix.dropna(how='all').empty:
                         continue
-            
+                
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
-            
+                
                         time_series = values_matrix.loc[i].values
                         time_series_text = "<br>".join([f"{y}: {v:.2f}" for y, v in zip(years, time_series)])
-            
+                
                         if i in filtered_additional.index:
                             extra_data = filtered_additional.loc[i]
                             extra_info = "<br>".join([
@@ -1043,7 +1054,7 @@ with tab1:
                             ])
                         else:
                             extra_info = "Keine Zusatzdaten verfügbar"
-            
+                
                         is_selected = selected_vertex is not None and i == selected_vertex
                         fig.add_trace(go.Scatter(
                             x=years,
@@ -1057,7 +1068,7 @@ with tab1:
                             hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
-            
+                
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
@@ -1072,7 +1083,7 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
-            
+                
                     min_vals = full_values_matrix.min()
                     max_vals = full_values_matrix.max()
                     fig.add_trace(go.Scatter(
@@ -1084,7 +1095,7 @@ with tab1:
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
-            
+                
                     if st.session_state["show_original_ranges"]:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                         fig.add_trace(go.Scatter(
@@ -1096,7 +1107,7 @@ with tab1:
                             hoverinfo='skip',
                             showlegend=False
                         ), row=row, col=col)
-            
+                
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
@@ -1121,12 +1132,12 @@ with tab1:
                     margin=dict(l=40, r=40, t=80, b=50),
                     showlegend=False
                 )
-            
+                
                 for i in range(1, len(valid_techs) + 1):
                     suffix = "" if i == 1 else str(i)
                     xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
                     yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
-            
+                
                     if isinstance(xaxis, XAxis):
                         xaxis.update(
                             showgrid=True,
@@ -1147,7 +1158,7 @@ with tab1:
                             linewidth=1,
                             ticks="outside"
                         )
-            
+                
                 for ann in fig['layout']['annotations']:
                     ann['y'] += 0.01
                     ann['font'] = dict(
@@ -1155,7 +1166,7 @@ with tab1:
                         color='#222',
                         family=PLOT_CONFIG["font_family"]
                     )
-            
+                
                 st.plotly_chart(fig, use_container_width=True)
 
             else:
