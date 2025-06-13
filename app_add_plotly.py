@@ -999,8 +999,7 @@ with tab1:
                                     for spine in ax.spines.values():
                                         spine.set_visible(False)
                                     col.pyplot(fig)
-                elif selected_vertex is None:
-                    st.info("ℹ️ Kein Vertex ausgewählt. Bitte oben eine Auswahl treffen.")
+                
             
                 # Plot-Erstellung
                 fig = make_subplots(
