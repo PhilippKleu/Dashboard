@@ -696,6 +696,11 @@ with tab1:
                 additional_cols=additional_cols
             )
             
+            
+            st.session_state["selected_vertex"] = (
+                selected_vertex if selected_vertex != "— Please select —" else None
+            )
+            
         
         with col2:
             mpl.rcParams.update({
