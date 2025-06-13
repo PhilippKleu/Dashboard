@@ -854,7 +854,7 @@ with tab1:
                     horizontal_spacing=0.08,
                     vertical_spacing=0.09
                 )
-            
+                selected_vertex = st.session_state.get("selected_vertex")
                 for idx, tech in enumerate(valid_techs):
                     year_cols = tech_time_map[tech]
                     if not year_cols:
@@ -876,17 +876,15 @@ with tab1:
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
+                    
                         time_series = values_matrix.loc[i].values
                         is_sel = selected_vertex is not None and i == selected_vertex
-            
-                        # Zusatzinfo für Hover
-                        if i in vertex_df.index:
-                            hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                                [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
-                            )
-                        else:
-                            hover_text = f"Vertex {i}"
-            
+                    
+                        # Hovertext für Tooltip
+                        hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
+                            [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
+                        )
+                    
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=time_series,
@@ -895,8 +893,8 @@ with tab1:
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                                 width=3 if is_sel else 1
                             ),
-                            hoverinfo='text',
                             text=[hover_text] * len(years),
+                            hoverinfo='text',
                             showlegend=False
                         ), row=row, col=col)
             
