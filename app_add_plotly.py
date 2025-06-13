@@ -808,14 +808,14 @@ with tab1:
         
             # === Installed Capacities Plot ===
             st.markdown("### Installed Capacities Over Time")
-        
+
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices_cap = current_indices
-        
+            
             valid_techs_all = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
             selected_techs = st.multiselect(
                 "Technologien auswählen, die angezeigt werden sollen:",
@@ -823,22 +823,23 @@ with tab1:
                 default=valid_techs_all,
                 help="Wählen Sie eine oder mehrere Technologien aus."
             )
-        
+            
             valid_techs = selected_techs
-        
+            
             if not valid_techs:
                 st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
                 st.stop()
-        
+            
             year_cols = tech_time_map[valid_techs[0]]
             _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-        
+            
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=list(cols),
                 n_vertices=st.session_state["max_plot_vertices"],
                 index_subset=current_indices
             )
+            
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_techs = len(valid_techs)
                 n_cols = st.session_state.get("n_cols_plots", 3)
@@ -878,6 +879,14 @@ with tab1:
                         time_series = values_matrix.loc[i].values
                         is_sel = selected_vertex is not None and i == selected_vertex
             
+                        # Zusatzinfo für Hover
+                        if i in vertex_df.index:
+                            hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
+                                [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
+                            )
+                        else:
+                            hover_text = f"Vertex {i}"
+            
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=time_series,
@@ -886,7 +895,8 @@ with tab1:
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                                 width=3 if is_sel else 1
                             ),
-                            hoverinfo='skip',
+                            hoverinfo='text',
+                            text=[hover_text] * len(years),
                             showlegend=False
                         ), row=row, col=col)
             
