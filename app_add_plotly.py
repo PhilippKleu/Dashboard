@@ -300,14 +300,18 @@ def load_default_excel_from_url(url):
         raise ValueError("❌ Standarddatei konnte nicht geladen werden.")
     return pd.read_excel(BytesIO(response.content))
 
-# Hauptblock
 if not st.session_state.get("excel_loaded", False):
-    st.subheader("📂 Upload Excel File oder Standard-Datei verwenden")
 
-    use_default = st.checkbox("📁 Statt Upload Standard-Excel verwenden")
-    uploaded_file = None if use_default else st.file_uploader("Upload a .xlsx file", type=["xlsx"])
+    st.subheader("📂 Excel-Datei auswählen")
+    col1, col2 = st.columns(2)
 
-    if use_default or uploaded_file is not None:
+    with col1:
+        use_default_clicked = st.button("📁 Standard-Excel verwenden")
+    with col2:
+        upload_file = st.file_uploader("📤 Eigene Excel-Datei hochladen (.xlsx)", type=["xlsx"])
+
+    # Nur fortfahren, wenn eine der beiden Optionen gewählt wurde
+    if use_default_clicked or upload_file is not None:
         st.subheader("Excel Read-In method")
 
         option = st.selectbox(
@@ -318,7 +322,7 @@ if not st.session_state.get("excel_loaded", False):
         if option == "📥 Read-in all vertices":
             if st.button("Read-in Excel File"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default else pd.read_excel(uploaded_file)
+                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_clicked else pd.read_excel(upload_file)
                     st.session_state["uploaded_excel"] = df.copy()
                     st.session_state["excel_loaded"] = True
                     st.session_state["excel_error"] = None
@@ -338,7 +342,7 @@ if not st.session_state.get("excel_loaded", False):
 
             if st.button("Apply Clustering and Read-in"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default else pd.read_excel(uploaded_file)
+                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_clicked else pd.read_excel(upload_file)
                     amount_vertices_requested = int(k_value)
 
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
