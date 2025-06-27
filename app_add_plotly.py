@@ -309,7 +309,7 @@ if not st.session_state.get("excel_loaded", False):
     with col1:
         upload_file = st.file_uploader("📤 Eigene Excel-Datei hochladen (.xlsx)", type=["xlsx"])
     with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         use_default_clicked = st.button("📁 Standard-Excel verwenden")
 
     # Nur fortfahren, wenn eine der beiden Optionen gewählt wurde
