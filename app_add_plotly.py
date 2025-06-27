@@ -885,7 +885,6 @@ with tab1:
                         time_series = values_matrix.loc[i].values
                         is_sel = selected_vertex is not None and i == selected_vertex
                     
-                        # Hovertext für Tooltip
                         hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
                             [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
                         )
@@ -896,7 +895,7 @@ with tab1:
                             mode='lines',
                             line=dict(
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
-                                width=3 if is_sel else 1
+                                width=4 if is_sel else 1  # Hier die dickere Linie für den ausgewählten Vertex
                             ),
                             text=[hover_text] * len(years),
                             hoverinfo='text',
