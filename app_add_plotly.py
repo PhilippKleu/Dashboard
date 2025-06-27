@@ -303,12 +303,13 @@ def load_default_excel_from_url(url):
 if not st.session_state.get("excel_loaded", False):
 
     st.subheader("📂 Excel-Datei auswählen")
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([2, 1])
 
+    
     with col1:
-        use_default_clicked = st.button("📁 Standard-Excel verwenden")
-    with col2:
         upload_file = st.file_uploader("📤 Eigene Excel-Datei hochladen (.xlsx)", type=["xlsx"])
+    with col2:
+        use_default_clicked = st.button("📁 Standard-Excel verwenden")
 
     # Nur fortfahren, wenn eine der beiden Optionen gewählt wurde
     if use_default_clicked or upload_file is not None:
