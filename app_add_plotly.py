@@ -680,8 +680,8 @@ with tab1:
         
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
-                cols=example_cols,
-                n_vertices=st.session_state.get("max_plot_vertices", 20),
+                cols=list(cols),
+                n_vertices=st.session_state["max_plot_vertices"],
                 index_subset=current_indices
             )
         
@@ -813,7 +813,7 @@ with tab1:
         
             # === Installed Capacities Plot ===
             st.markdown("### Installed Capacities Over Time")
-
+            
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
