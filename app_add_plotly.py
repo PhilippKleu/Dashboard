@@ -677,6 +677,8 @@ with tab1:
                 example_cols = selected_metrics
             else:
                 example_cols = list(vertex_df.columns[:5])
+
+            valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
             year_cols = tech_time_map[valid_techs[0]]
             _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
             plot_indices = select_representative_vertices_by_kmeans(
@@ -836,7 +838,7 @@ with tab1:
                 st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
                 st.stop()
             
-            year_cols = tech_time_map[valid_techs[0]]
+            year_cols = tech_time_map[valid_techs_all[0]]
             _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
             
             plot_indices = select_representative_vertices_by_kmeans(
