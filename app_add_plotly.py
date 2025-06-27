@@ -677,7 +677,8 @@ with tab1:
                 example_cols = selected_metrics
             else:
                 example_cols = list(vertex_df.columns[:5])
-        
+            year_cols = tech_time_map[valid_techs[0]]
+            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=list(cols),
