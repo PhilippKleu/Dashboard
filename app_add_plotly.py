@@ -20,6 +20,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 from plotly.graph_objs.layout import XAxis, YAxis
+import requests
 
 
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
