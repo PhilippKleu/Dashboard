@@ -1693,6 +1693,7 @@ with tab1:
                     )
             
                 st.pyplot(fig_value)
+                
         st.markdown("### Installed Capacities Over Time")
     
         n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
@@ -2026,8 +2027,9 @@ with tab1:
             additional_cols,
             default=additional_cols[:5] if len(additional_cols) > 5 else additional_cols
         )
-    
+        
         if selected_metrics:
+            
             additional_data = vertex_df.loc[tech_data.index, selected_metrics]
             filtered_additional = additional_data.loc[current_indices]
     
