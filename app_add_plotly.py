@@ -2125,39 +2125,39 @@ with tab1:
                     ax_idx += 1
     
             # === Jahresmetriken ===
+            # === Jahresmetriken ===
             for base in selected_base_metrics:
                 ax = axes[ax_idx]
                 ax.set_facecolor('#f0f0f0')
-    
+            
                 entries = sorted(base_metric_dict[base])
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
-                st.markdown(columns)
-                st.write("🔍 Columns in `filtered_convex_additional`:")
-                st.write(list(filtered_convex_additional.columns))
-                st.write("📌 current_indices:")
-                st.write(current_indices)
-                
-                st.write("📋 Index in filtered_convex_additional:")
-                st.write(filtered_convex_additional.index)
-    
+            
+                # DEBUG-Output (kann später entfernt werden)
+                st.markdown(f"**Jahresmetriken für {base}**")
+                st.write("👉 columns:", columns)
+                st.write("👉 convex columns available:", list(filtered_convex_additional.columns))
+            
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
-    
+            
+                # === Konvexe Daten: KEIN current_indices!
+                available_cols = [col for col in columns if col in filtered_convex_additional.columns]
                 convex_data_available = (
                     st.session_state.get("show_convex") and
                     not filtered_convex_additional.empty and
-                    all(col in filtered_convex_additional.columns for col in columns)
+                    len(available_cols) > 0
                 )
-    
                 if convex_data_available:
-                    filtered_convex_data = filtered_convex_additional[columns].loc[current_indices]
-    
+                    filtered_convex_data = filtered_convex_additional[available_cols]  # Keine .loc[current_indices]
+            
                 if st.session_state.get("plot_type_selector") == "Violinplot":
                     year_values = [filtered_data[col].dropna().values for col in columns]
+            
                     if convex_data_available:
-                        convex_year_values = [filtered_convex_data[col].dropna().values for col in columns]
-    
+                        convex_year_values = [filtered_convex_data[col].dropna().values for col in available_cols]
+            
                     if st.session_state.get("show_original_ranges", False):
                         for i, col in enumerate(columns):
                             try:
@@ -2166,7 +2166,7 @@ with tab1:
                                 ax.fill_between([i + 0.6, i + 1.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
                             except:
                                 pass
-    
+            
                     vp = ax.violinplot(year_values, positions=range(1, len(years) + 1), showmeans=False, showmedians=True, showextrema=True)
                     for pc in vp['bodies']:
                         pc.set_facecolor((0.2, 0.6, 0.2, 0.7))
@@ -2174,25 +2174,25 @@ with tab1:
                         pc.set_alpha(0.7)
                     if 'cmedians' in vp:
                         vp['cmedians'].set_color('black')
-    
+            
                     if convex_data_available:
                         for i, cvals in enumerate(convex_year_values):
                             ax.scatter([i + 1] * len(cvals), cvals, color='crimson', alpha=0.5, marker='x', label='Convex' if i == 0 else "")
-    
+            
                     ax.set_xticks(range(1, len(years) + 1))
                     ax.set_xticklabels([str(y) for y in years])
-    
+            
                 else:  # Scatter für Jahresmetriken
                     for i, col in enumerate(columns):
                         values = filtered_data[col].dropna().values
                         x_vals = [i + 1] * len(values)
                         ax.scatter(x_vals, values, alpha=0.7, color="#444444")
-    
-                        if convex_data_available:
+            
+                        if convex_data_available and col in filtered_convex_data.columns:
                             cvals = filtered_convex_data[col].dropna().values
                             cx_vals = [i + 1] * len(cvals)
                             ax.scatter(cx_vals, cvals, alpha=0.5, color='crimson', marker='x')
-    
+            
                         if st.session_state.get("show_original_ranges", False):
                             try:
                                 ovals = vertex_df[col].dropna()
@@ -2200,10 +2200,10 @@ with tab1:
                                 ax.fill_between([i + 0.8, i + 1.2], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
                             except:
                                 pass
-    
+            
                     ax.set_xticks(range(1, len(years) + 1))
                     ax.set_xticklabels([str(y) for y in years])
-    
+            
                 ax.set_title(base, fontsize=12)
                 ax.set_xlabel("Year")
                 ax.set_ylabel("Value")
