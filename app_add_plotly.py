@@ -2132,6 +2132,11 @@ with tab1:
                 st.markdown(columns)
                 st.write("🔍 Columns in `filtered_convex_additional`:")
                 st.write(list(filtered_convex_additional.columns))
+                st.write("📌 current_indices:")
+                st.write(current_indices)
+                
+                st.write("📋 Index in filtered_convex_additional:")
+                st.write(filtered_convex_additional.index)
     
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
