@@ -2022,7 +2022,7 @@ with tab1:
     st.markdown("### Additional Metrics")
 
     if additional_cols:
-        # === Trennung der Metriken anhand von Jahreszahlen ===
+        # === Trennung nach Jahreszahl ===
         yearly_metrics = [col for col in additional_cols if re.search(r"\b\d{4}\b", col)]
         single_metrics = [col for col in additional_cols if not re.search(r"\b\d{4}\b", col)]
     
@@ -2042,13 +2042,13 @@ with tab1:
                 base_name = re.sub(r"\b\d{4}\b", "", col).strip(" _()-")
                 base_metric_dict[base_name].append((year, col))
     
-        # === Auswahl Basismetriken für Zeitreihe ===
+        # === Auswahl Jahresmetriken (Basisnamen) ===
         selected_base_metrics = st.multiselect(
             "📈 Select yearly metric(s) to plot over time",
             sorted(base_metric_dict.keys())
         )
     
-        # === EINZELMETRIKEN: Violinplot oder Streudiagramm ===
+        # === EINZELMETRIKEN: Subplot-Raster ===
         if selected_single:
             selected_metrics = selected_single
             additional_data = vertex_df.loc[tech_data.index, selected_metrics]
@@ -2062,155 +2062,70 @@ with tab1:
             else:
                 filtered_combined = filtered_additional
     
-            if st.session_state.get("plot_type_selector") == "Violinplot":
-                max_cols = 8
-                n_metrics = len(selected_metrics)
-                n_cols = min(max_cols, n_metrics)
-                n_rows = -(-n_metrics // max_cols)
+            max_cols = 3
+            n_metrics = len(selected_metrics)
+            n_cols = min(max_cols, n_metrics)
+            n_rows = -(-n_metrics // max_cols)
     
-                fig_violin, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 5))
-                fig_violin.patch.set_facecolor('#f4f4f4')
+            fig_sub, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 5, n_rows * 5))
+            fig_sub.patch.set_facecolor('#f4f4f4')
+            axes = axes.flatten() if n_metrics > 1 else [axes]
     
-                if n_metrics == 1:
-                    axes = [axes]
-                else:
-                    axes = axes.flatten()
+            for i, col in enumerate(selected_metrics):
+                ax = axes[i]
+                ax.set_facecolor('#f0f0f0')
+                values = filtered_combined[col].dropna().values
+                if len(values) == 0:
+                    ax.set_visible(False)
+                    continue
     
-                for i, col in enumerate(selected_metrics):
-                    ax = axes[i]
-                    ax.set_facecolor('#f0f0f0')
-                    values = filtered_combined[col].dropna().values
-                    if len(values) == 0:
-                        ax.set_visible(False)
-                        continue
+                clean_label = col.replace("installed_capacity_", "").replace("INSTALLED_CAPACITY_", "").replace("NEW_CAPACITY_", "")
     
-                    if st.session_state.get("show_original_ranges", False):
-                        try:
-                            original_values = vertex_df[col].dropna()
-                        except KeyError:
-                            original_values = pd.Series(dtype=float)
-                        if not original_values.empty:
-                            omin = original_values.min()
-                            omax = original_values.max()
-                            ax.fill_between([1 - 0.4, 1 + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
-    
+                if st.session_state.get("plot_type_selector") == "Violinplot":
                     vp = ax.violinplot([values], positions=[1], showmeans=False, showmedians=True, showextrema=True, widths=0.8)
                     for pc in vp['bodies']:
                         pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
                         pc.set_edgecolor('black')
                         pc.set_alpha(0.7)
-                        pc.set_zorder(2)
-    
                     if 'cmedians' in vp:
                         vp['cmedians'].set_color('black')
-    
-                    clean_label = col.replace("installed_capacity_", "").replace("INSTALLED_CAPACITY_", "").replace("NEW_CAPACITY_", "")
                     ax.set_xlim(0.5, 1.5)
-                    ax.set_title(clean_label, fontsize=14)
                     ax.set_xticks([])
-                    ax.set_ylabel("Metric Value", fontsize=13)
-                    ax.tick_params(axis='y', labelsize=12)
-                    ax.grid(True, linestyle="--", alpha=0.4)
     
-                for j in range(i + 1, len(axes)):
-                    axes[j].set_visible(False)
+                elif st.session_state.get("plot_type_selector") == "Streudiagramm":
+                    x_vals = [0] * len(values)
+                    ax.scatter(x_vals, values, alpha=0.7, color="#444444")
+                    ax.set_xlim(-0.5, 0.5)
+                    ax.set_xticks([])
     
-                plt.tight_layout()
-                st.pyplot(fig_violin)
+                ax.set_title(clean_label, fontsize=13)
+                ax.set_ylabel("Metric Value", fontsize=11)
+                ax.tick_params(axis='y', labelsize=10)
+                ax.grid(True, linestyle="--", alpha=0.4)
     
-                if st.session_state.get("show_density"):
-                    if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [
-                            ("Operational_Variables", fig_value),
-                            ("Installed_Capacities", fig),
-                            ("Density", fig_dichte),
-                            ("Violin", fig_violin)
-                        ]
-                    else:
-                        st.session_state["stored_figures"] = [
-                            ("Installed_Capacities", fig),
-                            ("Density", fig_dichte),
-                            ("Violin", fig_violin)
-                        ]
-                else:
-                    if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [
-                            ("Operational_Variables", fig_value),
-                            ("Installed_Capacities", fig),
-                            ("Violin", fig_violin)
-                        ]
-                    else:
-                        st.session_state["stored_figures"] = [
-                            ("Installed_Capacities", fig),
-                            ("Violin", fig_violin)
-                        ]
+            for j in range(i + 1, len(axes)):
+                axes[j].set_visible(False)
     
-            elif st.session_state.get("plot_type_selector") == "Streudiagramm":
-                fig_scatter, ax_scatter = plt.subplots(figsize=(12, 3))
-                fig_scatter.patch.set_facecolor('#f4f4f4')
-                ax_scatter.set_facecolor('#f0f0f0')
-                y_max = max([filtered_combined[col].max() for col in selected_metrics])
+            plt.tight_layout()
+            st.pyplot(fig_sub)
+            st.session_state["stored_figures"].append(("Single_Metrics_Subplots", fig_sub))
     
-                for i, col in enumerate(selected_metrics):
-                    values = filtered_additional[col].dropna().values
-                    x_vals = [i] * len(values)
-                    ax_scatter.scatter(x_vals, values, alpha=0.7, color="#444444", label="Original" if i == 0 else None)
-    
-                    if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
-                        convex_vals = filtered_convex_additional[col].dropna().values
-                        cx_vals = [i] * len(convex_vals)
-                        ax_scatter.scatter(cx_vals, convex_vals, alpha=0.5, color="#ff4444", label="Convex" if i == 0 else None)
-    
-                    global_min = additional_data[col].min()
-                    global_max = additional_data[col].max()
-                    ax_scatter.fill_between([i - 0.3, i + 0.3], global_min, global_max, color='gray', alpha=0.15)
-                    ax_scatter.text(i, global_max + (y_max * 0.02), f"{global_min:.1f}–{global_max:.1f}", ha='center', va='bottom', fontsize=8, color='black')
-    
-                handles, labels = ax_scatter.get_legend_handles_labels()
-                if handles:
-                    ax_scatter.legend(handles, labels)
-    
-                clean_labels = [col.replace("installed_capacity_", "").replace("INSTALLED_CAPACITY_", "").replace("NEW_CAPACITY_", "") for col in selected_metrics]
-                ax_scatter.set_xticks(range(len(selected_metrics)))
-                ax_scatter.set_xticklabels(clean_labels, rotation=45, ha="right")
-                ax_scatter.set_ylabel("Metric Value")
-                ax_scatter.set_title("Remaining Values for Selected Additional Metrics")
-                ax_scatter.set_ylim(0, y_max * 1.1)
-                ax_scatter.grid(True, linestyle="--", alpha=0.4)
-    
-                st.pyplot(fig_scatter)
-    
-                if st.session_state.get("show_density"):
-                    if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [
-                            ("Operational_Variables", fig_value),
-                            ("Installed_Capacities", fig),
-                            ("Density", fig_dichte),
-                            ("scatter", fig_scatter)
-                        ]
-                    else:
-                        st.session_state["stored_figures"] = [
-                            ("Installed_Capacities", fig),
-                            ("Density", fig_dichte),
-                            ("scatter", fig_scatter)
-                        ]
-                else:
-                    if MAA_PREFIX == "VALUE_":
-                        st.session_state["stored_figures"] = [
-                            ("Operational_Variables", fig_value),
-                            ("Installed_Capacities", fig),
-                            ("scatter", fig_scatter)
-                        ]
-                    else:
-                        st.session_state["stored_figures"] = [
-                            ("Installed_Capacities", fig),
-                            ("scatter", fig_scatter)
-                        ]
-    
-        # === ZEITREIHENPLOTS FÜR JAHRESMETRIKEN ===
+        # === JAHRESMETRIKEN: Zeitreihe als Subplots ===
         if selected_base_metrics:
-            for base in selected_base_metrics:
-                entries = sorted(base_metric_dict[base])  # list of (year, column)
+            n_metrics = len(selected_base_metrics)
+            max_cols = 3
+            n_cols = min(max_cols, n_metrics)
+            n_rows = -(-n_metrics // max_cols)
+    
+            fig_grid, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 5, n_rows * 4))
+            fig_grid.patch.set_facecolor('#f4f4f4')
+            axes = axes.flatten() if n_metrics > 1 else [axes]
+    
+            for i, base in enumerate(selected_base_metrics):
+                ax = axes[i]
+                ax.set_facecolor('#f0f0f0')
+    
+                entries = sorted(base_metric_dict[base])
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
     
@@ -2218,19 +2133,18 @@ with tab1:
                 filtered_data = data.loc[current_indices]
                 avg_per_year = filtered_data.mean(axis=0)
     
-                fig_time, ax_time = plt.subplots(figsize=(10, 4))
-                fig_time.patch.set_facecolor('#f4f4f4')
-                ax_time.set_facecolor('#f0f0f0')
+                ax.plot(years, avg_per_year.values, marker='o', linestyle='-')
+                ax.set_title(base, fontsize=12)
+                ax.set_xlabel("Year")
+                ax.set_ylabel("Avg. Value")
+                ax.grid(True, linestyle="--", alpha=0.4)
     
-                ax_time.plot(years, avg_per_year.values, marker='o', linestyle='-', label=base)
-                ax_time.set_title(f"Development of '{base}' over Years")
-                ax_time.set_xlabel("Year")
-                ax_time.set_ylabel("Average Value")
-                ax_time.grid(True, linestyle="--", alpha=0.4)
-                ax_time.legend()
+            for j in range(i + 1, len(axes)):
+                axes[j].set_visible(False)
     
-                st.pyplot(fig_time)
-                st.session_state["stored_figures"].append((f"Yearly_Trend_{base}", fig_time))
+            plt.tight_layout()
+            st.pyplot(fig_grid)
+            st.session_state["stored_figures"].append(("Yearly_Metric_Subplots", fig_grid))
     
     else:
         st.info("No numeric columns found after the last 'NEW_CAPACITY' column.")
