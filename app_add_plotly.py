@@ -2022,11 +2022,11 @@ with tab1:
     st.markdown("### Additional Metrics")
 
     if additional_cols:
-        # === Metriken mit oder ohne Jahreszahl trennen ===
+        # === Trennung nach Jahreszahl ===
         yearly_metrics = [col for col in additional_cols if re.search(r"\b\d{4}\b", col)]
         single_metrics = [col for col in additional_cols if not re.search(r"\b\d{4}\b", col)]
     
-        # === Jahresmetriken gruppieren nach Basismetrik ===
+        # === Gruppierung der Jahresmetriken nach Basismetrik ===
         base_metric_dict = defaultdict(list)
         for col in yearly_metrics:
             match = re.search(r"\b(\d{4})\b", col)
@@ -2046,7 +2046,7 @@ with tab1:
         selected_single = [item.replace("🔹 ", "") for item in selected_combined if item.startswith("🔹")]
         selected_base_metrics = [item.replace("📈 ", "") for item in selected_combined if item.startswith("📈")]
     
-        # === Subplot-Gemeinsam-Darstellung ===
+        # === Anzahl aller benötigten Subplots ===
         total_plots = len(selected_single) + len(selected_base_metrics)
     
         if total_plots > 0:
@@ -2054,12 +2054,12 @@ with tab1:
             n_cols = min(max_cols, total_plots)
             n_rows = -(-total_plots // max_cols)
     
-            fig_combined, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 5, n_rows * 4))
+            fig_combined, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 5, n_rows * 5))
             fig_combined.patch.set_facecolor('#f4f4f4')
             axes = axes.flatten() if total_plots > 1 else [axes]
             ax_idx = 0
     
-            # === Einzelmetriken-Subplots ===
+            # === Einzelmetriken ===
             if selected_single:
                 additional_data = vertex_df.loc[tech_data.index, selected_single]
                 filtered_additional = additional_data.loc[current_indices]
@@ -2081,7 +2081,14 @@ with tab1:
                         ax_idx += 1
                         continue
     
-                    clean_label = col.replace("installed_capacity_", "").replace("INSTALLED_CAPACITY_", "").replace("NEW_CAPACITY_", "")
+                    # Originalbereich anzeigen
+                    if st.session_state.get("show_original_ranges", False):
+                        try:
+                            original_values = vertex_df[col].dropna()
+                            omin, omax = original_values.min(), original_values.max()
+                            ax.fill_between([1 - 0.4, 1 + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                        except:
+                            pass
     
                     if st.session_state.get("plot_type_selector") == "Violinplot":
                         vp = ax.violinplot([values], positions=[1], showmeans=False, showmedians=True, showextrema=True, widths=0.8)
@@ -2093,35 +2100,74 @@ with tab1:
                             vp['cmedians'].set_color('black')
                         ax.set_xlim(0.5, 1.5)
                         ax.set_xticks([])
-    
-                    elif st.session_state.get("plot_type_selector") == "Streudiagramm":
+                    else:
                         x_vals = [0] * len(values)
                         ax.scatter(x_vals, values, alpha=0.7, color="#444444")
                         ax.set_xlim(-0.5, 0.5)
                         ax.set_xticks([])
     
-                    ax.set_title(clean_label, fontsize=12)
+                    ax.set_title(col, fontsize=12)
                     ax.set_ylabel("Value")
                     ax.grid(True, linestyle="--", alpha=0.4)
                     ax_idx += 1
     
-            # === Jahresmetriken-Zeitreihen ===
+            # === Jahresmetriken (alle Jahre je Basismetrik im gleichen Subplot) ===
             for base in selected_base_metrics:
                 ax = axes[ax_idx]
                 ax.set_facecolor('#f0f0f0')
     
-                entries = sorted(base_metric_dict[base])
+                entries = sorted(base_metric_dict[base])  # [(year, col)]
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
     
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
-                avg_per_year = filtered_data.mean(axis=0)
     
-                ax.plot(years, avg_per_year.values, marker='o', linestyle='-')
+                if st.session_state.get("plot_type_selector") == "Violinplot":
+                    year_values = [filtered_data[col].dropna().values for col in columns]
+    
+                    if st.session_state.get("show_original_ranges", False):
+                        for i, col in enumerate(columns):
+                            try:
+                                ovals = vertex_df[col].dropna()
+                                omin, omax = ovals.min(), ovals.max()
+                                ax.fill_between([i + 0.6, i + 1.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                            except:
+                                pass
+    
+                    vp = ax.violinplot(year_values, positions=range(1, len(years) + 1), showmeans=False, showmedians=True, showextrema=True)
+                    for pc in vp['bodies']:
+                        pc.set_facecolor((0.2, 0.6, 0.2, 0.7))
+                        pc.set_edgecolor('black')
+                        pc.set_alpha(0.7)
+    
+                    if 'cmedians' in vp:
+                        vp['cmedians'].set_color('black')
+    
+                    ax.set_xticks(range(1, len(years) + 1))
+                    ax.set_xticklabels([str(y) for y in years])
+    
+                else:  # Streudiagramm
+                    for i, col in enumerate(columns):
+                        values = filtered_data[col].dropna().values
+                        x_vals = [i + 1] * len(values)
+                        ax.scatter(x_vals, values, alpha=0.7, label=f"{years[i]}")
+    
+                        if st.session_state.get("show_original_ranges", False):
+                            try:
+                                ovals = vertex_df[col].dropna()
+                                omin, omax = ovals.min(), ovals.max()
+                                ax.fill_between([i + 0.8, i + 1.2], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
+                            except:
+                                pass
+    
+                    ax.set_xticks(range(1, len(years) + 1))
+                    ax.set_xticklabels([str(y) for y in years])
+                    ax.legend(fontsize=8)
+    
                 ax.set_title(base, fontsize=12)
                 ax.set_xlabel("Year")
-                ax.set_ylabel("Avg. Value")
+                ax.set_ylabel("Value")
                 ax.grid(True, linestyle="--", alpha=0.4)
                 ax_idx += 1
     
