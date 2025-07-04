@@ -2043,7 +2043,13 @@ with tab1:
             [f"🔹 {m}" for m in single_metrics] +
             [f"📈 {base}" for base in sorted(base_metric_dict.keys())]
         )
-        selected_combined = st.multiselect("📊 Select metrics to plot", options_dropdown)
+        default_selection = options_dropdown[:3] if len(options_dropdown) >= 3 else options_dropdown
+
+        selected_combined = st.multiselect(
+            "📊 Select metrics to plot",
+            options_dropdown,
+            default=default_selection
+        )
     
         # === Auswahl trennen
         selected_single = [item.replace("🔹 ", "") for item in selected_combined if item.startswith("🔹")]
