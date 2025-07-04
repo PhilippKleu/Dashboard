@@ -2134,11 +2134,7 @@ with tab1:
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
             
-                # DEBUG-Output (kann später entfernt werden)
-                st.markdown(f"**Jahresmetriken für {base}**")
-                st.write("👉 columns:", columns)
-                st.write("👉 convex columns available:", list(filtered_convex_additional.columns))
-            
+                           
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
             
