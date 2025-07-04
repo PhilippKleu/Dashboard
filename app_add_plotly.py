@@ -2258,7 +2258,6 @@ with tab1:
         st.markdown("#### Convex Combinations")
     
         if filtered_convex_data.empty:
-            st.info("⚠️ `filtered_convex_data` ist leer – nichts zu kombinieren.")
             st.dataframe(filtered_convex_data, use_container_width=True)
         else:
             frames_to_concat = [filtered_convex_data.reset_index(drop=True)]
