@@ -2130,7 +2130,8 @@ with tab1:
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
                 st.markdown(columns)
-                st.markdown(filtered_convex_additional)
+                st.write("🔍 Columns in `filtered_convex_additional`:")
+                st.write(list(filtered_convex_additional.columns))
     
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
