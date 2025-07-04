@@ -2262,18 +2262,11 @@ with tab1:
             st.dataframe(filtered_convex_data, use_container_width=True)
         else:
             frames_to_concat = [filtered_convex_data.reset_index(drop=True)]
-    
-            # DEBUG: Spalten aus filtered_convex_data
-            st.markdown("**🔍 Spalten aus `filtered_convex_data`**")
-            st.write(list(filtered_convex_data.columns))
+                
     
             if additional_cols and not filtered_convex_additional.empty:
                 additional_convex_part = filtered_convex_additional[additional_cols].reset_index(drop=True)
-    
-                # DEBUG: Spalten aus additional_convex_part
-                st.markdown("**🔍 Spalten aus `filtered_convex_additional[additional_cols]`**")
-                st.write(list(additional_convex_part.columns))
-    
+                    
                 frames_to_concat.append(additional_convex_part)
     
             # Check auf doppelte Spaltennamen vor dem concat
