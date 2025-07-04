@@ -2256,18 +2256,40 @@ with tab1:
     ):
         st.markdown("---")
         st.markdown("#### Convex Combinations")
+    
         if filtered_convex_data.empty:
+            st.info("⚠️ `filtered_convex_data` ist leer – nichts zu kombinieren.")
             st.dataframe(filtered_convex_data, use_container_width=True)
         else:
             frames_to_concat = [filtered_convex_data.reset_index(drop=True)]
-
-            
-
+    
+            # DEBUG: Spalten aus filtered_convex_data
+            st.markdown("**🔍 Spalten aus `filtered_convex_data`**")
+            st.write(list(filtered_convex_data.columns))
+    
             if additional_cols and not filtered_convex_additional.empty:
                 additional_convex_part = filtered_convex_additional[additional_cols].reset_index(drop=True)
+    
+                # DEBUG: Spalten aus additional_convex_part
+                st.markdown("**🔍 Spalten aus `filtered_convex_additional[additional_cols]`**")
+                st.write(list(additional_convex_part.columns))
+    
                 frames_to_concat.append(additional_convex_part)
-
-            convex_with_all = pd.concat(frames_to_concat, axis=1)
+    
+            # Check auf doppelte Spaltennamen vor dem concat
+            all_columns = pd.concat(frames_to_concat, axis=1).columns
+            duplicated_cols = all_columns[all_columns.duplicated()].tolist()
+    
+            if duplicated_cols:
+                st.error(f"❌ Duplicate column names found: {duplicated_cols}")
+                # Optional: automatisch duplikate entfernen oder umbenennen
+                convex_with_all = pd.concat(frames_to_concat, axis=1)
+                convex_with_all = convex_with_all.loc[:, ~convex_with_all.columns.duplicated()]
+                st.info("ℹ️ Doppelte Spalten wurden automatisch entfernt.")
+            else:
+                convex_with_all = pd.concat(frames_to_concat, axis=1)
+    
+            st.markdown("✅ Finaler kombinierter DataFrame")
             st.dataframe(convex_with_all, use_container_width=True)
 
 with tab2:
