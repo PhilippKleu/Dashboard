@@ -2020,7 +2020,8 @@ with tab1:
     # === Weitere Metriken anzeigen ===
     # Beispiel-Daten
     st.markdown("### Additional Metrics")
-    
+
+    st.markdown(additional_cols)
     if additional_cols:
         selected_metrics = st.multiselect(
             "📌 Select additional metrics to visualize",
