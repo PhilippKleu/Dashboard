@@ -2022,7 +2022,7 @@ with tab1:
     st.markdown("### Additional Metrics")
 
     if additional_cols:
-        # === Trennung nach Jahreszahl ===
+        # === Trennung in Jahresmetriken und Einzelmetriken ===
         yearly_metrics = [col for col in additional_cols if re.search(r"\b\d{4}\b", col)]
         single_metrics = [col for col in additional_cols if not re.search(r"\b\d{4}\b", col)]
     
@@ -2035,18 +2035,17 @@ with tab1:
                 base_name = re.sub(r"\b\d{4}\b", "", col).strip(" _()-")
                 base_metric_dict[base_name].append((year, col))
     
-        # === Kombiniertes Dropdown-Menü ===
+        # === Dropdown für beide Typen
         options_dropdown = (
             [f"🔹 {m}" for m in single_metrics] +
             [f"📈 {base}" for base in sorted(base_metric_dict.keys())]
         )
         selected_combined = st.multiselect("📊 Select metrics to plot", options_dropdown)
     
-        # === Vorbereitung ===
+        # === Auswahl trennen
         selected_single = [item.replace("🔹 ", "") for item in selected_combined if item.startswith("🔹")]
         selected_base_metrics = [item.replace("📈 ", "") for item in selected_combined if item.startswith("📈")]
     
-        # === Anzahl aller benötigten Subplots ===
         total_plots = len(selected_single) + len(selected_base_metrics)
     
         if total_plots > 0:
@@ -2081,7 +2080,6 @@ with tab1:
                         ax_idx += 1
                         continue
     
-                    # Originalbereich anzeigen
                     if st.session_state.get("show_original_ranges", False):
                         try:
                             original_values = vertex_df[col].dropna()
@@ -2100,9 +2098,21 @@ with tab1:
                             vp['cmedians'].set_color('black')
                         ax.set_xlim(0.5, 1.5)
                         ax.set_xticks([])
+    
+                        # Konvexwerte (falls aktiv)
+                        if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
+                            if col in filtered_convex_additional.columns:
+                                cvals = filtered_convex_additional[col].dropna().values
+                                ax.scatter([1] * len(cvals), cvals, color='crimson', alpha=0.5, marker='x', label='Convex')
+    
                     else:
                         x_vals = [0] * len(values)
                         ax.scatter(x_vals, values, alpha=0.7, color="#444444")
+                        if st.session_state.get("show_convex") and not filtered_convex_additional.empty:
+                            if col in filtered_convex_additional.columns:
+                                cx_vals = [0] * len(filtered_convex_additional[col].dropna())
+                                cy_vals = filtered_convex_additional[col].dropna().values
+                                ax.scatter(cx_vals, cy_vals, alpha=0.5, color='crimson', marker='x', label='Convex')
                         ax.set_xlim(-0.5, 0.5)
                         ax.set_xticks([])
     
@@ -2111,20 +2121,31 @@ with tab1:
                     ax.grid(True, linestyle="--", alpha=0.4)
                     ax_idx += 1
     
-            # === Jahresmetriken (alle Jahre je Basismetrik im gleichen Subplot) ===
+            # === Jahresmetriken ===
             for base in selected_base_metrics:
                 ax = axes[ax_idx]
                 ax.set_facecolor('#f0f0f0')
     
-                entries = sorted(base_metric_dict[base])  # [(year, col)]
+                entries = sorted(base_metric_dict[base])
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
     
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
     
+                convex_data_available = (
+                    st.session_state.get("show_convex") and
+                    not filtered_convex_additional.empty and
+                    all(col in filtered_convex_additional.columns for col in columns)
+                )
+    
+                if convex_data_available:
+                    filtered_convex_data = filtered_convex_additional[columns].loc[current_indices]
+    
                 if st.session_state.get("plot_type_selector") == "Violinplot":
                     year_values = [filtered_data[col].dropna().values for col in columns]
+                    if convex_data_available:
+                        convex_year_values = [filtered_convex_data[col].dropna().values for col in columns]
     
                     if st.session_state.get("show_original_ranges", False):
                         for i, col in enumerate(columns):
@@ -2140,18 +2161,26 @@ with tab1:
                         pc.set_facecolor((0.2, 0.6, 0.2, 0.7))
                         pc.set_edgecolor('black')
                         pc.set_alpha(0.7)
-    
                     if 'cmedians' in vp:
                         vp['cmedians'].set_color('black')
+    
+                    if convex_data_available:
+                        for i, cvals in enumerate(convex_year_values):
+                            ax.scatter([i + 1] * len(cvals), cvals, color='crimson', alpha=0.5, marker='x', label='Convex' if i == 0 else "")
     
                     ax.set_xticks(range(1, len(years) + 1))
                     ax.set_xticklabels([str(y) for y in years])
     
-                else:  # Streudiagramm
+                else:  # Scatter für Jahresmetriken
                     for i, col in enumerate(columns):
                         values = filtered_data[col].dropna().values
                         x_vals = [i + 1] * len(values)
-                        ax.scatter(x_vals, values, alpha=0.7, label=f"{years[i]}")
+                        ax.scatter(x_vals, values, alpha=0.7, color="#444444")
+    
+                        if convex_data_available:
+                            cvals = filtered_convex_data[col].dropna().values
+                            cx_vals = [i + 1] * len(cvals)
+                            ax.scatter(cx_vals, cvals, alpha=0.5, color='crimson', marker='x')
     
                         if st.session_state.get("show_original_ranges", False):
                             try:
@@ -2163,7 +2192,6 @@ with tab1:
     
                     ax.set_xticks(range(1, len(years) + 1))
                     ax.set_xticklabels([str(y) for y in years])
-                    ax.legend(fontsize=8)
     
                 ax.set_title(base, fontsize=12)
                 ax.set_xlabel("Year")
