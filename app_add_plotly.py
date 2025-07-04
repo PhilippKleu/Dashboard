@@ -2165,7 +2165,7 @@ with tab1:
             
                     vp = ax.violinplot(year_values, positions=range(1, len(years) + 1), showmeans=False, showmedians=True, showextrema=True)
                     for pc in vp['bodies']:
-                        pc.set_facecolor((0.2, 0.6, 0.2, 0.7))
+                        pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
                         pc.set_edgecolor('black')
                         pc.set_alpha(0.7)
                     if 'cmedians' in vp:
