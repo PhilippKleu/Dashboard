@@ -2129,6 +2129,7 @@ with tab1:
                 entries = sorted(base_metric_dict[base])
                 years = [year for year, _ in entries]
                 columns = [col for _, col in entries]
+                st.markdown(columns)
     
                 data = vertex_df.loc[tech_data.index, columns]
                 filtered_data = data.loc[current_indices]
