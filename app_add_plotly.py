@@ -154,11 +154,14 @@ def initialize_session_state():
         'convex_combinations': pd.DataFrame(),
         'convex_additional': pd.DataFrame(),
         'show_convex': True,
+        'show_original_ranges': False,          # <--- ergänzt
+        'plot_type_selector': 'Violinplot',     # <--- ergänzt
+        'stored_figures': [],                   # <--- ergänzt
         'excel_loaded': False,
         'excel_path': '',
         'excel_error': None,
-        'n_cols_plots': 3,  # <--- HIER Standardwert für Plot-Spaltenanzahl
-        'max_plot_vertices': 5,  # optional auch gleich hier
+        'n_cols_plots': 3,                      # Standardanzahl Subplot-Spalten
+        'max_plot_vertices': 5,
         "column_ratio" : 0.3,
         'layout_mode': "Two-column layout",
     }
