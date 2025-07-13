@@ -754,7 +754,7 @@ with tab1:
         
             if MAA_PREFIX == "VALUE_":
                 st.markdown("### Operational Variables Over Time")
-                plot_mode = 'markers' if len(years) == 1 else 'lines'
+                
 
                 value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
                 
@@ -794,6 +794,7 @@ with tab1:
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
                     cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+                    plot_mode = 'markers' if len(years) == 1 else 'lines'
                 
                     st.write(f"🔍 Tech: {tech} — Jahre: {years} — Spalten: {cols}")
                 
