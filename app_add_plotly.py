@@ -536,7 +536,7 @@ with tab1:
             selected_metrics = [m for m in ordered_techs if m in additional_cols]
         
             selected_data = pd.DataFrame(index=tech_data.index)
-            st.write(selected_techs)
+            
             if selected_techs:
                 
                 selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in selected_techs]]], axis=1)
@@ -705,40 +705,61 @@ with tab1:
                 prefix=MAA_PREFIX
             )
         
-            # === Absicherung: plot_indices vorbereiten für Zusatzinfo/Highlight
-            if selected_techs:
-                example_cols = [f"{MAA_PREFIX}{t}" for t in selected_techs]
-            elif selected_metrics:
-                example_cols = selected_metrics
-            else:
-                example_cols = list(vertex_df.columns[:5])
-            
+                    
             valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
-            year_cols = tech_time_map[valid_techs[0]]
-            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+
+            st.markdown("#### 🐞 Debug: Gültige Technologien")
+            st.write(valid_techs)
             
-            plot_indices = select_representative_vertices_by_kmeans(
-                df=vertex_df,
-                cols=list(cols),
-                n_vertices=st.session_state["max_plot_vertices"],
-                index_subset=current_indices
-            )
+            if not valid_techs:
+                st.warning("⚠️ Keine gültigen Technologien in `tech_time_map` gefunden!")
+            else:
+                year_cols = tech_time_map[valid_techs[0]]
             
-            # === Zusatzinfos & Highlight-Auswahl anzeigen
-            st.markdown("---")
-            st.markdown("### Highlight Vertex & View Details")
+                st.markdown(f"#### 🐞 Debug: year_cols für erste Tech '{valid_techs[0]}'")
+                st.write(year_cols)
             
-            selected_vertex = select_and_show_vertex_info(
-                plot_indices=plot_indices,
-                current_indices=current_indices,
-                vertex_df=vertex_df,
-                tech_data=tech_data,
-                additional_cols=additional_cols
-            )
+                try:
+                    _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+                    cols = list(cols)
+                except ValueError as e:
+                    st.error(f"❌ Fehler beim Entpacken der Spalten für '{valid_techs[0]}': {e}")
+                    cols = []
             
-            st.session_state["selected_vertex"] = (
-                selected_vertex if selected_vertex != "— Please select —" else None
-            )
+                st.markdown("#### 🐞 Debug: Final verwendete Zeitreihen-Spalten")
+                st.write(cols)
+            
+                if cols:
+                    plot_indices = select_representative_vertices_by_kmeans(
+                        df=vertex_df,
+                        cols=cols,
+                        n_vertices=st.session_state["max_plot_vertices"],
+                        index_subset=current_indices
+                    )
+            
+                    st.markdown("#### 🐞 Debug: Ausgewählte Vertex-Indizes für Plots")
+                    st.write(plot_indices)
+            
+                    # === Zusatzinfos & Highlight-Auswahl anzeigen
+                    st.markdown("---")
+                    st.markdown("### Highlight Vertex & View Details")
+            
+                    selected_vertex = select_and_show_vertex_info(
+                        plot_indices=plot_indices,
+                        current_indices=current_indices,
+                        vertex_df=vertex_df,
+                        tech_data=tech_data,
+                        additional_cols=additional_cols
+                    )
+            
+                    st.markdown("#### 🐞 Debug: Ausgewählter Vertex")
+                    st.write(selected_vertex)
+            
+                    st.session_state["selected_vertex"] = (
+                        selected_vertex if selected_vertex != "— Please select —" else None
+                    )
+                else:
+                    st.error("🚫 Keine gültigen Spalten gefunden – überspringe Vertex-Auswahl.")
             
         
         with col2:
