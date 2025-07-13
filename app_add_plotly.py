@@ -882,9 +882,18 @@ with tab1:
                             st.write(f"⬆️ Max-Werte: {max_vals.tolist()}")
                     
                             if not original_matrix.empty:
+                                if len(years) == 1:
+                                    # Bei nur einem Jahr: künstlich um ±0.25 erweitern
+                                    y_val = years[0]
+                                    x_vals = [y_val - 0.25, y_val + 0.25, y_val + 0.25, y_val - 0.25]
+                                    y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
+                                else:
+                                    x_vals = list(years) + list(reversed(years))
+                                    y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
+                                
                                 fig_val.add_trace(go.Scatter(
-                                    x=list(years) + list(reversed(years)),
-                                    y=min_vals.tolist() + max_vals.tolist()[::-1],
+                                    x=x_vals,
+                                    y=y_vals,
                                     fill='toself',
                                     fillcolor="rgba(255, 0, 0, 0.08)",
                                     line=dict(color='rgba(255,255,255,0)'),
