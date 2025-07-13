@@ -754,6 +754,7 @@ with tab1:
         
             if MAA_PREFIX == "VALUE_":
                 st.markdown("### Operational Variables Over Time")
+                plot_mode = 'markers' if len(years) == 1 else 'lines'
 
                 value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
                 
@@ -828,7 +829,7 @@ with tab1:
                         fig_val.add_trace(go.Scatter(
                             x=years,
                             y=values,
-                            mode='lines',
+                            mode=plot_mode,
                             line=dict(
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                                 width=4 if is_sel else 1
@@ -847,7 +848,7 @@ with tab1:
                                     fig_val.add_trace(go.Scatter(
                                         x=years,
                                         y=vals,
-                                        mode='lines',
+                                        mode=plot_mode,
                                         line=dict(color="rgba(255, 50, 50, 0.4)"),
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
