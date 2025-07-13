@@ -822,7 +822,13 @@ with tab1:
                 fig_height_val = fig_width_val
                 
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
-                    plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
+                    plot_indices_val = select_representative_vertices_by_kmeans(
+                        df=vertex_df,
+                        cols=list(cols),
+                        n_vertices=st.session_state["max_plot_vertices"],
+                        index_subset=current_indices
+                    )
+                   
                     st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
                     st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
