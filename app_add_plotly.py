@@ -296,12 +296,14 @@ st.title(" Technology Decision Tool")
 # === Excel-Datei Ladebereich via Upload ===
 DEFAULT_EXCEL_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/vertex_results_default.xlsx"
 
-# Funktion zum Laden der Excel-Datei über URL
-def load_default_excel_from_url(url):
+@st.cache_data(show_spinner="📥 Lade Standard-Excel ...")
+def read_default_excel_from_url(url):
     response = requests.get(url)
     if response.status_code != 200:
         raise ValueError("❌ Standarddatei konnte nicht geladen werden.")
     return pd.read_excel(BytesIO(response.content))
+
+
 
 if not st.session_state.get("excel_loaded", False):
 
@@ -338,7 +340,7 @@ if not st.session_state.get("excel_loaded", False):
         if option == "📥 Read-in all vertices":
             if st.button("Read-in Excel File"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else pd.read_excel(uploaded_file)
+                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
                     st.session_state["uploaded_excel"] = df.copy()
                     st.session_state["excel_loaded"] = True
                     st.session_state["excel_error"] = None
@@ -358,7 +360,7 @@ if not st.session_state.get("excel_loaded", False):
 
             if st.button("Apply Clustering and Read-in"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else pd.read_excel(uploaded_file)
+                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
                     amount_vertices_requested = int(k_value)
 
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
