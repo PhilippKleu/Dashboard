@@ -758,6 +758,8 @@ with tab1:
                 value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
                 
                 valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
+                st.write("🛠️ Gefundene Technologien:", valid_techs_value)
+                
                 n_techs_value = len(valid_techs_value)
                 n_cols_val = st.session_state.get("n_cols_plots", 3)
                 n_rows_val = ceil(n_techs_value / n_cols_val)
@@ -785,14 +787,17 @@ with tab1:
                 for idx, tech in enumerate(valid_techs_value):
                     year_cols = value_time_map[tech]
                     if not year_cols:
+                        st.write(f"⚠️ Keine Spalten für Technologie: {tech}")
                         continue
                 
-                    # Verwende dieselbe Filterlogik wie im ursprünglichen Code
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
                     cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
                 
+                    st.write(f"🔍 Tech: {tech} — Jahre: {years} — Spalten: {cols}")
+                
                     if not cols:
+                        st.write(f"🚫 Überspringe Technologie {tech}, da keine passenden Spalten vorhanden.")
                         continue
                 
                     row, col = divmod(idx, n_cols_val)
@@ -803,11 +808,15 @@ with tab1:
                     values_matrix = vertex_df.loc[plot_indices_val, cols]
                 
                     if values_matrix.dropna(how='all').empty:
+                        st.write(f"⚠️ Leere Werte für {tech}, überspringe.")
                         continue
+                
+                    st.write(f"✅ Werte für {tech}: {values_matrix.shape[0]} Zeilen, {values_matrix.shape[1]} Spalten")
                 
                     for i in values_matrix.index:
                         values = values_matrix.loc[i].values
                         if len(values) != len(years):
+                            st.write(f"⚠️ Zeile {i}: Ungleiche Länge zwischen Jahren und Werten ({len(years)} vs {len(values)})")
                             continue
                 
                         is_sel = selected_vertex is not None and i == selected_vertex
@@ -831,6 +840,7 @@ with tab1:
                 
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         if all(col in filtered_convex_data.columns for col in cols):
+                            st.write(f"➕ Konvexe Kombinationen für {tech} werden geplottet.")
                             for i in filtered_convex_data.index:
                                 vals = filtered_convex_data.loc[i, cols].values
                                 if not np.isnan(vals).all():
@@ -842,6 +852,8 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
+                        else:
+                            st.write(f"⚠️ Konvexdaten fehlen Spalten für {tech}: {cols}")
                 
                     fig_val.add_trace(go.Scatter(
                         x=list(years) + list(reversed(years)),
