@@ -716,27 +716,28 @@ with tab1:
                 example_cols = list(vertex_df.columns[:5])
                 st.write("🧪 Fallback-Beispielspalten:", example_cols)
             
-            # Verfügbare Technologien und Spalten extrahieren
+            # Verfügbare Technologien für KMeans
             valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
-            if not valid_techs:
-                st.warning("⚠️ Keine gültigen Technologien mit Zeitverlauf gefunden.")
-                st.stop()
+            st.write("📦 Gültige Technologien für KMeans:", valid_techs)
             
-            year_cols = tech_time_map[valid_techs[0]]
-            st.write(f"🧩 Verwende year_cols von: {valid_techs[0]} →", year_cols)
+            # Auswahl der Spalten (aus der ersten Technologie)
+            if valid_techs:
+                year_cols = tech_time_map[valid_techs[0]]
+                st.write(f"🧩 Verwende year_cols von: {valid_techs[0]} →", year_cols)
             
-            # Extrahiere die Spaltennamen für KMeans
-            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-            cols = list(cols)
-            st.write("📊 Spalten (cols) für KMeans:", cols)
+                _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+                cols = list(cols)
+                st.write("📊 Spalten (cols) für KMeans:", cols)
+            else:
+                st.warning("⚠️ Keine gültigen Technologien für KMeans vorhanden.")
+                cols = []
             
-            # Prüfe, ob die Spalten überhaupt im DataFrame vorhanden sind
+            # Überprüfe, ob die Spalten im DataFrame vorhanden sind
             missing_cols = [c for c in cols if c not in vertex_df.columns]
             if missing_cols:
-                st.error(f"❌ Spalten fehlen im DataFrame: {missing_cols}")
-                st.stop()
+                st.warning(f"⚠️ Folgende Spalten fehlen im DataFrame und könnten zu Problemen führen: {missing_cols}")
             
-            # KMeans-Auswahl vorbereiten
+            # Auswahl der Vertices für Highlighting (per KMeans oder Sampling)
             try:
                 plot_indices = select_representative_vertices_by_kmeans(
                     df=vertex_df,
@@ -745,11 +746,8 @@ with tab1:
                     index_subset=current_indices
                 )
                 st.write("🧠 Plot Indices (für Highlight):", plot_indices)
-            
-                if len(plot_indices) == 0:
-                    st.warning("⚠️ Keine Vertices durch KMeans ausgewählt.")
             except Exception as e:
-                st.error(f"❌ Fehler beim KMeans-Clustering: {e}")
+                st.error(f"❌ Fehler beim Auswählen von plot_indices: {e}")
                 plot_indices = []
             
             # === Zusatzinfos & Highlight-Auswahl anzeigen
@@ -766,10 +764,10 @@ with tab1:
                 )
                 st.write("🎯 Ausgewählter Vertex (aus Auswahl):", selected_vertex)
             except Exception as e:
-                st.error(f"❌ Fehler beim Anzeigen der Vertex-Auswahl: {e}")
+                st.error(f"❌ Fehler bei select_and_show_vertex_info(): {e}")
                 selected_vertex = None
             
-            # Speichern in Session-State (falls gültig)
+            # Speichern in Session-State (sofern gültig)
             st.session_state["selected_vertex"] = (
                 selected_vertex if selected_vertex != "— Please select —" else None
             )
