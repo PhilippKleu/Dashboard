@@ -993,6 +993,183 @@ with tab1:
                 
                 st.plotly_chart(fig_val, use_container_width=True)
 
+                # === Installed Capacities Plot ===
+            st.markdown("### Installed Capacities Over Time")
+            
+            if len(current_indices) > st.session_state["max_plot_vertices"]:
+                plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
+                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+            else:
+                st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+                plot_indices_cap = current_indices
+            
+            valid_techs_all = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+            selected_techs = st.multiselect(
+                "Technologien auswählen, die angezeigt werden sollen:",
+                options=valid_techs_all,
+                default=valid_techs_all,
+                help="Wählen Sie eine oder mehrere Technologien aus."
+            )
+            
+            valid_techs = selected_techs
+            
+            if not valid_techs:
+                st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
+                st.stop()
+            
+            year_cols = tech_time_map[valid_techs_all[0]]
+            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+            
+            plot_indices = select_representative_vertices_by_kmeans(
+                df=vertex_df,
+                cols=list(cols),
+                n_vertices=st.session_state["max_plot_vertices"],
+                index_subset=current_indices
+            )
+            
+            if st.session_state.get("plot_type_selector2") == "Line Plot":
+                n_techs = len(valid_techs)
+                n_cols = st.session_state.get("n_cols_plots", 3)
+                n_rows = int(np.ceil(n_techs / n_cols))
+                fig_width = 9 * (1 / n_cols) * n_cols
+                fig_height = fig_width
+            
+                fig = make_subplots(
+                    rows=n_rows,
+                    cols=n_cols,
+                    subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs],
+                    horizontal_spacing=0.08,
+                    vertical_spacing=0.09
+                )
+                selected_vertex = st.session_state.get("selected_vertex")
+                for idx, tech in enumerate(valid_techs):
+                    year_cols = tech_time_map[tech]
+                    if not year_cols:
+                        continue
+            
+                    row, col = divmod(idx, n_cols)
+                    row += 1
+                    col += 1
+            
+                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+                    years, cols = zip(*years_cols_sorted)
+            
+                    full_values_matrix = vertex_df.loc[current_indices, cols]
+                    values_matrix = vertex_df.loc[plot_indices, cols]
+            
+                    if values_matrix.dropna(how='all').empty:
+                        continue
+            
+                    for i in values_matrix.index:
+                        if values_matrix.loc[i].dropna().empty:
+                            continue
+                    
+                        time_series = values_matrix.loc[i].values
+                        is_sel = selected_vertex is not None and i == selected_vertex
+                    
+                        hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
+                            [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
+                        )
+                    
+                        fig.add_trace(go.Scatter(
+                            x=years,
+                            y=time_series,
+                            mode='lines',
+                            line=dict(
+                                color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
+                                width=4 if is_sel else 1  # Hier die dickere Linie für den ausgewählten Vertex
+                            ),
+                            text=[hover_text] * len(years),
+                            hoverinfo='text',
+                            showlegend=False
+                        ), row=row, col=col)
+            
+                    if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
+                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                        if all(col in filtered_convex_data.columns for col in convex_cols):
+                            for i in filtered_convex_data.index:
+                                vals = filtered_convex_data.loc[i, convex_cols].values
+                                if not np.isnan(vals).all():
+                                    fig.add_trace(go.Scatter(
+                                        x=years,
+                                        y=vals,
+                                        mode='lines',
+                                        line=dict(color="rgba(255, 50, 50, 0.4)"),
+                                        hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
+                                        showlegend=False
+                                    ), row=row, col=col)
+            
+                    fig.add_trace(go.Scatter(
+                        x=list(years) + list(reversed(years)),
+                        y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
+                        fill='toself',
+                        fillcolor="rgba(26, 102, 204, 0.15)",
+                        line=dict(color='rgba(255,255,255,0)'),
+                        hoverinfo='skip',
+                        showlegend=False
+                    ), row=row, col=col)
+            
+                    if st.session_state["show_original_ranges"]:
+                        original_matrix = vertex_df.loc[tech_data.index, cols]
+                        fig.add_trace(go.Scatter(
+                            x=list(years) + list(reversed(years)),
+                            y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
+                            fill='toself',
+                            fillcolor="rgba(255, 0, 0, 0.08)",
+                            line=dict(color='rgba(255,255,255,0)'),
+                            hoverinfo='skip',
+                            showlegend=False
+                        ), row=row, col=col)
+            
+                fig.update_layout(
+                    height=fig_height * 100,
+                    width=fig_width * 100,
+                    title=dict(
+                        text="Installed Capacities Over Time (All Technologies)",
+                        font=dict(size=18, family="Arial", color="#333"),
+                        x=0,
+                        xanchor="left"
+                    ),
+                    font=dict(size=12, family="Arial", color="#333"),
+                    paper_bgcolor='#f4f4f4',
+                    plot_bgcolor='#f4f4f4',
+                    hovermode="closest",
+                    margin=dict(l=40, r=40, t=80, b=50),
+                    showlegend=False
+                )
+            
+                for i in range(1, len(valid_techs) + 1):
+                    suffix = "" if i == 1 else str(i)
+                    xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
+                    yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
+            
+                    if isinstance(xaxis, XAxis):
+                        xaxis.update(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            mirror=True,
+                            showline=True,
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside"
+                        )
+                    if isinstance(yaxis, YAxis):
+                        yaxis.update(
+                            showgrid=True,
+                            gridcolor="rgba(0,0,0,0.1)",
+                            mirror=True,
+                            showline=True,
+                            linecolor="rgba(0,0,0,0.3)",
+                            linewidth=1,
+                            ticks="outside"
+                        )
+            
+                for ann in fig['layout']['annotations']:
+                    ann['y'] += 0.01
+                    ann['font'] = dict(size=12, color='#222', family="Arial")
+            
+                st.plotly_chart(fig, use_container_width=True)
+
             else:
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
                 n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
