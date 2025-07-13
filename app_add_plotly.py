@@ -869,11 +869,22 @@ with tab1:
                 
                     if st.session_state["show_original_ranges"]:
                         try:
+                            st.write(f"📦 Versuche Originalbereich zu laden für Tech: {tech}")
+                            st.write(f"🔑 Spalten für Originalbereich: {cols}")
+                    
                             original_matrix = vertex_df.loc[current_indices, cols]
+                            st.write(f"📊 Original Matrix Shape: {original_matrix.shape}")
+                    
+                            min_vals = original_matrix.min()
+                            max_vals = original_matrix.max()
+                    
+                            st.write(f"⬇️ Min-Werte: {min_vals.tolist()}")
+                            st.write(f"⬆️ Max-Werte: {max_vals.tolist()}")
+                    
                             if not original_matrix.empty:
                                 fig_val.add_trace(go.Scatter(
                                     x=list(years) + list(reversed(years)),
-                                    y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
+                                    y=min_vals.tolist() + max_vals.tolist()[::-1],
                                     fill='toself',
                                     fillcolor="rgba(255, 0, 0, 0.08)",
                                     line=dict(color='rgba(255,255,255,0)'),
@@ -881,9 +892,12 @@ with tab1:
                                     showlegend=False
                                 ), row=row, col=col)
                             else:
-                                st.write(f"⚠️ Originalbereich für {tech} ist leer.")
+                                st.write(f"⚠️ Originalmatrix für {tech} ist leer.")
+                    
+                        except KeyError as e:
+                            st.write(f"❌ Spaltenfehler bei Originalbereich für {tech}: {e}")
                         except Exception as e:
-                            st.write(f"❌ Fehler beim Laden des Originalbereichs für {tech}: {e}")
+                            st.write(f"❌ Unerwarteter Fehler beim Originalbereich für {tech}: {e}")
                 
                 fig_val.update_layout(
                     height=fig_height_val * 100,
