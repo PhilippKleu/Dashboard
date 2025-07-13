@@ -759,7 +759,7 @@ with tab1:
                 value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
                 
                 valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
-                st.write("🛠️ Gefundene Technologien:", valid_techs_value)
+                
                 
                 n_techs_value = len(valid_techs_value)
                 n_cols_val = st.session_state.get("n_cols_plots", 3)
@@ -796,7 +796,7 @@ with tab1:
                     cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
                     plot_mode = 'markers' if len(years) == 1 else 'lines'
                 
-                    st.write(f"🔍 Tech: {tech} — Jahre: {years} — Spalten: {cols}")
+                   
                 
                     if not cols:
                         st.write(f"🚫 Überspringe Technologie {tech}, da keine passenden Spalten vorhanden.")
@@ -813,7 +813,7 @@ with tab1:
                         st.write(f"⚠️ Leere Werte für {tech}, überspringe.")
                         continue
                 
-                    st.write(f"✅ Werte für {tech}: {values_matrix.shape[0]} Zeilen, {values_matrix.shape[1]} Spalten")
+                    
                 
                     for i in values_matrix.index:
                         values = values_matrix.loc[i].values
