@@ -539,7 +539,7 @@ with tab1:
             st.write(selected_techs)
             if selected_techs:
                 
-                selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in ]]], axis=1)
+                selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in selected_techs]]], axis=1)
             if selected_metrics:
                 selected_data = pd.concat([selected_data, vertex_df.loc[tech_data.index, selected_metrics]], axis=1)
         
