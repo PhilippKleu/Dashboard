@@ -704,38 +704,76 @@ with tab1:
             )
         
             # === Absicherung: plot_indices vorbereiten für Zusatzinfo/Highlight
+
+            # Beispielspalten vorbereiten
             if selected_techs:
                 example_cols = [f"{MAA_PREFIX}{t}" for t in selected_techs]
+                st.write("🧪 Beispielspalten über selected_techs:", example_cols)
             elif selected_metrics:
                 example_cols = selected_metrics
+                st.write("🧪 Beispielspalten über selected_metrics:", example_cols)
             else:
                 example_cols = list(vertex_df.columns[:5])
-
+                st.write("🧪 Fallback-Beispielspalten:", example_cols)
+            
+            # Verfügbare Technologien und Spalten extrahieren
             valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+            if not valid_techs:
+                st.warning("⚠️ Keine gültigen Technologien mit Zeitverlauf gefunden.")
+                st.stop()
+            
             year_cols = tech_time_map[valid_techs[0]]
+            st.write(f"🧩 Verwende year_cols von: {valid_techs[0]} →", year_cols)
+            
+            # Extrahiere die Spaltennamen für KMeans
             _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-            plot_indices = select_representative_vertices_by_kmeans(
-                df=vertex_df,
-                cols=list(cols),
-                n_vertices=st.session_state["max_plot_vertices"],
-                index_subset=current_indices
-            )
-        
+            cols = list(cols)
+            st.write("📊 Spalten (cols) für KMeans:", cols)
+            
+            # Prüfe, ob die Spalten überhaupt im DataFrame vorhanden sind
+            missing_cols = [c for c in cols if c not in vertex_df.columns]
+            if missing_cols:
+                st.error(f"❌ Spalten fehlen im DataFrame: {missing_cols}")
+                st.stop()
+            
+            # KMeans-Auswahl vorbereiten
+            try:
+                plot_indices = select_representative_vertices_by_kmeans(
+                    df=vertex_df,
+                    cols=cols,
+                    n_vertices=st.session_state["max_plot_vertices"],
+                    index_subset=current_indices
+                )
+                st.write("🧠 Plot Indices (für Highlight):", plot_indices)
+            
+                if len(plot_indices) == 0:
+                    st.warning("⚠️ Keine Vertices durch KMeans ausgewählt.")
+            except Exception as e:
+                st.error(f"❌ Fehler beim KMeans-Clustering: {e}")
+                plot_indices = []
+            
             # === Zusatzinfos & Highlight-Auswahl anzeigen
             st.markdown("---")
             st.markdown("### Highlight Vertex & View Details")
-            selected_vertex = select_and_show_vertex_info(
-                plot_indices=plot_indices,
-                current_indices=current_indices,
-                vertex_df=vertex_df,
-                tech_data=tech_data,
-                additional_cols=additional_cols
-            )
             
+            try:
+                selected_vertex = select_and_show_vertex_info(
+                    plot_indices=plot_indices,
+                    current_indices=current_indices,
+                    vertex_df=vertex_df,
+                    tech_data=tech_data,
+                    additional_cols=additional_cols
+                )
+                st.write("🎯 Ausgewählter Vertex (aus Auswahl):", selected_vertex)
+            except Exception as e:
+                st.error(f"❌ Fehler beim Anzeigen der Vertex-Auswahl: {e}")
+                selected_vertex = None
             
+            # Speichern in Session-State (falls gültig)
             st.session_state["selected_vertex"] = (
                 selected_vertex if selected_vertex != "— Please select —" else None
             )
+            st.write("📌 Session-State 'selected_vertex':", st.session_state["selected_vertex"])
             
         
         with col2:
@@ -868,12 +906,9 @@ with tab1:
                     ), row=row, col=col)
                 
                     if st.session_state["show_original_ranges"]:
-                        try:
-                            
-                    
+                        try:                    
                             original_matrix = vertex_df.loc[current_indices, cols]
-                            st.write(f"📊 Original Matrix Shape: {original_matrix.shape}")
-                    
+                                                
                             min_vals = original_matrix.min()
                             max_vals = original_matrix.max()
                     
