@@ -536,8 +536,10 @@ with tab1:
             selected_metrics = [m for m in ordered_techs if m in additional_cols]
         
             selected_data = pd.DataFrame(index=tech_data.index)
+            st.write(selected_techs)
             if selected_techs:
-                selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in selected_techs]]], axis=1)
+                
+                selected_data = pd.concat([selected_data, tech_data[[f"{MAA_PREFIX}{t}" for t in ]]], axis=1)
             if selected_metrics:
                 selected_data = pd.concat([selected_data, vertex_df.loc[tech_data.index, selected_metrics]], axis=1)
         
@@ -704,74 +706,39 @@ with tab1:
             )
         
             # === Absicherung: plot_indices vorbereiten für Zusatzinfo/Highlight
-
-            # Beispielspalten vorbereiten
             if selected_techs:
                 example_cols = [f"{MAA_PREFIX}{t}" for t in selected_techs]
-                st.write("🧪 Beispielspalten über selected_techs:", example_cols)
             elif selected_metrics:
                 example_cols = selected_metrics
-                st.write("🧪 Beispielspalten über selected_metrics:", example_cols)
             else:
                 example_cols = list(vertex_df.columns[:5])
-                st.write("🧪 Fallback-Beispielspalten:", example_cols)
             
-            # Verfügbare Technologien für KMeans
             valid_techs = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
-            st.write("📦 Gültige Technologien für KMeans:", valid_techs)
+            year_cols = tech_time_map[valid_techs[0]]
+            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
             
-            # Auswahl der Spalten (aus der ersten Technologie)
-            if valid_techs:
-                year_cols = tech_time_map[valid_techs[0]]
-                st.write(f"🧩 Verwende year_cols von: {valid_techs[0]} →", year_cols)
-            
-                _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
-                cols = list(cols)
-                st.write("📊 Spalten (cols) für KMeans:", cols)
-            else:
-                st.warning("⚠️ Keine gültigen Technologien für KMeans vorhanden.")
-                cols = []
-            
-            # Überprüfe, ob die Spalten im DataFrame vorhanden sind
-            missing_cols = [c for c in cols if c not in vertex_df.columns]
-            if missing_cols:
-                st.warning(f"⚠️ Folgende Spalten fehlen im DataFrame und könnten zu Problemen führen: {missing_cols}")
-            
-            # Auswahl der Vertices für Highlighting (per KMeans oder Sampling)
-            try:
-                plot_indices = select_representative_vertices_by_kmeans(
-                    df=vertex_df,
-                    cols=cols,
-                    n_vertices=st.session_state["max_plot_vertices"],
-                    index_subset=current_indices
-                )
-                st.write("🧠 Plot Indices (für Highlight):", plot_indices)
-            except Exception as e:
-                st.error(f"❌ Fehler beim Auswählen von plot_indices: {e}")
-                plot_indices = []
+            plot_indices = select_representative_vertices_by_kmeans(
+                df=vertex_df,
+                cols=list(cols),
+                n_vertices=st.session_state["max_plot_vertices"],
+                index_subset=current_indices
+            )
             
             # === Zusatzinfos & Highlight-Auswahl anzeigen
             st.markdown("---")
             st.markdown("### Highlight Vertex & View Details")
             
-            try:
-                selected_vertex = select_and_show_vertex_info(
-                    plot_indices=plot_indices,
-                    current_indices=current_indices,
-                    vertex_df=vertex_df,
-                    tech_data=tech_data,
-                    additional_cols=additional_cols
-                )
-                st.write("🎯 Ausgewählter Vertex (aus Auswahl):", selected_vertex)
-            except Exception as e:
-                st.error(f"❌ Fehler bei select_and_show_vertex_info(): {e}")
-                selected_vertex = None
+            selected_vertex = select_and_show_vertex_info(
+                plot_indices=plot_indices,
+                current_indices=current_indices,
+                vertex_df=vertex_df,
+                tech_data=tech_data,
+                additional_cols=additional_cols
+            )
             
-            # Speichern in Session-State (sofern gültig)
             st.session_state["selected_vertex"] = (
                 selected_vertex if selected_vertex != "— Please select —" else None
             )
-            st.write("📌 Session-State 'selected_vertex':", st.session_state["selected_vertex"])
             
         
         with col2:
