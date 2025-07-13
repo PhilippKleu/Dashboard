@@ -878,35 +878,35 @@ with tab1:
                             min_vals = original_matrix.min()
                             max_vals = original_matrix.max()
                     
-                            st.write(f"⬇️ Min-Werte: {min_vals.tolist()}")
-                            st.write(f"⬆️ Max-Werte: {max_vals.tolist()}")
+                            if len(years) == 1:
+                                # Nur ein Jahr vorhanden → künstlich verbreitern für sichtbare Fläche
+                                year = years[0]
+                                x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                                y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
                     
-                            if not original_matrix.empty:
-                                if len(years) == 1:
-                                    # Bei nur einem Jahr: künstlich um ±0.25 erweitern
-                                    y_val = years[0]
-                                    x_vals = [y_val - 0.25, y_val + 0.25, y_val + 0.25, y_val - 0.25]
-                                    y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                                else:
-                                    x_vals = list(years) + list(reversed(years))
-                                    y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-                                
-                                fig_val.add_trace(go.Scatter(
-                                    x=x_vals,
-                                    y=y_vals,
-                                    fill='toself',
-                                    fillcolor="rgba(255, 0, 0, 0.08)",
-                                    line=dict(color='rgba(255,255,255,0)'),
-                                    hoverinfo='skip',
-                                    showlegend=False
-                                ), row=row, col=col)
+                                # Setze Tick-Position manuell zurück auf den echten Wert
+                                fig_val.update_xaxes(
+                                    tickvals=[year],
+                                    ticktext=[str(year)],
+                                    row=row,
+                                    col=col
+                                )
                             else:
-                                st.write(f"⚠️ Originalmatrix für {tech} ist leer.")
+                                x_vals = list(years) + list(reversed(years))
+                                y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
                     
-                        except KeyError as e:
-                            st.write(f"❌ Spaltenfehler bei Originalbereich für {tech}: {e}")
+                            fig_val.add_trace(go.Scatter(
+                                x=x_vals,
+                                y=y_vals,
+                                fill='toself',
+                                fillcolor="rgba(255, 0, 0, 0.08)",
+                                line=dict(color='rgba(255,255,255,0)'),
+                                hoverinfo='skip',
+                                showlegend=False
+                            ), row=row, col=col)
+                    
                         except Exception as e:
-                            st.write(f"❌ Unerwarteter Fehler beim Originalbereich für {tech}: {e}")
+                            st.write(f"❌ Fehler beim Originalbereich für {tech}: {e}")
                 
                 fig_val.update_layout(
                     height=fig_height_val * 100,
