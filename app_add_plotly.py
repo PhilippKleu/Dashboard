@@ -1014,7 +1014,17 @@ with tab1:
 
                 # === Installed Capacities Plot ===
             st.markdown("### Installed Capacities Over Time")
+
+            # === Auswahl Mapping je nach Prefix
+            if MAA_PREFIX == "VALUE_":
+                source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+            elif MAA_PREFIX == "MAA_":
+                source_map = tech_time_map
+            else:
+                st.error(f"Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
+                st.stop()
             
+            # === Auswahl von Vertex-Indizes
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
                 st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
@@ -1022,7 +1032,8 @@ with tab1:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices_cap = current_indices
             
-            valid_techs_all = sorted([tech for tech, v in tech_time_map.items() if len(v) >= 1])
+            # === Gültige Technologien + Auswahl
+            valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
             selected_techs = st.multiselect(
                 "Technologien auswählen, die angezeigt werden sollen:",
                 options=valid_techs_all,
@@ -1036,16 +1047,24 @@ with tab1:
                 st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
                 st.stop()
             
-            year_cols = tech_time_map[valid_techs_all[0]]
-            _, cols = zip(*sorted(year_cols, key=lambda x: x[0]))
+            # === Initiale Spaltenauswahl für KMeans
+            year_cols = source_map[valid_techs_all[0]]
+            years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+            
+            if MAA_PREFIX == "VALUE_":
+                cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + valid_techs_all[0])]
+            else:
+                _, cols = zip(*years_cols_sorted)
+                cols = list(cols)
             
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
-                cols=list(cols),
+                cols=cols,
                 n_vertices=st.session_state["max_plot_vertices"],
                 index_subset=current_indices
             )
             
+            # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_techs = len(valid_techs)
                 n_cols = st.session_state.get("n_cols_plots", 3)
@@ -1061,8 +1080,9 @@ with tab1:
                     vertical_spacing=0.09
                 )
                 selected_vertex = st.session_state.get("selected_vertex")
+            
                 for idx, tech in enumerate(valid_techs):
-                    year_cols = tech_time_map[tech]
+                    year_cols = source_map[tech]
                     if not year_cols:
                         continue
             
@@ -1071,7 +1091,12 @@ with tab1:
                     col += 1
             
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years, cols = zip(*years_cols_sorted)
+            
+                    if MAA_PREFIX == "VALUE_":
+                        years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+                        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+                    else:
+                        years, cols = zip(*years_cols_sorted)
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
@@ -1082,21 +1107,21 @@ with tab1:
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
                             continue
-                    
+            
                         time_series = values_matrix.loc[i].values
                         is_sel = selected_vertex is not None and i == selected_vertex
-                    
+            
                         hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
                             [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
                         )
-                    
+            
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=time_series,
                             mode='lines',
                             line=dict(
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
-                                width=4 if is_sel else 1  # Hier die dickere Linie für den ausgewählten Vertex
+                                width=4 if is_sel else 1
                             ),
                             text=[hover_text] * len(years),
                             hoverinfo='text',
@@ -1188,6 +1213,7 @@ with tab1:
                     ann['font'] = dict(size=12, color='#222', family="Arial")
             
                 st.plotly_chart(fig, use_container_width=True)
+
 
             else:
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
