@@ -842,7 +842,7 @@ with tab1:
                 
                     if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
                         if all(col in filtered_convex_data.columns for col in cols):
-                            st.write(f"➕ Konvexe Kombinationen für {tech} werden geplottet.")
+                            
                             for i in filtered_convex_data.index:
                                 vals = filtered_convex_data.loc[i, cols].values
                                 if not np.isnan(vals).all():
@@ -869,8 +869,7 @@ with tab1:
                 
                     if st.session_state["show_original_ranges"]:
                         try:
-                            st.write(f"📦 Versuche Originalbereich zu laden für Tech: {tech}")
-                            st.write(f"🔑 Spalten für Originalbereich: {cols}")
+                            
                     
                             original_matrix = vertex_df.loc[current_indices, cols]
                             st.write(f"📊 Original Matrix Shape: {original_matrix.shape}")
