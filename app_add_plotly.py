@@ -706,39 +706,48 @@ with tab1:
             )
         
                     
-            DEBUG = True  # Optional: auf False setzen, um Debug-Ausgaben zu deaktivieren
+            DEBUG = True  # Setze auf False, um Debug-Ausgaben auszublenden
 
-            # === Verwende dieselbe Datenbasis wie im Plot: operational values
-            value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-            
-            valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
-            
-            if DEBUG:
-                st.markdown("#### 🐞 Debug: Gültige Technologien (operational)")
-                st.write(valid_techs_value)
-            
-            if not valid_techs_value:
-                st.warning("⚠️ Keine gültigen Technologien in `value_time_map` gefunden.")
-                plot_indices = []
-                selected_vertex = None
+            # === Fallunterscheidung anhand des MAA_PREFIX
+            if MAA_PREFIX == "VALUE_":
+                source = "value_time_map"
+                mode = "operational"
+                time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode)
+                valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
+            elif MAA_PREFIX == "MAA_":
+                source = "tech_time_map"
+                time_map = tech_time_map
+                valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
             else:
-                # Nimm die erste Technologie mit gültigen Zeitwerten
-                tech = valid_techs_value[0]
-                year_cols = value_time_map[tech]
+                st.error(f"❌ Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
+                time_map, valid_techs, plot_indices, selected_vertex = {}, [], [], None
+            
+            if valid_techs:
+                tech = valid_techs[0]
+                year_cols = time_map[tech]
             
                 if DEBUG:
-                    st.markdown(f"#### 🐞 Debug: year_cols für erste Tech '{tech}'")
+                    st.markdown(f"#### 🐞 Debug: Quelle = `{source}`")
+                    st.markdown("#### 🐞 Debug: Gültige Technologien")
+                    st.write(valid_techs)
+                    st.markdown(f"#### 🐞 Debug: year_cols für Technologie '{tech}'")
                     st.write(year_cols)
             
                 try:
-                    # Sortieren nach Jahr, nur Spalten mit passendem Prefix behalten
+                    # Sortiere nach Jahr
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+            
+                    if source == "value_time_map":
+                        # VALUE_: nur Spalten mit passendem Prefix
+                        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+                    else:
+                        # MAA_: alle Spalten übernehmen
+                        _, cols = zip(*years_cols_sorted)
+                        cols = list(cols)
             
                     if DEBUG:
-                        st.markdown("#### 🐞 Debug: Verwendete Spalten (cols) für KMeans")
+                        st.markdown("#### 🐞 Debug: Verwendete Spalten für KMeans")
                         st.write(cols)
-                        st.markdown("#### 🐞 Debug: Vorschau der Eingabematrix für KMeans")
                         st.dataframe(vertex_df.loc[current_indices, cols].head())
             
                     # Auswahl repräsentativer Vertices
@@ -754,7 +763,7 @@ with tab1:
                         st.write(plot_indices)
             
                 except Exception as e:
-                    st.error(f"❌ Fehler bei der Spalten- oder Vertex-Auswahl: {e}")
+                    st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
                     plot_indices = []
             
                 # === Zusatzinfos & Highlight-Auswahl anzeigen
@@ -776,6 +785,10 @@ with tab1:
                 st.session_state["selected_vertex"] = (
                     selected_vertex if selected_vertex != "— Please select —" else None
                 )
+            else:
+                st.warning(f"⚠️ Keine gültigen Technologien in `{source}` gefunden.")
+                plot_indices = []
+                selected_vertex = None
             
         
         with col2:
