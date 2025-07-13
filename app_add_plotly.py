@@ -868,16 +868,22 @@ with tab1:
                     ), row=row, col=col)
                 
                     if st.session_state["show_original_ranges"]:
-                        original_matrix = vertex_df.loc[current_indices, cols]
-                        fig_val.add_trace(go.Scatter(
-                            x=list(years) + list(reversed(years)),
-                            y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
-                            fill='toself',
-                            fillcolor="rgba(255, 0, 0, 0.08)",
-                            line=dict(color='rgba(255,255,255,0)'),
-                            hoverinfo='skip',
-                            showlegend=False
-                        ), row=row, col=col)
+                        try:
+                            original_matrix = vertex_df.loc[current_indices, cols]
+                            if not original_matrix.empty:
+                                fig_val.add_trace(go.Scatter(
+                                    x=list(years) + list(reversed(years)),
+                                    y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
+                                    fill='toself',
+                                    fillcolor="rgba(255, 0, 0, 0.08)",
+                                    line=dict(color='rgba(255,255,255,0)'),
+                                    hoverinfo='skip',
+                                    showlegend=False
+                                ), row=row, col=col)
+                            else:
+                                st.write(f"⚠️ Originalbereich für {tech} ist leer.")
+                        except Exception as e:
+                            st.write(f"❌ Fehler beim Laden des Originalbereichs für {tech}: {e}")
                 
                 fig_val.update_layout(
                     height=fig_height_val * 100,
