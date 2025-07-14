@@ -2324,70 +2324,95 @@ with tab1:
             for tech, year_cols in sorted(tech_time_map.items()):
                 if len(year_cols) < 1:
                     continue
-        
+            
                 years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                 years = [y for y, _ in years_cols_sorted]
                 cols = [col for _, col in years_cols_sorted]
-        
+            
                 values_matrix = vertex_df.loc[plot_indices, cols]
                 if values_matrix.dropna(how='all').empty:
                     continue
-        
-                # ==== Konvexe Kombinationen mit einbeziehen ====
+            
+                # ==== Konvexe Kombinationen einbeziehen ====
                 if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                     convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                     if all(col in filtered_convex_data.columns for col in convex_cols):
                         convex_matrix = filtered_convex_data[convex_cols]
                         values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
-        
+            
                 ax = axes[plot_idx]
                 ax.set_facecolor('#f0f0f0')
-        
+            
                 # ==== Violinplot-Daten ====
                 data = [values_matrix[col].dropna().values for col in cols]
-        
+            
                 if all(len(d) > 0 for d in data):
                     ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-        
+            
+                    # ==== Selektierter Vertex als Punkt ====
+                    selected_vertex = st.session_state.get("selected_vertex", None)
+                    if selected_vertex is not None and selected_vertex in vertex_df.index:
+                        try:
+                            highlight_vals = vertex_df.loc[selected_vertex, cols]
+                            for y, val in zip(years, highlight_vals):
+                                if pd.notnull(val):
+                                    show_label = plot_idx == 0  # Nur erstes Subplot zeigt Legenden-Eintrag
+                                    ax.scatter(y, val, color="black", s=60, zorder=3,
+                                               label="Selected Vertex" if show_label else None)
+                        except Exception as e:
+                            st.warning(f"❌ Fehler beim Zeichnen des Highlight-Vertex für {tech}: {e}")
+            
                 # ==== Ursprünglicher Wertebereich (rote Fläche) ====
                 if st.session_state.get('show_original_ranges', False):
                     try:
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                     except Exception:
-                        original_matrix = vertex_df[cols]  # Fallback
-        
+                        original_matrix = vertex_df[cols]
+            
                     original_min = original_matrix.min()
                     original_max = original_matrix.max()
-        
+            
                     for y, omin, omax in zip(years, original_min, original_max):
                         if not np.isnan(omin) and not np.isnan(omax):
                             ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-        
+            
                 ax.set_title(tech.replace('_', ' ').title())
                 ax.set_xticks(years)
+                ax.set_xticklabels([str(y) for y in years])
+            
                 if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
                     ax.set_xlabel("Year")
                 if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
                     ax.set_ylabel("Installed Capacity")
                 ax.grid(True, linestyle="--", alpha=0.4)
-        
+            
                 if plot_idx == 0:
                     handles_labels = ax.get_legend_handles_labels()
-        
+            
                 plot_idx += 1
-        
-            # Entferne nicht benötigte Subplots
+            
+            # ==== Leere Achsen entfernen ====
             for i in range(plot_idx, len(axes)):
                 if axes[i] in fig.axes:
                     fig.delaxes(axes[i])
-        
-            # === Gemeinsame Legende ===
+            
+            # ==== Legende ====
             if plot_idx > 0:
+                legend_items = []
+            
+                # Konvexe Daten-Linie
                 combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-        
+                legend_items.append(combined_line)
+            
+                # Highlight-Punkt, falls vorhanden
+                if st.session_state.get("selected_vertex") is not None:
+                    highlight_point = mlines.Line2D([], [], color="black", marker='o', linestyle='None',
+                                                    markersize=8, label="Selected Vertex")
+                    legend_items.append(highlight_point)
+            
                 fig.legend(
-                    [combined_line],
-                    ['Values incl. Convex'],
+                    legend_items,
+                    [line.get_label() for line in legend_items],
                     loc='upper center',
                     bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
                     ncol=1,
@@ -2395,13 +2420,13 @@ with tab1:
                     fancybox=True,
                     fontsize=14
                 )
-        
+            
                 fig.subplots_adjust(
                     top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
                     hspace=0.3,
                     wspace=0.18
                 )
-        
+            
             st.pyplot(fig)
         # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
         
