@@ -204,7 +204,7 @@ def prepare_vertex_selection(
         st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
         return time_map, valid_techs, [], tech
 
-    return time_map, valid_techs, plot_indices, tech
+    return time_map, valid_techs, plot_indices, tech,cols
     
 # === Initialisiere Session State ===
 def initialize_session_state():
@@ -763,7 +763,7 @@ with tab1:
                 prefix=MAA_PREFIX
             )
         
-            time_map, valid_techs, plot_indices, tech = prepare_vertex_selection(
+            time_map, valid_techs, plot_indices, tech,cols = prepare_vertex_selection(
                 MAA_PREFIX=MAA_PREFIX,
                 vertex_df=vertex_df,
                 tech_time_map=tech_time_map,
