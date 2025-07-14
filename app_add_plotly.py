@@ -1079,6 +1079,7 @@ with tab1:
             st.write("🔎 Vorschau der Daten für KMeans:", subset_df.head(5))
             st.write("❓ Enthält NaNs:", subset_df.isna().sum().sum() > 0)
             st.write("📊 Datentypen:", subset_df.dtypes)
+            st.write(current_indices)
             
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
             try:
