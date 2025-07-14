@@ -1097,18 +1097,21 @@ with tab1:
             
             
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
-            try:
-                raw_plot_indices = select_representative_vertices_by_kmeans(
-                    df=vertex_df,
-                    cols=cols,
-                    n_vertices=st.session_state["max_plot_vertices"],
-                    index_subset=current_indices
-                )
-                plot_indices = clean_plot_indices(raw_plot_indices)
-                st.success(f"✅ {len(plot_indices)} repräsentative Vertices erfolgreich ausgewählt.")
-            except Exception as e:
-                st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
-                st.stop()
+            if MAA_PREFIX == "VALUE_":
+                plot_indices=plot_indices_val
+            else:
+                try:
+                    raw_plot_indices = select_representative_vertices_by_kmeans(
+                        df=vertex_df,
+                        cols=cols,
+                        n_vertices=st.session_state["max_plot_vertices"],
+                        index_subset=current_indices
+                    )
+                    plot_indices = clean_plot_indices(raw_plot_indices)
+                    st.success(f"✅ {len(plot_indices)} repräsentative Vertices erfolgreich ausgewählt.")
+                except Exception as e:
+                    st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
+                    st.stop()
             st.write(plot_indices)
             st.write("🔢 Index von vertex_df:", vertex_df.index.tolist()[:10])
             # === Plot-Erstellung
