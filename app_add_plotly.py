@@ -1889,92 +1889,92 @@ with tab1:
                 ann['font'] = dict(size=12, color='#222', family="Arial")
             
             st.plotly_chart(fig_val, use_container_width=True)
-            else:
-                plot_idx_val = 0
-                for tech, year_cols in sorted(value_time_map.items()):
-                    if len(year_cols) < 1 or not any(col.startswith(MAA_PREFIX + tech) for _, col in year_cols):
-                        continue
-            
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted if col.startswith(MAA_PREFIX + tech)]
-            
-                    if not cols:
-                        continue
-            
-                    values_matrix = vertex_df.loc[plot_indices_val, cols]
-            
-                    # === Konvexe Kombinationen einbeziehen ===
-                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                        if all(col in filtered_convex_data.columns for col in cols):
-                            convex_matrix = filtered_convex_data[cols]
-                            values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
-            
-                    if values_matrix.dropna(how='all').empty:
-                        continue
-            
-                    ax = axes_value[plot_idx_val]
-                    ax.set_facecolor('#f0f0f0')
-            
-                    data = [values_matrix[col].dropna().values for col in cols]
-            
-                    if all(len(d) > 0 for d in data):
-                        vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-            
-                    # === Ursprünglicher Wertebereich (rote Fläche) ===
-                    if st.session_state.get('show_original_ranges', False):
-                        try:
-                            original_matrix = vertex_df.loc[tech_data.index, cols]
-                        except Exception:
-                            original_matrix = vertex_df[cols]
-            
-                        original_min = original_matrix.min()
-                        original_max = original_matrix.max()
-            
-                        for y, omin, omax in zip(years, original_min, original_max):
-                            if not np.isnan(omin) and not np.isnan(omax):
-                                ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-            
-                    ax.set_title(tech.replace('_', ' ').title())
-                    ax.set_xticks(years)
-            
-                    if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
-                        ax.set_xlabel("Year")
-                    if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
-                        ax.set_ylabel("VALUE_")
-                    ax.grid(True, linestyle="--", alpha=0.4)
-            
-                    if plot_idx_val == 0:
-                        handles_labels_val = ax.get_legend_handles_labels()
-            
-                    plot_idx_val += 1
-            
-                for i in range(plot_idx_val, len(axes_value)):
-                    if axes_value[i] in fig_value.axes:
-                        fig_value.delaxes(axes_value[i])
-            
-                # === Legende anpassen ===
-                if plot_idx_val > 0:
-                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-            
-                    fig_value.legend(
-                        [combined_line],
-                        ['Values incl. Convex'],
-                        loc='upper center',
-                        bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
-                        ncol=1,
-                        frameon=True,
-                        fancybox=True,
-                        fontsize=14
-                    )
-            
-                    fig_value.subplots_adjust(
-                        top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
-                        hspace=0.3,
-                        wspace=0.18
-                    )
-            
-                st.pyplot(fig_value)
+        else:
+            plot_idx_val = 0
+            for tech, year_cols in sorted(value_time_map.items()):
+                if len(year_cols) < 1 or not any(col.startswith(MAA_PREFIX + tech) for _, col in year_cols):
+                    continue
+        
+                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+                years = [y for y, _ in years_cols_sorted]
+                cols = [col for _, col in years_cols_sorted if col.startswith(MAA_PREFIX + tech)]
+        
+                if not cols:
+                    continue
+        
+                values_matrix = vertex_df.loc[plot_indices_val, cols]
+        
+                # === Konvexe Kombinationen einbeziehen ===
+                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
+                    if all(col in filtered_convex_data.columns for col in cols):
+                        convex_matrix = filtered_convex_data[cols]
+                        values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
+        
+                if values_matrix.dropna(how='all').empty:
+                    continue
+        
+                ax = axes_value[plot_idx_val]
+                ax.set_facecolor('#f0f0f0')
+        
+                data = [values_matrix[col].dropna().values for col in cols]
+        
+                if all(len(d) > 0 for d in data):
+                    vp = ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
+        
+                # === Ursprünglicher Wertebereich (rote Fläche) ===
+                if st.session_state.get('show_original_ranges', False):
+                    try:
+                        original_matrix = vertex_df.loc[tech_data.index, cols]
+                    except Exception:
+                        original_matrix = vertex_df[cols]
+        
+                    original_min = original_matrix.min()
+                    original_max = original_matrix.max()
+        
+                    for y, omin, omax in zip(years, original_min, original_max):
+                        if not np.isnan(omin) and not np.isnan(omax):
+                            ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
+        
+                ax.set_title(tech.replace('_', ' ').title())
+                ax.set_xticks(years)
+        
+                if plot_idx_val >= (n_rows_value - 1) * st.session_state.get("n_cols_plots", 3):
+                    ax.set_xlabel("Year")
+                if plot_idx_val % st.session_state.get("n_cols_plots", 3) == 0:
+                    ax.set_ylabel("VALUE_")
+                ax.grid(True, linestyle="--", alpha=0.4)
+        
+                if plot_idx_val == 0:
+                    handles_labels_val = ax.get_legend_handles_labels()
+        
+                plot_idx_val += 1
+        
+            for i in range(plot_idx_val, len(axes_value)):
+                if axes_value[i] in fig_value.axes:
+                    fig_value.delaxes(axes_value[i])
+        
+            # === Legende anpassen ===
+            if plot_idx_val > 0:
+                combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
+        
+                fig_value.legend(
+                    [combined_line],
+                    ['Values incl. Convex'],
+                    loc='upper center',
+                    bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
+                    ncol=1,
+                    frameon=True,
+                    fancybox=True,
+                    fontsize=14
+                )
+        
+                fig_value.subplots_adjust(
+                    top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
+                    hspace=0.3,
+                    wspace=0.18
+                )
+        
+            st.pyplot(fig_value)
                 
         st.markdown("### Installed Capacities Over Time")
     
