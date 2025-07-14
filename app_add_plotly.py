@@ -2238,14 +2238,24 @@ with tab1:
                 showlegend=False
             )
         
-            # Achsenstyling
+            # Achsenstyling + X-Achsen auf Jahresbeschriftung setzen
             for i in range(1, plot_idx + 1):
                 suffix = "" if i == 1 else str(i)
                 xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
                 yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
-        
+            
                 if xaxis:
+                    # Tick-Labels auf echte Jahre begrenzen
+                    subplot_years = [y for tech, year_cols in sorted(tech_time_map.items())
+                                     for y, _ in year_cols][:1]  # fallback bei Fehler
+                    if plot_idx >= i:
+                        tech_idx = i - 1
+                        subplot_tech = list(sorted(tech_time_map.keys()))[tech_idx]
+                        subplot_years = [y for y, _ in sorted(tech_time_map[subplot_tech])]
+            
                     xaxis.update(
+                        tickvals=subplot_years,
+                        ticktext=[str(y) for y in subplot_years],
                         showgrid=True,
                         gridcolor="rgba(0,0,0,0.1)",
                         mirror=True,
