@@ -2003,6 +2003,19 @@ with tab1:
                     if all(len(d) > 0 for d in data):
                         ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
                 
+                        # === Vertex Highlight als Punkt ===
+                        selected_vertex = st.session_state.get("selected_vertex", None)
+                        if selected_vertex is not None and selected_vertex in vertex_df.index:
+                            try:
+                                highlight_vals = vertex_df.loc[selected_vertex, cols]
+                                for y, val in zip(years, highlight_vals):
+                                    if pd.notnull(val):
+                                        show_label = plot_idx_val == 0  # nur beim ersten Plot in Legende
+                                        ax.scatter(y, val, color="black", s=60, zorder=3,
+                                                   label="Selected Vertex" if show_label else None)
+                            except Exception as e:
+                                st.warning(f"❌ Fehler beim Zeichnen des Highlight-Vertex für {tech}: {e}")
+                
                     # === Ursprünglicher Wertebereich (rote Fläche) ===
                     if st.session_state.get('show_original_ranges', False):
                         try:
@@ -2040,11 +2053,21 @@ with tab1:
                 
                 # === Legende einfügen ===
                 if plot_idx_val > 0:
+                    legend_items = []
+                
+                    # Basislinie
                     combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
+                    legend_items.append(combined_line)
+                
+                    # Highlight-Punkt
+                    if st.session_state.get("selected_vertex") is not None:
+                        highlight_point = mlines.Line2D([], [], color="black", marker='o', linestyle='None',
+                                                        markersize=8, label="Selected Vertex")
+                        legend_items.append(highlight_point)
                 
                     fig_value.legend(
-                        [combined_line],
-                        ['Values incl. Convex'],
+                        legend_items,
+                        [line.get_label() for line in legend_items],
                         loc='upper center',
                         bbox_to_anchor=(0.5, 1.2 - 0.02 * max(n_cols - 2, 0)),
                         ncol=1,
