@@ -1109,8 +1109,11 @@ with tab1:
                 selected_vertex = st.session_state.get("selected_vertex")
             
                 for idx, tech in enumerate(valid_techs):
-                    year_cols = source_map[tech]
+                    st.write(f"🔍 Processing technology: `{tech}`")
+            
+                    year_cols = source_map.get(tech, [])
                     if not year_cols:
+                        st.warning(f"⚠️ Keine year_cols gefunden für {tech}")
                         continue
             
                     row, col = divmod(idx, n_cols)
@@ -1121,25 +1124,40 @@ with tab1:
                     try:
                         years, cols = zip(*years_cols_sorted)
                     except ValueError:
-                        continue  # year_cols leer
-                    st.write(cols)
-                    st.write(vertex_df.columns)
+                        st.warning(f"⚠️ year_cols leer oder fehlerhaft für {tech}: {year_cols}")
+                        continue
+            
+                    st.write(f"📅 Years: {years}")
+                    st.write(f"🧩 Columns: {cols}")
+                    st.write(f"🧾 Alle Spalten im DataFrame: {list(vertex_df.columns)}")
+            
+                    if any(col not in vertex_df.columns for col in cols):
+                        st.error(f"❌ Eine oder mehrere Spalten fehlen in vertex_df für {tech}")
+                        continue
+            
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
             
                     if values_matrix.dropna(how='all').empty:
+                        st.warning(f"⚠️ Werte-Matrix leer oder nur NaN für {tech} auf Indices {plot_indices}")
                         continue
             
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
+                            st.info(f"ℹ️ Vertex {i} hat nur NaN-Werte – wird übersprungen.")
                             continue
             
                         time_series = values_matrix.loc[i].values
                         is_sel = selected_vertex is not None and i == selected_vertex
             
-                        hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                            [f"{year}: {val:.2f}" for year, val in zip(years, time_series)]
-                        )
+                        try:
+                            hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
+                                [f"{year}: {float(val):.2f}" if pd.notnull(val) else f"{year}: n/a"
+                                 for year, val in zip(years, time_series)]
+                            )
+                        except Exception as e:
+                            st.error(f"❌ Fehler beim Erstellen von hover_text für Vertex {i}: {e}")
+                            continue
             
                         fig.add_trace(go.Scatter(
                             x=years,
@@ -1154,7 +1172,8 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
             
-                    if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
+                    # Optional: convex combinations plot
+                    if st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty:
                         convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                         if all(col in filtered_convex_data.columns for col in convex_cols):
                             for i in filtered_convex_data.index:
@@ -1168,7 +1187,10 @@ with tab1:
                                         hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                                         showlegend=False
                                     ), row=row, col=col)
+                        else:
+                            st.warning(f"⚠️ Convex columns fehlen für {tech}: {convex_cols}")
             
+                    # Bereich für aktuelle vertex-Daten
                     fig.add_trace(go.Scatter(
                         x=list(years) + list(reversed(years)),
                         y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
@@ -1179,7 +1201,7 @@ with tab1:
                         showlegend=False
                     ), row=row, col=col)
             
-                    if st.session_state["show_original_ranges"]:
+                    if st.session_state.get("show_original_ranges", False):
                         original_matrix = vertex_df.loc[tech_data.index, cols]
                         fig.add_trace(go.Scatter(
                             x=list(years) + list(reversed(years)),
