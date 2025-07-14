@@ -179,7 +179,7 @@ def prepare_vertex_selection(
 ):
     """
     Bereitet die Vertex-Auswahl basierend auf dem MAA_PREFIX vor.
-    Gibt: time_map, valid_techs, plot_indices, selected_tech zurück
+    Gibt: time_map, valid_techs, plot_indices, selected_tech, cols zurück
     """
     if MAA_PREFIX == "VALUE_":
         source = "value_time_map"
@@ -192,11 +192,11 @@ def prepare_vertex_selection(
         valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
     else:
         st.error(f"❌ Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
-        return {}, [], [], None
+        return {}, [], [], None, []
 
     if not valid_techs:
         st.warning(f"⚠️ Keine gültigen Technologien in `{source}` gefunden.")
-        return time_map, valid_techs, [], None
+        return time_map, valid_techs, [], None, []
 
     tech = valid_techs[0]
     year_cols = time_map[tech]
@@ -211,18 +211,22 @@ def prepare_vertex_selection(
             _, cols = zip(*years_cols_sorted)
             cols = list(cols)
 
-        # Auswahl repräsentativer Vertices
-        plot_indices = select_representative_vertices_by_kmeans(
-            df=vertex_df,
-            cols=cols,
-            n_vertices=max_plot_vertices,
-            index_subset=current_indices
-        )
+        # Auswahl repräsentativer Vertices nur wenn nötig
+        if len(current_indices) > max_plot_vertices:
+            plot_indices = select_representative_vertices_by_kmeans(
+                df=vertex_df,
+                cols=cols,
+                n_vertices=max_plot_vertices,
+                index_subset=current_indices
+            )
+        else:
+            plot_indices = current_indices
+
     except Exception as e:
         st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
-        return time_map, valid_techs, [], tech
+        return time_map, valid_techs, [], tech, []
 
-    return time_map, valid_techs, plot_indices, tech,cols
+    return time_map, valid_techs, plot_indices, tech, cols
     
 # === Initialisiere Session State ===
 def initialize_session_state():
@@ -780,7 +784,7 @@ with tab1:
                 ordered_techs,
                 prefix=MAA_PREFIX
             )
-        
+                
             time_map, valid_techs, plot_indices, tech,cols = prepare_vertex_selection(
                 MAA_PREFIX=MAA_PREFIX,
                 vertex_df=vertex_df,
@@ -1779,6 +1783,7 @@ with tab1:
             else:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices_val = current_indices
+                
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 selected_vertex = st.session_state.get("selected_vertex")
                 
