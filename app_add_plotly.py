@@ -148,6 +148,64 @@ def select_and_show_vertex_info(plot_indices, current_indices, vertex_df, tech_d
                         col.pyplot(fig)
 
     return selected_vertex
+
+def prepare_vertex_selection(
+    MAA_PREFIX,
+    vertex_df,
+    tech_time_map,
+    extract_time_series_map,
+    select_representative_vertices_by_kmeans,
+    current_indices,
+    max_plot_vertices,
+    st
+):
+    """
+    Bereitet die Vertex-Auswahl basierend auf dem MAA_PREFIX vor.
+    Gibt: time_map, valid_techs, plot_indices, selected_tech zurück
+    """
+    if MAA_PREFIX == "VALUE_":
+        source = "value_time_map"
+        mode = "operational"
+        time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode)
+        valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
+    elif MAA_PREFIX == "MAA_":
+        source = "tech_time_map"
+        time_map = tech_time_map
+        valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
+    else:
+        st.error(f"❌ Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
+        return {}, [], [], None
+
+    if not valid_techs:
+        st.warning(f"⚠️ Keine gültigen Technologien in `{source}` gefunden.")
+        return time_map, valid_techs, [], None
+
+    tech = valid_techs[0]
+    year_cols = time_map[tech]
+
+    try:
+        # Sortiere nach Jahr
+        years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+
+        if source == "value_time_map":
+            cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+        else:
+            _, cols = zip(*years_cols_sorted)
+            cols = list(cols)
+
+        # Auswahl repräsentativer Vertices
+        plot_indices = select_representative_vertices_by_kmeans(
+            df=vertex_df,
+            cols=cols,
+            n_vertices=max_plot_vertices,
+            index_subset=current_indices
+        )
+    except Exception as e:
+        st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
+        return time_map, valid_techs, [], tech
+
+    return time_map, valid_techs, plot_indices, tech
+    
 # === Initialisiere Session State ===
 def initialize_session_state():
     defaults = {
@@ -705,52 +763,20 @@ with tab1:
                 prefix=MAA_PREFIX
             )
         
-            if MAA_PREFIX == "VALUE_":
-                source = "value_time_map"
-                mode = "operational"
-                time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode)
-                valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
-            elif MAA_PREFIX == "MAA_":
-                source = "tech_time_map"
-                time_map = tech_time_map
-                valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
-            else:
-                st.error(f"❌ Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
-                time_map, valid_techs, plot_indices, selected_vertex = {}, [], [], None
+            time_map, valid_techs, plot_indices, tech = prepare_vertex_selection(
+                MAA_PREFIX=MAA_PREFIX,
+                vertex_df=vertex_df,
+                tech_time_map=tech_time_map,
+                extract_time_series_map=extract_time_series_map,
+                select_representative_vertices_by_kmeans=select_representative_vertices_by_kmeans,
+                current_indices=current_indices,
+                max_plot_vertices=st.session_state["max_plot_vertices"],
+                st=st
+            )
             
             if valid_techs:
-                tech = valid_techs[0]
-                year_cols = time_map[tech]
-            
-            
-                try:
-                    # Sortiere nach Jahr
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-            
-                    if source == "value_time_map":
-                        # VALUE_: nur Spalten mit passendem Prefix
-                        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-                    else:
-                        # MAA_: alle Spalten übernehmen
-                        _, cols = zip(*years_cols_sorted)
-                        cols = list(cols)
-                        
-                    # Auswahl repräsentativer Vertices
-                    plot_indices = select_representative_vertices_by_kmeans(
-                        df=vertex_df,
-                        cols=cols,
-                        n_vertices=st.session_state["max_plot_vertices"],
-                        index_subset=current_indices
-                    )
-            
-                except Exception as e:
-                    st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
-                    plot_indices = []
-            
-                # === Zusatzinfos & Highlight-Auswahl anzeigen
                 st.markdown("---")
                 st.markdown("### Highlight Vertex & View Details")
-            
                 selected_vertex = select_and_show_vertex_info(
                     plot_indices=plot_indices,
                     current_indices=current_indices,
@@ -758,14 +784,10 @@ with tab1:
                     tech_data=tech_data,
                     additional_cols=additional_cols
                 )
-            
-            
                 st.session_state["selected_vertex"] = (
                     selected_vertex if selected_vertex != "— Please select —" else None
                 )
             else:
-                st.warning(f"⚠️ Keine gültigen Technologien in `{source}` gefunden.")
-                plot_indices = []
                 selected_vertex = None
             
         
