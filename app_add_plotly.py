@@ -1091,6 +1091,7 @@ with tab1:
                 st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
                 st.stop()
             st.write(plot_indices)
+            st.write("🔢 Index von vertex_df:", vertex_df.index.tolist()[:10])
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_techs = len(valid_techs)
