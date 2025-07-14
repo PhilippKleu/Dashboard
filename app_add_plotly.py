@@ -1016,13 +1016,9 @@ with tab1:
             st.markdown("### Installed Capacities Over Time")
 
             # === Auswahl Mapping je nach Prefix
-            if MAA_PREFIX == "VALUE_":
-                source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-            elif MAA_PREFIX == "MAA_":
-                source_map = tech_time_map
-            else:
-                st.error(f"Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
-                st.stop()
+            
+            source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
+            
             
             # === Auswahl von Vertex-Indizes
             if len(current_indices) > st.session_state["max_plot_vertices"]:
