@@ -1664,21 +1664,21 @@ with tab1:
                 st=st
             )
             
-            if valid_techs:
-                st.markdown("---")
-                st.markdown("### Highlight Vertex & View Details")
-                selected_vertex = select_and_show_vertex_info(
-                    plot_indices=plot_indices,
-                    current_indices=current_indices,
-                    vertex_df=vertex_df,
-                    tech_data=tech_data,
-                    additional_cols=additional_cols
-                )
-                st.session_state["selected_vertex"] = (
-                    selected_vertex if selected_vertex != "— Please select —" else None
-                )
-            else:
-                selected_vertex = None
+        if valid_techs:
+            st.markdown("---")
+            st.markdown("### Highlight Vertex & View Details")
+            selected_vertex = select_and_show_vertex_info(
+                plot_indices=plot_indices,
+                current_indices=current_indices,
+                vertex_df=vertex_df,
+                tech_data=tech_data,
+                additional_cols=additional_cols
+            )
+            st.session_state["selected_vertex"] = (
+                selected_vertex if selected_vertex != "— Please select —" else None
+            )
+        else:
+            selected_vertex = None
         
         st.divider()
         # === Matplotlib-Style für Diagramme ===
