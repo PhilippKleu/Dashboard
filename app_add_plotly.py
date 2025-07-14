@@ -1117,6 +1117,8 @@ with tab1:
             
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
+                st.markdown("### Installed Capacities Over Time")
+            
                 n_techs = len(valid_techs)
                 n_cols = st.session_state.get("n_cols_plots", 3)
                 n_rows = int(np.ceil(n_techs / n_cols))
@@ -1179,7 +1181,6 @@ with tab1:
                             st.error(f"❌ Fehler beim Erstellen von hover_text für Vertex {i}: {e}")
                             continue
             
-                        # 👉 Punkt- oder Liniendarstellung je nach Anzahl der Jahre
                         plot_mode = "lines" if len(years) > 1 else "markers"
             
                         fig.add_trace(go.Scatter(
@@ -1199,68 +1200,44 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
             
-                    # Optional: convex combinations plot
-                    if st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty:
-                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                        if all(col in filtered_convex_data.columns for col in convex_cols):
-                            for i in filtered_convex_data.index:
-                                vals = filtered_convex_data.loc[i, convex_cols].values
-                                if not np.isnan(vals).all():
-                                    fig.add_trace(go.Scatter(
-                                        x=years,
-                                        y=vals,
-                                        mode='lines',
-                                        line=dict(color="rgba(255, 50, 50, 0.4)"),
-                                        hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
-                                        showlegend=False
-                                    ), row=row, col=col)
-                        else:
-                            st.warning(f"⚠️ Convex columns fehlen für {tech}: {convex_cols}")
-            
-                    # Bereich für aktuelle vertex-Daten
-                    fig.add_trace(go.Scatter(
-                        x=list(years) + list(reversed(years)),
-                        y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
-                        fill='toself',
-                        fillcolor="rgba(26, 102, 204, 0.15)",
-                        line=dict(color='rgba(255,255,255,0)'),
-                        hoverinfo='skip',
-                        showlegend=False
-                    ), row=row, col=col)
-            
                     if st.session_state.get("show_original_ranges", False):
-                        original_matrix = vertex_df.loc[tech_data.index, cols]
-                        min_vals = list(original_matrix.min())
-                        max_vals = list(original_matrix.max())
-                    
-                        if len(years) > 1:
-                            # normale Fläche zwischen min/max
+                        try:
+                            original_matrix = vertex_df.loc[current_indices, cols]
+                            min_vals = original_matrix.min()
+                            max_vals = original_matrix.max()
+            
+                            if len(years) == 1:
+                                year = years[0]
+                                x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                                y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
+            
+                                fig.update_xaxes(
+                                    tickvals=[year],
+                                    ticktext=[str(year)],
+                                    row=row,
+                                    col=col
+                                )
+                            else:
+                                x_vals = list(years) + list(reversed(years))
+                                y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
+            
                             fig.add_trace(go.Scatter(
-                                x=list(years) + list(reversed(years)),
-                                y=min_vals + max_vals[::-1],
+                                x=x_vals,
+                                y=y_vals,
                                 fill='toself',
                                 fillcolor="rgba(255, 0, 0, 0.08)",
                                 line=dict(color='rgba(255,255,255,0)'),
                                 hoverinfo='skip',
                                 showlegend=False
                             ), row=row, col=col)
-                        else:
-                            # einzelner Punkt mit Whisker-Linie für Min/Max
-                            year = years[0]
-                            fig.add_trace(go.Scatter(
-                                x=[year, year],
-                                y=[min_vals[0], max_vals[0]],
-                                mode='lines',
-                                line=dict(color="rgba(255,0,0,0.5)", width=6),
-                                hoverinfo='skip',
-                                showlegend=False
-                            ), row=row, col=col)
+                        except Exception as e:
+                            st.write(f"❌ Fehler beim Originalbereich für {tech}: {e}")
             
                 fig.update_layout(
                     height=fig_height * 100,
                     width=fig_width * 100,
                     title=dict(
-                        text="Installed Capacities Over Time (All Technologies)",
+                        text="Installed Capacities Over Time",
                         font=dict(size=18, family="Arial", color="#333"),
                         x=0,
                         xanchor="left"
