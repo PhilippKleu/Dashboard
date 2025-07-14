@@ -1779,7 +1779,7 @@ with tab1:
             
             if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                 plot_indices_val = plot_indices
-                st.caption(f"⚡️ **Note:** Displaying a clsutered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 plot_indices_val = plot_indices
