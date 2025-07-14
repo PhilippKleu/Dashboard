@@ -1036,14 +1036,7 @@ with tab1:
             # === Auswahl Mapping je nach Prefix
             source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
                         
-            # === Auswahl von Vertex-Indizes
-            if len(current_indices) > st.session_state["max_plot_vertices"]:
-                plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
-            else:
-                st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                plot_indices_cap = current_indices
-            
+                   
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
             
@@ -1108,12 +1101,11 @@ with tab1:
                         index_subset=current_indices
                     )
                     plot_indices = clean_plot_indices(raw_plot_indices)
-                    st.success(f"✅ {len(plot_indices)} repräsentative Vertices erfolgreich ausgewählt.")
+                    
                 except Exception as e:
                     st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
                     st.stop()
-            st.write(plot_indices)
-            st.write("🔢 Index von vertex_df:", vertex_df.index.tolist()[:10])
+            
             
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
@@ -1135,7 +1127,7 @@ with tab1:
                 selected_vertex = st.session_state.get("selected_vertex")
             
                 for idx, tech in enumerate(valid_techs):
-                    st.write(f"🔍 Processing technology: `{tech}`")
+                    
             
                     year_cols = source_map.get(tech, [])
                     if not year_cols:
@@ -1159,7 +1151,7 @@ with tab1:
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-                    st.write(values_matrix)
+                    
                     if values_matrix.dropna(how='all').empty:
                         st.warning(f"⚠️ Werte-Matrix leer oder nur NaN für {tech} auf Indices {plot_indices}")
                         continue
