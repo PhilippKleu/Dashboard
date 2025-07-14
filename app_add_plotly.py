@@ -1122,6 +1122,7 @@ with tab1:
                     except ValueError:
                         continue  # year_cols leer
                     st.write(cols)
+                    st.write(vertex_df.columns)
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
             
