@@ -1016,9 +1016,8 @@ with tab1:
             st.markdown("### Installed Capacities Over Time")
 
             # === Auswahl Mapping je nach Prefix
-            
             source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
-            
+            st.write("🔍 source_map keys (Technologien):", list(source_map.keys()))
             
             # === Auswahl von Vertex-Indizes
             if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -1030,6 +1029,12 @@ with tab1:
             
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
+            st.write("✅ Gültige Technologien:", valid_techs_all)
+            
+            if not valid_techs_all:
+                st.error("❌ Keine gültigen Technologien mit Zeitreihen gefunden.")
+                st.stop()
+            
             selected_techs = st.multiselect(
                 "Technologien auswählen, die angezeigt werden sollen:",
                 options=valid_techs_all,
@@ -1050,15 +1055,33 @@ with tab1:
             if MAA_PREFIX == "VALUE_":
                 cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + valid_techs_all[0])]
             else:
-                _, cols = zip(*years_cols_sorted)
-                cols = list(cols)
+                try:
+                    _, cols = zip(*years_cols_sorted)
+                    cols = list(cols)
+                except ValueError:
+                    st.error("❌ Konnte keine Spalten für KMeans aus years_cols_sorted extrahieren.")
+                    st.stop()
             
-            plot_indices = select_representative_vertices_by_kmeans(
-                df=vertex_df,
-                cols=cols,
-                n_vertices=st.session_state["max_plot_vertices"],
-                index_subset=current_indices
-            )
+            st.write("🧮 Verwendete Spalten für KMeans:", cols)
+            
+            # === Data Check vor KMeans
+            subset_df = vertex_df.loc[current_indices, cols]
+            st.write("🔎 Vorschau der Daten für KMeans:", subset_df.head(5))
+            st.write("❓ Enthält NaNs:", subset_df.isna().sum().sum() > 0)
+            st.write("📊 Datentypen:", subset_df.dtypes)
+            
+            # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
+            try:
+                plot_indices = select_representative_vertices_by_kmeans(
+                    df=vertex_df,
+                    cols=cols,
+                    n_vertices=st.session_state["max_plot_vertices"],
+                    index_subset=current_indices
+                )
+                st.success(f"✅ {len(plot_indices)} repräsentative Vertices erfolgreich ausgewählt.")
+            except Exception as e:
+                st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
+                st.stop()
             
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
