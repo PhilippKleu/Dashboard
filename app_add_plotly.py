@@ -1121,12 +1121,10 @@ with tab1:
                     col += 1
             
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-            
-                    if MAA_PREFIX == "VALUE_":
-                        years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-                        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-                    else:
+                    try:
                         years, cols = zip(*years_cols_sorted)
+                    except ValueError:
+                        continue  # year_cols leer
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
