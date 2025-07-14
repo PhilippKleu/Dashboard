@@ -1050,17 +1050,18 @@ with tab1:
             st.write(valid_techs)
             
             # === Initiale Spaltenauswahl für KMeans
-            st.write(source_map)
-            year_cols = source_map[valid_techs_all[0]]
-            st.write(year_cols)
-            years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-            
             if MAA_PREFIX == "VALUE_":
-                # ⬇️ Nur Spalten mit "INSTALLED_CAPACITY_" zulassen
-                cols = [c for _, c in years_cols_sorted if c.startswith("INSTALLED_CAPACITY_")]
-                st.write(years_cols_sorted)
-                st.write("🧮 (VALUE_): Verwendete Spalten mit 'INSTALLED_CAPACITY_':", cols)
+                # 🔁 Alle Spalten aus der source_map für die ausgewählten Technologien nehmen
+                cols = []
+                for tech in valid_techs:
+                    year_cols = source_map.get(tech, [])
+                    cols.extend([col for _, col in year_cols])
+                cols = list(set(cols))  # Doppelte entfernen
+                st.write("🧮 (VALUE_): Verwendete Spalten aus allen gewählten Technologien:", cols)
             else:
+                # Fallback: Nur erste Technologie wie gehabt
+                year_cols = source_map[valid_techs_all[0]]
+                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                 try:
                     _, cols = zip(*years_cols_sorted)
                     cols = list(cols)
