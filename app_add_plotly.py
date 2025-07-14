@@ -1114,6 +1114,7 @@ with tab1:
                     st.stop()
             st.write(plot_indices)
             st.write("🔢 Index von vertex_df:", vertex_df.index.tolist()[:10])
+            
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_techs = len(valid_techs)
@@ -1150,8 +1151,6 @@ with tab1:
                         st.warning(f"⚠️ year_cols leer oder fehlerhaft für {tech}: {year_cols}")
                         continue
             
-                    
-            
                     if any(col not in vertex_df.columns for col in cols):
                         st.error(f"❌ Eine oder mehrere Spalten fehlen in vertex_df für {tech}")
                         continue
@@ -1180,14 +1179,21 @@ with tab1:
                             st.error(f"❌ Fehler beim Erstellen von hover_text für Vertex {i}: {e}")
                             continue
             
+                        # 👉 Punkt- oder Liniendarstellung je nach Anzahl der Jahre
+                        plot_mode = "lines" if len(years) > 1 else "markers"
+            
                         fig.add_trace(go.Scatter(
                             x=years,
                             y=time_series,
-                            mode='lines',
+                            mode=plot_mode,
                             line=dict(
                                 color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                                 width=4 if is_sel else 1
-                            ),
+                            ) if plot_mode == "lines" else None,
+                            marker=dict(
+                                color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
+                                size=10
+                            ) if plot_mode == "markers" else None,
                             text=[hover_text] * len(years),
                             hoverinfo='text',
                             showlegend=False
@@ -1282,6 +1288,7 @@ with tab1:
                     ann['font'] = dict(size=12, color='#222', family="Arial")
             
                 st.plotly_chart(fig, use_container_width=True)
+
 
 
             else:
