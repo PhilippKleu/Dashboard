@@ -1778,11 +1778,11 @@ with tab1:
             fig_height_val = fig_width_val
             
             if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
-                plot_indices_val = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                plot_indices_val = plot_indices
+                st.caption(f"⚡️ **Note:** Displaying a clsutered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                plot_indices_val = current_indices
+                plot_indices_val = plot_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 selected_vertex = st.session_state.get("selected_vertex")
