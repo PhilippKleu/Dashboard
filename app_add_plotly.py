@@ -1090,7 +1090,7 @@ with tab1:
             except Exception as e:
                 st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
                 st.stop()
-            
+            st.write(plot_indices)
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 n_techs = len(valid_techs)
