@@ -57,7 +57,25 @@ st.markdown("""
         
     </style>
 """, unsafe_allow_html=True)
-
+def clean_plot_indices(raw_indices):
+    """
+    Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
+    Funktioniert auch bei echten ints und np.int64-Objekten.
+    """
+    cleaned = []
+    for idx in raw_indices:
+        try:
+            if isinstance(idx, int):
+                cleaned.append(idx)
+            elif isinstance(idx, str):
+                match = re.search(r"\d+", idx)
+                if match:
+                    cleaned.append(int(match.group()))
+            else:
+                cleaned.append(int(idx))  # z. B. np.int64
+        except Exception as e:
+            print(f"⚠️ Fehler beim Konvertieren von Index {idx}: {e}")
+    return cleaned
 def select_representative_vertices_by_kmeans(
     df: pd.DataFrame,
     cols: list,
@@ -1080,12 +1098,13 @@ with tab1:
             
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
             try:
-                plot_indices = select_representative_vertices_by_kmeans(
+                raw_plot_indices = select_representative_vertices_by_kmeans(
                     df=vertex_df,
                     cols=cols,
                     n_vertices=st.session_state["max_plot_vertices"],
                     index_subset=current_indices
                 )
+                plot_indices = clean_plot_indices(raw_plot_indices)
                 st.success(f"✅ {len(plot_indices)} repräsentative Vertices erfolgreich ausgewählt.")
             except Exception as e:
                 st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
