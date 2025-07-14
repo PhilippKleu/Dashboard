@@ -2166,42 +2166,61 @@ with tab1:
                                         showlegend=False
                                     ), row=row, col=col)
         
-                # Min/Max Bereich
-                min_vals = full_values_matrix.min()
-                max_vals = full_values_matrix.max()
-                x_vals = [*years, *reversed(years)]
-                y_vals = [*min_vals.values, *reversed(max_vals.values)]
+                # Min/Max Bereich für aktuelle Vertices
+                try:
+                    min_vals = full_values_matrix.min()
+                    max_vals = full_values_matrix.max()
         
-                fig.add_trace(go.Scatter(
-                    x=x_vals,
-                    y=y_vals,
-                    fill='toself',
-                    fillcolor="rgba(26,102,204,0.15)",
-                    line=dict(color='rgba(255,255,255,0)'),
-                    hoverinfo='skip',
-                    showlegend=False
-                ), row=row, col=col)
-        
-                # Originalbereich
-                if st.session_state.get('show_original_ranges', False):
-                    original_matrix = vertex_df.loc[tech_data.index, cols]
-                    orig_min = original_matrix.min()
-                    orig_max = original_matrix.max()
-                    x_vals = [*years, *reversed(years)]
-                    y_vals = [*orig_min.values, *reversed(orig_max.values)]
+                    if len(years) == 1:
+                        year = years[0]
+                        x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                        y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
+                    else:
+                        x_vals = list(years) + list(reversed(years))
+                        y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
         
                     fig.add_trace(go.Scatter(
                         x=x_vals,
                         y=y_vals,
                         fill='toself',
-                        fillcolor="rgba(255,0,0,0.08)",
+                        fillcolor="rgba(26,102,204,0.15)",
                         line=dict(color='rgba(255,255,255,0)'),
                         hoverinfo='skip',
                         showlegend=False
                     ), row=row, col=col)
+                except Exception as e:
+                    st.warning(f"❌ Fehler beim Plotten der Min/Max-Bereiche für {tech}: {e}")
+        
+                # Originalbereiche anzeigen (z.B. für alle Datenpunkte, nicht nur aktuelle Auswahl)
+                if st.session_state.get('show_original_ranges', False):
+                    try:
+                        original_matrix = vertex_df.loc[tech_data.index, cols]
+                        orig_min = original_matrix.min()
+                        orig_max = original_matrix.max()
+        
+                        if len(years) == 1:
+                            year = years[0]
+                            x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                            y_vals = [orig_min.iloc[0], orig_min.iloc[0], orig_max.iloc[0], orig_max.iloc[0]]
+                        else:
+                            x_vals = list(years) + list(reversed(years))
+                            y_vals = orig_min.tolist() + orig_max.tolist()[::-1]
+        
+                        fig.add_trace(go.Scatter(
+                            x=x_vals,
+                            y=y_vals,
+                            fill='toself',
+                            fillcolor="rgba(255,0,0,0.08)",
+                            line=dict(color='rgba(255,255,255,0)'),
+                            hoverinfo='skip',
+                            showlegend=False
+                        ), row=row, col=col)
+                    except Exception as e:
+                        st.warning(f"❌ Fehler beim Originalbereich für {tech}: {e}")
         
                 plot_idx += 1
         
+            # Layout
             fig.update_layout(
                 height=fig_height * 100,
                 width=fig_width * 100,
@@ -2226,16 +2245,32 @@ with tab1:
                 yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
         
                 if xaxis:
-                    xaxis.update(showgrid=True, gridcolor="rgba(0,0,0,0.1)", mirror=True,
-                                 showline=True, linecolor="rgba(0,0,0,0.3)", linewidth=1, ticks="outside")
+                    xaxis.update(
+                        showgrid=True,
+                        gridcolor="rgba(0,0,0,0.1)",
+                        mirror=True,
+                        showline=True,
+                        linecolor="rgba(0,0,0,0.3)",
+                        linewidth=1,
+                        ticks="outside"
+                    )
                 if yaxis:
-                    yaxis.update(showgrid=True, gridcolor="rgba(0,0,0,0.1)", mirror=True,
-                                 showline=True, linecolor="rgba(0,0,0,0.3)", linewidth=1, ticks="outside")
+                    yaxis.update(
+                        showgrid=True,
+                        gridcolor="rgba(0,0,0,0.1)",
+                        mirror=True,
+                        showline=True,
+                        linecolor="rgba(0,0,0,0.3)",
+                        linewidth=1,
+                        ticks="outside"
+                    )
         
+            # Annotation-Titel etwas nach oben verschieben
             for ann in fig['layout']['annotations']:
                 ann['y'] += 0.01
                 ann['font'] = dict(size=12, color='#222', family="Arial")
         
+            # Anzeigen
             st.plotly_chart(fig, use_container_width=True)
         else:
             plot_idx = 0
