@@ -1271,7 +1271,30 @@ with tab1:
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
+                    # Aktuellen Gültigkeitsbereich (Min/Max der aktuellen Vertices) in Hellblau anzeigen
+                    try:
+                        min_vals = full_values_matrix.min()
+                        max_vals = full_values_matrix.max()
                     
+                        if len(years) == 1:
+                            year = years[0]
+                            x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                            y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
+                        else:
+                            x_vals = list(years) + list(reversed(years))
+                            y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
+                    
+                        fig.add_trace(go.Scatter(
+                            x=x_vals,
+                            y=y_vals,
+                            fill='toself',
+                            fillcolor="rgba(26,102,204,0.15)",  # Hellblau
+                            line=dict(color='rgba(255,255,255,0)'),
+                            hoverinfo='skip',
+                            showlegend=False
+                        ), row=row, col=col)
+                    except Exception as e:
+                        st.warning(f"❌ Fehler beim Plotten der Gültigkeitsbereiche für {tech}: {e}")
                     if values_matrix.dropna(how='all').empty:
                         st.warning(f"⚠️ Werte-Matrix leer oder nur NaN für {tech} auf Indices {plot_indices}")
                         continue
