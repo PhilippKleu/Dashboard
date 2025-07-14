@@ -1050,25 +1050,15 @@ with tab1:
             st.write(valid_techs)
             
             # === Initiale Spaltenauswahl für KMeans
-            if MAA_PREFIX == "VALUE_":
-                # 🔁 Alle Spalten aus der source_map für die ausgewählten Technologien nehmen
-                cols = []
-                for tech in valid_techs:
-                    year_cols = source_map.get(tech, [])
-                    cols.extend([col for _, col in year_cols])
-                cols = list(set(cols))  # Doppelte entfernen
-                st.write("🧮 (VALUE_): Verwendete Spalten aus allen gewählten Technologien:", cols)
-            else:
-                # Fallback: Nur erste Technologie wie gehabt
-                year_cols = source_map[valid_techs_all[0]]
-                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                try:
-                    _, cols = zip(*years_cols_sorted)
-                    cols = list(cols)
-                    st.write("🧮 (anderes Prefix): Verwendete Spalten:", cols)
-                except ValueError:
-                    st.error("❌ Konnte keine Spalten aus years_cols_sorted extrahieren.")
-                    st.stop()
+            cols = []
+            for tech in valid_techs:
+                year_cols = source_map.get(tech, [])
+                for _, col in year_cols:
+                    full_col = f"{MAA_PREFIX}{col}"
+                    if full_col in vertex_df.columns:
+                        cols.append(full_col)
+            cols = list(set(cols))  # Duplikate entfernen
+            st.write("🧮 Verwendete Spalten für KMeans:", cols)
             
             if not cols:
                 st.error("❌ Keine passenden Spalten gefunden.")
@@ -1112,7 +1102,7 @@ with tab1:
                 selected_vertex = st.session_state.get("selected_vertex")
             
                 for idx, tech in enumerate(valid_techs):
-                    year_cols = source_map[tech]
+                    year_cols = source_map.get(tech, [])
                     if not year_cols:
                         continue
             
@@ -1122,9 +1112,13 @@ with tab1:
             
                     years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                     try:
-                        years, cols = zip(*years_cols_sorted)
+                        years, short_cols = zip(*years_cols_sorted)
+                        cols = [f"{MAA_PREFIX}{col}" for col in short_cols if f"{MAA_PREFIX}{col}" in vertex_df.columns]
                     except ValueError:
-                        continue  # year_cols leer
+                        continue  # leere year_cols
+            
+                    if not cols:
+                        continue  # keine passenden Spalten gefunden
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
