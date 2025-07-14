@@ -1047,8 +1047,10 @@ with tab1:
             if not valid_techs:
                 st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
                 st.stop()
+            st.write(valid_techs)
             
             # === Initiale Spaltenauswahl für KMeans
+            st.write(source_map)
             year_cols = source_map[valid_techs_all[0]]
             st.write(year_cols)
             years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
