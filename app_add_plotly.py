@@ -1017,8 +1017,7 @@ with tab1:
 
             # === Auswahl Mapping je nach Prefix
             source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
-            st.write("🔍 source_map keys (Technologien):", list(source_map.keys()))
-            
+                        
             # === Auswahl von Vertex-Indizes
             if len(current_indices) > st.session_state["max_plot_vertices"]:
                 plot_indices_cap = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
@@ -1029,7 +1028,7 @@ with tab1:
             
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
-            st.write("✅ Gültige Technologien:", valid_techs_all)
+            
             
             if not valid_techs_all:
                 st.error("❌ Keine gültigen Technologien mit Zeitreihen gefunden.")
@@ -1047,7 +1046,7 @@ with tab1:
             if not valid_techs:
                 st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
                 st.stop()
-            st.write(valid_techs)
+            
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
@@ -1057,7 +1056,7 @@ with tab1:
                     year_cols = source_map.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
-                st.write("🧮 (VALUE_): Verwendete Spalten aus allen gewählten Technologien:", cols)
+                
             else:
                 # Fallback: Nur erste Technologie wie gehabt
                 year_cols = source_map[valid_techs_all[0]]
@@ -1065,7 +1064,7 @@ with tab1:
                 try:
                     _, cols = zip(*years_cols_sorted)
                     cols = list(cols)
-                    st.write("🧮 (anderes Prefix): Verwendete Spalten:", cols)
+                   
                 except ValueError:
                     st.error("❌ Konnte keine Spalten aus years_cols_sorted extrahieren.")
                     st.stop()
@@ -1076,10 +1075,7 @@ with tab1:
             
             # === Data Check vor KMeans
             subset_df = vertex_df.loc[current_indices, cols]
-            st.write("🔎 Vorschau der Daten für KMeans:", subset_df.head(5))
-            st.write("❓ Enthält NaNs:", subset_df.isna().sum().sum() > 0)
-            st.write("📊 Datentypen:", subset_df.dtypes)
-            st.write(current_indices)
+            
             
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
             try:
