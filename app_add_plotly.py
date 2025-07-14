@@ -1230,15 +1230,31 @@ with tab1:
             
                     if st.session_state.get("show_original_ranges", False):
                         original_matrix = vertex_df.loc[tech_data.index, cols]
-                        fig.add_trace(go.Scatter(
-                            x=list(years) + list(reversed(years)),
-                            y=list(original_matrix.min()) + list(original_matrix.max())[::-1],
-                            fill='toself',
-                            fillcolor="rgba(255, 0, 0, 0.08)",
-                            line=dict(color='rgba(255,255,255,0)'),
-                            hoverinfo='skip',
-                            showlegend=False
-                        ), row=row, col=col)
+                        min_vals = list(original_matrix.min())
+                        max_vals = list(original_matrix.max())
+                    
+                        if len(years) > 1:
+                            # normale Fläche zwischen min/max
+                            fig.add_trace(go.Scatter(
+                                x=list(years) + list(reversed(years)),
+                                y=min_vals + max_vals[::-1],
+                                fill='toself',
+                                fillcolor="rgba(255, 0, 0, 0.08)",
+                                line=dict(color='rgba(255,255,255,0)'),
+                                hoverinfo='skip',
+                                showlegend=False
+                            ), row=row, col=col)
+                        else:
+                            # einzelner Punkt mit Whisker-Linie für Min/Max
+                            year = years[0]
+                            fig.add_trace(go.Scatter(
+                                x=[year, year],
+                                y=[min_vals[0], max_vals[0]],
+                                mode='lines',
+                                line=dict(color="rgba(255,0,0,0.5)", width=6),
+                                hoverinfo='skip',
+                                showlegend=False
+                            ), row=row, col=col)
             
                 fig.update_layout(
                     height=fig_height * 100,
