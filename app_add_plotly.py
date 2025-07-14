@@ -1050,6 +1050,7 @@ with tab1:
             
             # === Initiale Spaltenauswahl für KMeans
             year_cols = source_map[valid_techs_all[0]]
+            st.write(year_cols)
             years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
             
             if MAA_PREFIX == "VALUE_":
