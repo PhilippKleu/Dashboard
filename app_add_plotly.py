@@ -1147,9 +1147,7 @@ with tab1:
                         st.warning(f"⚠️ year_cols leer oder fehlerhaft für {tech}: {year_cols}")
                         continue
             
-                    st.write(f"📅 Years: {years}")
-                    st.write(f"🧩 Columns: {cols}")
-                    st.write(f"🧾 Alle Spalten im DataFrame: {list(vertex_df.columns)}")
+                    
             
                     if any(col not in vertex_df.columns for col in cols):
                         st.error(f"❌ Eine oder mehrere Spalten fehlen in vertex_df für {tech}")
@@ -1157,7 +1155,7 @@ with tab1:
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
-            
+                    st.write(values_matrix)
                     if values_matrix.dropna(how='all').empty:
                         st.warning(f"⚠️ Werte-Matrix leer oder nur NaN für {tech} auf Indices {plot_indices}")
                         continue
