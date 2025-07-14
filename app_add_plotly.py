@@ -2055,11 +2055,7 @@ with tab1:
         fig.patch.set_facecolor('#f4f4f4')
         axes = axes.flatten() if n_techs > 1 else [axes]
     
-        if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
-                
-            st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
-        else:
-            st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+        
                 
     
         
@@ -2080,11 +2076,10 @@ with tab1:
                 vertical_spacing=0.09
             )
         
-            if len(current_indices) > st.session_state["max_plot_vertices"]:
-                plot_indices = np.random.choice(current_indices, size=st.session_state["max_plot_vertices"], replace=False)
-                st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+            if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
+                
+                st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
-                plot_indices = current_indices
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
         
             selected_vertex = st.session_state.get("selected_vertex")
