@@ -705,10 +705,6 @@ with tab1:
                 prefix=MAA_PREFIX
             )
         
-                    
-            DEBUG = True  # Setze auf False, um Debug-Ausgaben auszublenden
-
-            # === Fallunterscheidung anhand des MAA_PREFIX
             if MAA_PREFIX == "VALUE_":
                 source = "value_time_map"
                 mode = "operational"
@@ -726,12 +722,6 @@ with tab1:
                 tech = valid_techs[0]
                 year_cols = time_map[tech]
             
-                if DEBUG:
-                    st.markdown(f"#### 🐞 Debug: Quelle = `{source}`")
-                    st.markdown("#### 🐞 Debug: Gültige Technologien")
-                    st.write(valid_techs)
-                    st.markdown(f"#### 🐞 Debug: year_cols für Technologie '{tech}'")
-                    st.write(year_cols)
             
                 try:
                     # Sortiere nach Jahr
@@ -744,12 +734,7 @@ with tab1:
                         # MAA_: alle Spalten übernehmen
                         _, cols = zip(*years_cols_sorted)
                         cols = list(cols)
-            
-                    if DEBUG:
-                        st.markdown("#### 🐞 Debug: Verwendete Spalten für KMeans")
-                        st.write(cols)
-                        st.dataframe(vertex_df.loc[current_indices, cols].head())
-            
+                        
                     # Auswahl repräsentativer Vertices
                     plot_indices = select_representative_vertices_by_kmeans(
                         df=vertex_df,
@@ -757,10 +742,6 @@ with tab1:
                         n_vertices=st.session_state["max_plot_vertices"],
                         index_subset=current_indices
                     )
-            
-                    if DEBUG:
-                        st.markdown("#### 🐞 Debug: KMeans-Auswahl (plot_indices)")
-                        st.write(plot_indices)
             
                 except Exception as e:
                     st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
@@ -778,9 +759,6 @@ with tab1:
                     additional_cols=additional_cols
                 )
             
-                if DEBUG:
-                    st.markdown("#### 🐞 Debug: Ausgewählter Vertex")
-                    st.write(selected_vertex)
             
                 st.session_state["selected_vertex"] = (
                     selected_vertex if selected_vertex != "— Please select —" else None
