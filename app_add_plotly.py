@@ -1055,6 +1055,7 @@ with tab1:
             if MAA_PREFIX == "VALUE_":
                 # ⬇️ Nur Spalten mit "INSTALLED_CAPACITY_" zulassen
                 cols = [c for _, c in years_cols_sorted if c.startswith("INSTALLED_CAPACITY_")]
+                st.write(years_cols_sorted)
                 st.write("🧮 (VALUE_): Verwendete Spalten mit 'INSTALLED_CAPACITY_':", cols)
             else:
                 try:
