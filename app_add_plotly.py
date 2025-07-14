@@ -1035,12 +1035,20 @@ with tab1:
                     st.plotly_chart(fig_val, use_container_width=True)
 
                 else:
+                    n_techs_value = len(valid_techs_value)
+                    n_cols_val = st.session_state.get("n_cols_plots", 3)
+                    n_rows_val = ceil(n_techs_value / n_cols_val)
+                
+                    plot_width_per_col = 6
+                    plot_height_per_row = 3.5
+                    fig_width_val = plot_width_per_col * n_cols_val
+                    fig_height_val = plot_height_per_row * n_rows_val
+                
                     fig_val, axes_val = plt.subplots(n_rows_val, n_cols_val, figsize=(fig_width_val, fig_height_val))
                     fig_val.patch.set_facecolor('#f4f4f4')
                     axes_val = axes_val.flatten() if n_techs_value > 1 else [axes_val]
                 
                     plot_idx_val = 0
-                
                     for tech in valid_techs_value:
                         year_cols = value_time_map[tech]
                         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
@@ -1052,7 +1060,7 @@ with tab1:
                 
                         values_matrix = vertex_df.loc[plot_indices_val, cols]
                 
-                        # === Konvexe Kombinationen hinzufügen ===
+                        # === Konvexe Kombinationen ===
                         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
                             if all(col in filtered_convex_data.columns for col in cols):
                                 convex_matrix = filtered_convex_data[cols]
@@ -1069,19 +1077,19 @@ with tab1:
                         if all(len(d) > 0 for d in data):
                             ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
                 
-                        # === Selektierter Vertex als Punkt ===
-                        selected_vertex = st.session_state.get("selected_vertex")
-                        if selected_vertex is not None and selected_vertex in vertex_df.index:
-                            try:
-                                highlight_vals = vertex_df.loc[selected_vertex, cols]
-                                for y, val in zip(years, highlight_vals):
-                                    if pd.notnull(val):
-                                        ax.scatter(y, val, color="black", s=60, zorder=3,
-                                                   label="Selected Vertex" if plot_idx_val == 0 else None)
-                            except Exception as e:
-                                st.warning(f"⚠️ Fehler beim Highlight-Punkt für {tech}: {e}")
+                            # === Vertex Highlight ===
+                            selected_vertex = st.session_state.get("selected_vertex")
+                            if selected_vertex is not None and selected_vertex in vertex_df.index:
+                                try:
+                                    highlight_vals = vertex_df.loc[selected_vertex, cols]
+                                    for y, val in zip(years, highlight_vals):
+                                        if pd.notnull(val):
+                                            ax.scatter(y, val, color="black", s=60, zorder=3,
+                                                       label="Selected Vertex" if plot_idx_val == 0 else None)
+                                except Exception as e:
+                                    st.warning(f"⚠️ Fehler beim Highlight für {tech}: {e}")
                 
-                        # === Ursprüngliche Wertebereiche ===
+                        # === Originalbereich ===
                         if st.session_state.get('show_original_ranges', False):
                             try:
                                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -1107,22 +1115,25 @@ with tab1:
                         ax.grid(True, linestyle="--", alpha=0.4)
                         plot_idx_val += 1
                 
+                    # Entferne leere Subplots
                     for i in range(plot_idx_val, len(axes_val)):
-                        fig_val.delaxes(axes_val[i])
+                        if axes_val[i] in fig_val.axes:
+                            fig_val.delaxes(axes_val[i])
                 
-                    # === Legende (optional) ===
-                    legend_items = []
-                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-                    legend_items.append(combined_line)
-                    if selected_vertex is not None:
-                        highlight_point = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
-                                                        label="Selected Vertex")
-                        legend_items.append(highlight_point)
+                    # === Legende ===
+                    if plot_idx_val > 0:
+                        legend_items = []
+                        convex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
+                        legend_items.append(convex_line)
                 
-                    if legend_items:
+                        if st.session_state.get("selected_vertex") is not None:
+                            vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
+                                                       label="Selected Vertex")
+                            legend_items.append(vertex_dot)
+                
                         fig_val.legend(
                             legend_items,
-                            [line.get_label() for line in legend_items],
+                            [item.get_label() for item in legend_items],
                             loc='upper center',
                             bbox_to_anchor=(0.5, 1.2 - 0.02 * max(n_cols_val - 2, 0)),
                             ncol=1,
