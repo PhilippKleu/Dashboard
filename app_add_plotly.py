@@ -1121,7 +1121,7 @@ with tab1:
                         years, cols = zip(*years_cols_sorted)
                     except ValueError:
                         continue  # year_cols leer
-            
+                    st.write(cols)
                     full_values_matrix = vertex_df.loc[current_indices, cols]
                     values_matrix = vertex_df.loc[plot_indices, cols]
             
