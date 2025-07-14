@@ -74,7 +74,7 @@ def clean_plot_indices(raw_indices):
             else:
                 cleaned.append(int(idx))  # z. B. np.int64
         except Exception as e:
-            print(f"⚠️ Fehler beim Konvertieren von Index {idx}: {e}")
+            print(f"⚠️ Error converting index {idx}: {e}")
     return cleaned
 def select_representative_vertices_by_kmeans(
     df: pd.DataFrame,
@@ -191,11 +191,11 @@ def prepare_vertex_selection(
         time_map = tech_time_map
         valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
     else:
-        st.error(f"❌ Unbekannter MAA_PREFIX: '{MAA_PREFIX}'. Erwarte 'VALUE_' oder 'MAA_'.")
+        st.error(f"❌ Unknown MAA_PREFIX: '{MAA_PREFIX}'. Expected 'VALUE_' or 'MAA_'.")
         return {}, [], [], None, []
 
     if not valid_techs:
-        st.warning(f"⚠️ Keine gültigen Technologien in `{source}` gefunden.")
+        st.warning(f"⚠️ No valid technologies found in `{source}`.")
         return time_map, valid_techs, [], None, []
 
     tech = valid_techs[0]
@@ -223,7 +223,7 @@ def prepare_vertex_selection(
             plot_indices = current_indices
 
     except Exception as e:
-        st.error(f"❌ Fehler beim Verarbeiten von Technologie '{tech}': {e}")
+        st.error(f"❌ Error processing technology '{tech}': {e}")
         return time_map, valid_techs, [], tech, []
 
     return time_map, valid_techs, plot_indices, tech, cols
@@ -380,18 +380,18 @@ DEFAULT_EXCEL_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/dev
 def read_default_excel_from_url(url):
     response = requests.get(url)
     if response.status_code != 200:
-        raise ValueError("❌ Standarddatei konnte nicht geladen werden.")
+        raise ValueError("❌ Could not load the default file.")
     return pd.read_excel(BytesIO(response.content))
 
 
 
 if not st.session_state.get("excel_loaded", False):
 
-    st.subheader("📂 Excel-Datei auswählen")
+    st.subheader("📂 Select Excel File")
     col1, spacer, col2 = st.columns([2, 0.3, 1])
 
     with col1:
-        upload_file = st.file_uploader("📤 Eigene Excel-Datei hochladen (.xlsx)", type=["xlsx"])
+        upload_file = st.file_uploader("📤 Upload your own Excel file (.xlsx)", type=["xlsx"])
         # Upload in Session speichern, falls vorhanden
         if upload_file is not None:
             st.session_state["uploaded_file"] = upload_file
@@ -399,7 +399,7 @@ if not st.session_state.get("excel_loaded", False):
 
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📁 Standard-Excel verwenden"):
+        if st.button("📁 Use default Excel file"):
             st.session_state["use_default_excel"] = True
             # Entferne eventuell vorhandene Upload-Datei, damit keine Verwirrung entsteht
             if "uploaded_file" in st.session_state:
@@ -426,7 +426,7 @@ if not st.session_state.get("excel_loaded", False):
                     st.session_state["excel_error"] = None
                     st.rerun()
                 except Exception as e:
-                    st.session_state["excel_error"] = f"❌ Fehler beim Einlesen: {e}"
+                    st.session_state["excel_error"] = f"❌ Error while reading the file: {e}"
 
         elif option == "📊 Apply clustering to retain representative vertices":
             k_value = st.number_input(
@@ -445,7 +445,7 @@ if not st.session_state.get("excel_loaded", False):
 
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
                     if not coeff_columns:
-                        raise ValueError("❌ Keine COEFF_-Spalten gefunden.")
+                        raise ValueError("❌ No COEFF_ columns found.")
 
                     last_coeff_col = coeff_columns[-1]
                     last_index_with_minus1 = df[df[last_coeff_col] == -1].index.max()
@@ -485,7 +485,7 @@ if not st.session_state.get("excel_loaded", False):
                         st.rerun()
 
                 except Exception as e:
-                    st.session_state["excel_error"] = f"❌ Fehler beim Clustern: {e}"
+                    st.session_state["excel_error"] = f"❌ Error during clustering: {e}"
 
     if st.session_state.get("excel_error"):
         st.error(st.session_state["excel_error"])
@@ -572,7 +572,7 @@ with st.sidebar.expander("Plot Options"):
 with st.sidebar.expander("Additional Metrics"):
     st.radio(
         "Plot type for additional metrics",
-        ["Violinplot", "Streudiagramm"],
+        ["Violin Plot", "Scatter Plot"],
         index=0,
         key="plot_type_selector"
     )
@@ -851,7 +851,7 @@ with tab1:
                         index_subset=current_indices
                     )
                    
-                    st.caption(f"⚡️ **Note:** Displaying a random sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
                     st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                     plot_indices_val = current_indices
@@ -869,7 +869,7 @@ with tab1:
                     for idx, tech in enumerate(valid_techs_value):
                         year_cols = value_time_map[tech]
                         if not year_cols:
-                            st.write(f"⚠️ Keine Spalten für Technologie: {tech}")
+                            st.write(f"⚠️ No columns found for technology: {tech}")
                             continue
                     
                         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
@@ -880,7 +880,7 @@ with tab1:
                        
                     
                         if not cols:
-                            st.write(f"🚫 Überspringe Technologie {tech}, da keine passenden Spalten vorhanden.")
+                            st.write(f"🚫 Skipping technology {tech} – no matching columns found.")
                             continue
                     
                         row, col = divmod(idx, n_cols_val)
@@ -891,7 +891,7 @@ with tab1:
                         values_matrix = vertex_df.loc[plot_indices_val, cols]
                     
                         if values_matrix.dropna(how='all').empty:
-                            st.write(f"⚠️ Leere Werte für {tech}, überspringe.")
+                            st.write(f"⚠️ Empty values for {tech}, skipping.")
                             continue
                     
                         
@@ -899,7 +899,7 @@ with tab1:
                         for i in values_matrix.index:
                             values = values_matrix.loc[i].values
                             if len(values) != len(years):
-                                st.write(f"⚠️ Zeile {i}: Ungleiche Länge zwischen Jahren und Werten ({len(years)} vs {len(values)})")
+                                st.write(f"⚠️ Row {i}: Mismatch between number of years and values ({len(years)} vs {len(values)})")
                                 continue
                     
                             is_sel = selected_vertex is not None and i == selected_vertex
@@ -936,7 +936,7 @@ with tab1:
                                             showlegend=False
                                         ), row=row, col=col)
                             else:
-                                st.write(f"⚠️ Konvexdaten fehlen Spalten für {tech}: {cols}")
+                                st.write(f"⚠️ Convex data missing columns for {tech}: {cols}")
                     
                         fig_val.add_trace(go.Scatter(
                             x=list(years) + list(reversed(years)),
@@ -983,7 +983,7 @@ with tab1:
                                 ), row=row, col=col)
                         
                             except Exception as e:
-                                st.write(f"❌ Fehler beim Originalbereich für {tech}: {e}")
+                                st.write(f"❌ Error displaying original range for {tech}: {e}")
                     
                     fig_val.update_layout(
                         height=fig_height_val * 100,
@@ -1087,7 +1087,7 @@ with tab1:
                                             ax.scatter(y, val, color="black", s=60, zorder=3,
                                                        label="Selected Vertex" if plot_idx_val == 0 else None)
                                 except Exception as e:
-                                    st.warning(f"⚠️ Fehler beim Highlight für {tech}: {e}")
+                                    st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
                 
                         # === Originalbereich ===
                         if st.session_state.get('show_original_ranges', False):
@@ -1162,20 +1162,20 @@ with tab1:
             
             
             if not valid_techs_all:
-                st.error("❌ Keine gültigen Technologien mit Zeitreihen gefunden.")
+                st.error("❌ No valid technologies with time series found.")
                 st.stop()
             
             selected_techs = st.multiselect(
-                "Technologien auswählen, die angezeigt werden sollen:",
+                "Select technologies to display:",
                 options=valid_techs_all,
                 default=valid_techs_all,
-                help="Wählen Sie eine oder mehrere Technologien aus."
+                help="Select one or more technologies to display."
             )
             
             valid_techs = selected_techs
             
             if not valid_techs:
-                st.warning("Bitte wählen Sie mindestens eine Technologie aus.")
+                st.warning("Please select at least one technology.")
                 st.stop()
             
             
@@ -1198,11 +1198,11 @@ with tab1:
                     cols = list(cols)
                    
                 except ValueError:
-                    st.error("❌ Konnte keine Spalten aus years_cols_sorted extrahieren.")
+                    st.error("❌ Could not extract columns from years_cols_sorted.")
                     st.stop()
             
             if not cols:
-                st.error("❌ Keine passenden Spalten gefunden.")
+                st.error("❌ No matching columns found.")
                 st.stop()
             
             # === Data Check vor KMeans
@@ -1232,7 +1232,7 @@ with tab1:
                     else:
                         st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 except Exception as e:
-                    st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
+                    st.exception(f"❌ Error selecting vertices using KMeans: {e}")
                     st.stop()
                     
             
@@ -1261,7 +1261,7 @@ with tab1:
             
                     year_cols = source_map.get(tech, [])
                     if not year_cols:
-                        st.warning(f"⚠️ Keine year_cols gefunden für {tech}")
+                        st.warning(f"⚠️ No year columns found for {tech}")
                         continue
             
                     row, col = divmod(idx, n_cols)
@@ -1272,11 +1272,11 @@ with tab1:
                     try:
                         years, cols = zip(*years_cols_sorted)
                     except ValueError:
-                        st.warning(f"⚠️ year_cols leer oder fehlerhaft für {tech}: {year_cols}")
+                        st.warning(f"⚠️ year_cols empty or invalid for {tech}: {year_cols}")
                         continue
             
                     if any(col not in vertex_df.columns for col in cols):
-                        st.error(f"❌ Eine oder mehrere Spalten fehlen in vertex_df für {tech}")
+                        st.error(f"❌ One or more columns missing in vertex_df for {tech}")
                         continue
             
                     full_values_matrix = vertex_df.loc[current_indices, cols]
@@ -1304,14 +1304,14 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
                     except Exception as e:
-                        st.warning(f"❌ Fehler beim Plotten der Gültigkeitsbereiche für {tech}: {e}")
+                        st.warning(f"❌ Error plotting validity ranges for {tech}: {e}")
                     if values_matrix.dropna(how='all').empty:
-                        st.warning(f"⚠️ Werte-Matrix leer oder nur NaN für {tech} auf Indices {plot_indices}")
+                        st.warning(f"⚠️ Value matrix empty or only NaNs for {tech} at indices {plot_indices}")
                         continue
             
                     for i in values_matrix.index:
                         if values_matrix.loc[i].dropna().empty:
-                            st.info(f"ℹ️ Vertex {i} hat nur NaN-Werte – wird übersprungen.")
+                            st.info(f"ℹ️ Vertex {i} contains only NaN values – skipping.")
                             continue
             
                         time_series = values_matrix.loc[i].values
@@ -1323,7 +1323,7 @@ with tab1:
                                  for year, val in zip(years, time_series)]
                             )
                         except Exception as e:
-                            st.error(f"❌ Fehler beim Erstellen von hover_text für Vertex {i}: {e}")
+                            st.error(f"❌ Error creating hover_text for vertex {i}: {e}")
                             continue
             
                         plot_mode = "lines" if len(years) > 1 else "markers"
@@ -1376,7 +1376,7 @@ with tab1:
                                 showlegend=False
                             ), row=row, col=col)
                         except Exception as e:
-                            st.write(f"❌ Fehler beim Originalbereich für {tech}: {e}")
+                            st.write(f"❌ Error displaying original range for {tech}: {e}")
             
                 fig.update_layout(
                     height=fig_height * 100,
@@ -2052,7 +2052,7 @@ with tab1:
                                 showlegend=False
                             ), row=row, col=col)
                         except Exception as e:
-                            st.write(f"❌ Fehler beim Originalbereich für {tech}: {e}")
+                            st.write(f"❌ Error displaying original range for {tech}: {e}")
                 
                     plot_idx_val += 1
                 
@@ -2163,7 +2163,7 @@ with tab1:
                                         ax.scatter(y, val, color="black", s=60, zorder=3,
                                                    label="Selected Vertex" if show_label else None)
                             except Exception as e:
-                                st.warning(f"❌ Fehler beim Zeichnen des Highlight-Vertex für {tech}: {e}")
+                                st.warning(f"❌ Error drawing highlighted vertex for {tech}: {e}")
                 
                     # === Ursprünglicher Wertebereich (rote Fläche) ===
                     if st.session_state.get('show_original_ranges', False):
@@ -2375,7 +2375,7 @@ with tab1:
                         showlegend=False
                     ), row=row, col=col)
                 except Exception as e:
-                    st.warning(f"❌ Fehler beim Plotten der Min/Max-Bereiche für {tech}: {e}")
+                    st.warning(f"❌ Error plotting min/max ranges for {tech}: {e}")
         
                 # Originalbereiche anzeigen (z.B. für alle Datenpunkte, nicht nur aktuelle Auswahl)
                 if st.session_state.get('show_original_ranges', False):
@@ -2402,7 +2402,7 @@ with tab1:
                             showlegend=False
                         ), row=row, col=col)
                     except Exception as e:
-                        st.warning(f"❌ Fehler beim Originalbereich für {tech}: {e}")
+                        st.warning(f"❌ Error displaying original range for {tech}: {e}")
         
                 plot_idx += 1
         
@@ -2509,7 +2509,7 @@ with tab1:
                                     ax.scatter(y, val, color="black", s=60, zorder=3,
                                                label="Selected Vertex" if show_label else None)
                         except Exception as e:
-                            st.warning(f"❌ Fehler beim Zeichnen des Highlight-Vertex für {tech}: {e}")
+                            st.warning(f"❌ Error drawing highlighted vertex for {tech}: {e}")
             
                 # ==== Ursprünglicher Wertebereich (rote Fläche) ====
                 if st.session_state.get('show_original_ranges', False):
@@ -2749,7 +2749,7 @@ with tab1:
                         except:
                             pass
     
-                    if st.session_state.get("plot_type_selector") == "Violinplot":
+                    if st.session_state.get("plot_type_selector") == "Violin Plot":
                         vp = ax.violinplot([values], positions=[1], showmeans=False, showmedians=True, showextrema=True, widths=0.8)
                         for pc in vp['bodies']:
                             pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
@@ -2806,7 +2806,7 @@ with tab1:
                 if convex_data_available:
                     filtered_convex_data = filtered_convex_additional[available_cols]  # Keine .loc[current_indices]
             
-                if st.session_state.get("plot_type_selector") == "Violinplot":
+                if st.session_state.get("plot_type_selector") == "Violin Plot":
                     year_values = [filtered_data[col].dropna().values for col in columns]
             
                     if convex_data_available:
@@ -2935,11 +2935,11 @@ with tab1:
                 # Optional: automatisch duplikate entfernen oder umbenennen
                 convex_with_all = pd.concat(frames_to_concat, axis=1)
                 convex_with_all = convex_with_all.loc[:, ~convex_with_all.columns.duplicated()]
-                st.info("ℹ️ Doppelte Spalten wurden automatisch entfernt.")
+                st.info("ℹ️ Duplicate columns were automatically removed.")
             else:
                 convex_with_all = pd.concat(frames_to_concat, axis=1)
     
-            st.markdown("✅ Finaler kombinierter DataFrame")
+            st.markdown("✅ Final combined DataFrame")
             st.dataframe(convex_with_all, use_container_width=True)
 
 with tab2:
