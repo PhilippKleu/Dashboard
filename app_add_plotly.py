@@ -1056,11 +1056,7 @@ with tab1:
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
             
-                if len(cols) == 1:
-                    result = cols[0]  # ✅ Nur der String
-                else:
-                    # Fehlerbehandlung oder weitere Logik
-                    raise ValueError(f"Mehrere Spalten gefunden: {cols}")
+                
                 
             else:
                 # Fallback: Nur erste Technologie wie gehabt
