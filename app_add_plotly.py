@@ -1716,7 +1716,7 @@ with tab1:
         )
     
         
-        st.divider()
+       
         # === Highlight ===
         time_map, valid_techs, plot_indices, tech,cols = prepare_vertex_selection(
                 MAA_PREFIX=MAA_PREFIX,
