@@ -1053,16 +1053,21 @@ with tab1:
             years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
             
             if MAA_PREFIX == "VALUE_":
-                cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + valid_techs_all[0])]
+                # ⬇️ Nur Spalten mit "INSTALLED_CAPACITY_" zulassen
+                cols = [c for _, c in years_cols_sorted if c.startswith("INSTALLED_CAPACITY_")]
+                st.write("🧮 (VALUE_): Verwendete Spalten mit 'INSTALLED_CAPACITY_':", cols)
             else:
                 try:
                     _, cols = zip(*years_cols_sorted)
                     cols = list(cols)
+                    st.write("🧮 (anderes Prefix): Verwendete Spalten:", cols)
                 except ValueError:
-                    st.error("❌ Konnte keine Spalten für KMeans aus years_cols_sorted extrahieren.")
+                    st.error("❌ Konnte keine Spalten aus years_cols_sorted extrahieren.")
                     st.stop()
             
-            st.write("🧮 Verwendete Spalten für KMeans:", cols)
+            if not cols:
+                st.error("❌ Keine passenden Spalten gefunden.")
+                st.stop()
             
             # === Data Check vor KMeans
             subset_df = vertex_df.loc[current_indices, cols]
