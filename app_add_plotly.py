@@ -340,7 +340,7 @@ if not st.session_state.get("excel_loaded", False):
         if option == "📥 Read-in all vertices":
             if st.button("Read-in Excel File"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
+                    df = read_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
                     st.session_state["uploaded_excel"] = df.copy()
                     st.session_state["excel_loaded"] = True
                     st.session_state["excel_error"] = None
@@ -360,7 +360,7 @@ if not st.session_state.get("excel_loaded", False):
 
             if st.button("Apply Clustering and Read-in"):
                 try:
-                    df = load_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
+                    df = read_default_excel_from_url(DEFAULT_EXCEL_URL) if use_default_excel else load_excel_data(uploaded_file)
                     amount_vertices_requested = int(k_value)
 
                     coeff_columns = [col for col in df.columns if col.startswith("COEFF_")]
