@@ -1050,12 +1050,17 @@ with tab1:
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
-                # 🔁 Alle Spalten aus der source_map für die ausgewählten Technologien nehmen
                 cols = []
                 for tech in valid_techs:
                     year_cols = source_map.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
+            
+                if len(cols) == 1:
+                    result = cols[0]  # ✅ Nur der String
+                else:
+                    # Fehlerbehandlung oder weitere Logik
+                    raise ValueError(f"Mehrere Spalten gefunden: {cols}")
                 
             else:
                 # Fallback: Nur erste Technologie wie gehabt
