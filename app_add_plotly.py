@@ -1212,6 +1212,12 @@ with tab1:
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
             if MAA_PREFIX == "VALUE_":
                 plot_indices=plot_indices_val
+                if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
+                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                else:
+                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+
+            
             else:
                 try:
                     raw_plot_indices = select_representative_vertices_by_kmeans(
@@ -1221,10 +1227,14 @@ with tab1:
                         index_subset=current_indices
                     )
                     plot_indices = clean_plot_indices(raw_plot_indices)
-                    
+                    if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
+                        st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                    else:
+                        st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
                 except Exception as e:
                     st.exception(f"❌ Fehler bei der Vertex-Auswahl via KMeans: {e}")
                     st.stop()
+                    
             
             
             # === Plot-Erstellung
