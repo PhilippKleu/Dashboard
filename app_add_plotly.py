@@ -190,13 +190,15 @@ def plot_violin_values(
     axes_val = axes_val.flatten() if n_techs_value > 1 else [axes_val]
     st.write(valid_techs_value)
     plot_idx_val = 0
-    for tech in valid_techs_value:
-        year_cols = value_time_map[tech]
+
+    
+    
+    for tech,year_cols in sorted(value_time_map.items()):
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
         st.write(year_cols)
         st.write(years_cols_sorted)
-        years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
+        years = [y for y, _ in years_cols_sorted]
+        cols = [col for _, col in years_cols_sorted]
         
         if not cols:
             continue
