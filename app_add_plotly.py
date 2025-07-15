@@ -236,7 +236,7 @@ def plot_violin_values(
         # === Originalbereich ===
         if st.session_state.get('show_original_ranges', False):
             try:
-                original_matrix = vertex_df.[cols]
+                original_matrix = vertex_df[cols]
             except Exception:
                 original_matrix = vertex_df[cols]
 
