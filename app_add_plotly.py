@@ -379,6 +379,7 @@ def plot_operational_variables_over_time(
 
         # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
         st.write(filtered_convex_data)
+        st.write(st_convex)
         if show_convex and not st_convex.empty:
             if len(years) == 1:
                 convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
@@ -1218,7 +1219,6 @@ with tab1:
             # === Auswahl Mapping je nach Prefix
             source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
                         
-                   
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
                         
@@ -1304,11 +1304,6 @@ with tab1:
                     apply_prefix=False,
                     plot_title="Installed Capacities Over Time"
                 )
-
-
-            
-
-
 
             else:
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
