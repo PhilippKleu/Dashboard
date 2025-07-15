@@ -378,9 +378,9 @@ def plot_operational_variables_over_time(
             ), row=row, col=col)
 
         # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
-        st.write("###")
+        st.write("dddd")
         st.write(filtered_convex_data)
-        st.write("###")
+        st.write("dddd")
         st.write(st_convex)
         if show_convex and not st_convex.empty:
             if len(years) == 1:
