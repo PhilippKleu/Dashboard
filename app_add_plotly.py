@@ -1719,320 +1719,50 @@ with tab1:
             st.markdown("### Operational Variables Over Time")
 
             value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+            valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
             
-            n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
-            n_cols_val = st.session_state.get("n_cols_plots", 3)
-            n_rows_value = ceil(n_techs_value / n_cols_val)
-            
-            fig_width_val = 9 * (1 / n_cols_val) * n_cols_val
-            fig_height_val = fig_width_val
-            
-            if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
-                plot_indices_val = plot_indices
-                st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+            if len(current_indices) > st.session_state["max_plot_vertices"]:
+                    plot_indices_val = select_representative_vertices_by_kmeans(
+                        df=vertex_df,
+                        cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
+                        n_vertices=st.session_state["max_plot_vertices"],
+                        index_subset=current_indices
+                    )
+                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
+                plot_indices_val = current_indices
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                plot_indices_val = plot_indices
                 
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                selected_vertex = st.session_state.get("selected_vertex")
                 
-                fig_val = make_subplots(
-                    rows=n_rows_value,
-                    cols=n_cols_val,
-                    subplot_titles=[tech.replace("_", " ").title() for tech in sorted(value_time_map.keys()) if len(value_time_map[tech]) >= 1],
-                    horizontal_spacing=0.08,
-                    vertical_spacing=0.09
+                plot_operational_variables_over_time(
+                    vertex_df=vertex_df,
+                    current_indices=current_indices,
+                    plot_indices_val=plot_indices_val,
+                    time_column_map=value_time_map,  # statt value_time_map
+                    selected_vertex=st.session_state.get("selected_vertex"),
+                    n_cols_val=st.session_state.get("n_cols_plots", 3),
+                    show_convex=st.session_state["show_convex"],
+                    st_convex =st.session_state["convex_combinations"],
+                    filtered_convex_data=filtered_convex_data,
+                    show_original_ranges=st.session_state["show_original_ranges"],
+                    max_plot_vertices=st.session_state["max_plot_vertices"],
+                    maa_prefix=MAA_PREFIX,
+                    apply_prefix=True,  # wichtig: MAA_ Prefix verwenden
+                    plot_title="Operational Variables Over Time"
                 )
-                
-                plot_idx_val = 0
-                for tech, year_cols in sorted(value_time_map.items()):
-                    if len(year_cols) < 1 or not any(col.startswith(MAA_PREFIX + tech) for _, col in year_cols):
-                        continue
-                
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted if col.startswith(MAA_PREFIX + tech)]
-                
-                    if not cols:
-                        continue
-                
-                    full_values_matrix = vertex_df.loc[current_indices, cols]
-                    values_matrix = vertex_df.loc[plot_indices_val, cols]
-                
-                    if values_matrix.dropna(how='all').empty:
-                        continue
-                
-                    row, col = divmod(plot_idx_val, n_cols_val)
-                    row += 1
-                    col += 1
-                
-                    plot_mode = 'markers' if len(years) == 1 else 'lines'
-                
-                    for i in values_matrix.index:
-                        values = values_matrix.loc[i].values
-                        if len(values) != len(years):
-                            st.warning(
-                                f"⚠️ Mismatch for tech: **{tech}**\n"
-                                f"- years: {years}\n"
-                                f"- values: {values}\n"
-                                f"- len(years): {len(years)}, len(values): {len(values)}"
-                            )
-                            continue
-                
-                        is_sel = selected_vertex is not None and i == selected_vertex
-                        hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                            [f"{year}: {val:.2f}" for year, val in zip(years, values)]
-                        )
-                
-                        fig_val.add_trace(go.Scatter(
-                            x=years,
-                            y=values,
-                            mode=plot_mode,
-                            line=dict(
-                                color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
-                                width=4 if is_sel else 1
-                            ),
-                            text=[hover_text] * len(years),
-                            hoverinfo='text',
-                            showlegend=False
-                        ), row=row, col=col)
-                
-                    if st.session_state['show_convex'] and not st.session_state['convex_combinations'].empty:
-                        if all(col in filtered_convex_data.columns for col in cols):
-                            for idx in filtered_convex_data.index:
-                                values = filtered_convex_data.loc[idx, cols].values
-                                if not np.isnan(values).all():
-                                    fig_val.add_trace(go.Scatter(
-                                        x=years,
-                                        y=values,
-                                        mode=plot_mode,
-                                        line=dict(color="rgba(255, 50, 50, 0.4)"),
-                                        hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
-                                        showlegend=False
-                                    ), row=row, col=col)
-                
-                    fig_val.add_trace(go.Scatter(
-                        x=list(years) + list(reversed(years)),
-                        y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
-                        fill='toself',
-                        fillcolor="rgba(26, 102, 204, 0.15)",
-                        line=dict(color='rgba(255,255,255,0)'),
-                        hoverinfo='skip',
-                        showlegend=False
-                    ), row=row, col=col)
-                
-                    if st.session_state['show_original_ranges']:
-                        try:
-                            original_matrix = vertex_df.loc[current_indices, cols]
-                            min_vals = original_matrix.min()
-                            max_vals = original_matrix.max()
-                
-                            if len(years) == 1:
-                                year = years[0]
-                                x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
-                                y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                
-                                fig_val.update_xaxes(
-                                    tickvals=[year],
-                                    ticktext=[str(year)],
-                                    row=row,
-                                    col=col
-                                )
-                            else:
-                                x_vals = list(years) + list(reversed(years))
-                                y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-                
-                            fig_val.add_trace(go.Scatter(
-                                x=x_vals,
-                                y=y_vals,
-                                fill='toself',
-                                fillcolor="rgba(255, 0, 0, 0.08)",
-                                line=dict(color='rgba(255,255,255,0)'),
-                                hoverinfo='skip',
-                                showlegend=False
-                            ), row=row, col=col)
-                        except Exception as e:
-                            st.write(f"❌ Error displaying original range for {tech}: {e}")
-                
-                    plot_idx_val += 1
-                
-                fig_val.update_layout(
-                    height=fig_height_val * 100,
-                    width=fig_width_val * 100,
-                    title=dict(
-                        text="Operational Variables Over Time",
-                        font=dict(size=18, family="Arial", color="#333"),
-                        x=0,
-                        xanchor="left"
-                    ),
-                    font=dict(size=12, family="Arial", color="#333"),
-                    paper_bgcolor='#f4f4f4',
-                    plot_bgcolor='#f4f4f4',
-                    hovermode="closest",
-                    margin=dict(l=40, r=40, t=80, b=50),
-                    showlegend=False
-                )
-                
-                for i in range(1, plot_idx_val + 1):
-                    suffix = "" if i == 1 else str(i)
-                    xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
-                    yaxis = getattr(fig_val.layout, f"yaxis{suffix}", None)
-                
-                    if isinstance(xaxis, XAxis):
-                        xaxis.update(
-                            showgrid=True,
-                            gridcolor="rgba(0,0,0,0.1)",
-                            mirror=True,
-                            showline=True,
-                            linecolor="rgba(0,0,0,0.3)",
-                            linewidth=1,
-                            ticks="outside"
-                        )
-                    if isinstance(yaxis, YAxis):
-                        yaxis.update(
-                            showgrid=True,
-                            gridcolor="rgba(0,0,0,0.1)",
-                            mirror=True,
-                            showline=True,
-                            linecolor="rgba(0,0,0,0.3)",
-                            linewidth=1,
-                            ticks="outside"
-                        )
-                
-                for ann in fig_val['layout']['annotations']:
-                    ann['y'] += 0.01
-                    ann['font'] = dict(size=12, color='#222', family="Arial")
-                
-                st.plotly_chart(fig_val, use_container_width=True)
+
+
             else:
-                # === Layout definieren ===
-                n_techs_value = sum(1 for v in value_time_map.values() if len(v) >= 1)
-                n_cols = st.session_state.get("n_cols_plots", 3)
-                n_rows_value = ceil(n_techs_value / n_cols)
-                
-                plot_width_per_col = 6
-                plot_height_per_row = 3.5
-                fig_width = plot_width_per_col * n_cols
-                fig_height = plot_height_per_row * n_rows_value
-                
-                fig_value, axes_value = plt.subplots(n_rows_value, n_cols, figsize=(fig_width, fig_height))
-                fig_value.patch.set_facecolor('#f4f4f4')
-                axes_value = axes_value.flatten() if n_techs_value > 1 else [axes_value]
-                
-                # === Plotten ===
-                plot_idx_val = 0
-                for tech, year_cols in sorted(value_time_map.items()):
-                    if len(year_cols) < 1 or not any(col.startswith(MAA_PREFIX + tech) for _, col in year_cols):
-                        continue
-                
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in years_cols_sorted]
-                    cols = [col for _, col in years_cols_sorted if col.startswith(MAA_PREFIX + tech)]
-                
-                    if not cols:
-                        continue
-                
-                    values_matrix = vertex_df.loc[plot_indices_val, cols]
-                
-                    # === Konvexe Kombinationen einbeziehen ===
-                    if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                        if all(col in filtered_convex_data.columns for col in cols):
-                            convex_matrix = filtered_convex_data[cols]
-                            values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
-                
-                    if values_matrix.dropna(how='all').empty:
-                        continue
-                
-                    ax = axes_value[plot_idx_val]
-                    ax.set_facecolor('#f0f0f0')
-                
-                    # === Violinplot-Daten vorbereiten ===
-                    data = [values_matrix[col].dropna().values for col in cols]
-                
-                    if all(len(d) > 0 for d in data):
-                        ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-                
-                        # === Vertex Highlight als Punkt ===
-                        selected_vertex = st.session_state.get("selected_vertex", None)
-                        if selected_vertex is not None and selected_vertex in vertex_df.index:
-                            try:
-                                highlight_vals = vertex_df.loc[selected_vertex, cols]
-                                for y, val in zip(years, highlight_vals):
-                                    if pd.notnull(val):
-                                        show_label = plot_idx_val == 0  # nur beim ersten Plot in Legende
-                                        ax.scatter(y, val, color="black", s=60, zorder=3,
-                                                   label="Selected Vertex" if show_label else None)
-                            except Exception as e:
-                                st.warning(f"❌ Error drawing highlighted vertex for {tech}: {e}")
-                
-                    # === Ursprünglicher Wertebereich (rote Fläche) ===
-                    if st.session_state.get('show_original_ranges', False):
-                        try:
-                            original_matrix = vertex_df.loc[tech_data.index, cols]
-                        except Exception:
-                            original_matrix = vertex_df[cols]
-                
-                        original_min = original_matrix.min()
-                        original_max = original_matrix.max()
-                
-                        for y, omin, omax in zip(years, original_min, original_max):
-                            if not np.isnan(omin) and not np.isnan(omax):
-                                ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-                
-                    # === Achsenbeschriftung & Formatierung ===
-                    ax.set_title(tech.replace('_', ' ').title())
-                    ax.set_xticks(years)
-                    ax.set_xticklabels([str(y) for y in years])
-                
-                    if plot_idx_val >= (n_rows_value - 1) * n_cols:
-                        ax.set_xlabel("Year")
-                    if plot_idx_val % n_cols == 0:
-                        ax.set_ylabel("VALUE_")
-                    ax.grid(True, linestyle="--", alpha=0.4)
-                
-                    if plot_idx_val == 0:
-                        handles_labels_val = ax.get_legend_handles_labels()
-                
-                    plot_idx_val += 1
-                
-                # === Leere Subplots entfernen ===
-                for i in range(plot_idx_val, len(axes_value)):
-                    if axes_value[i] in fig_value.axes:
-                        fig_value.delaxes(axes_value[i])
-                
-                # === Legende einfügen ===
-                if plot_idx_val > 0:
-                    legend_items = []
-                
-                    # Basislinie
-                    combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-                    legend_items.append(combined_line)
-                
-                    # Highlight-Punkt
-                    if st.session_state.get("selected_vertex") is not None:
-                        highlight_point = mlines.Line2D([], [], color="black", marker='o', linestyle='None',
-                                                        markersize=8, label="Selected Vertex")
-                        legend_items.append(highlight_point)
-                
-                    fig_value.legend(
-                        legend_items,
-                        [line.get_label() for line in legend_items],
-                        loc='upper center',
-                        bbox_to_anchor=(0.5, 1.2 - 0.02 * max(n_cols - 2, 0)),
-                        ncol=1,
-                        frameon=True,
-                        fancybox=True,
-                        fontsize=14
-                    )
-                
-                    fig_value.subplots_adjust(
-                        top=1.14 - 0.02 * max(n_cols - 2, 0),
-                        hspace=0.3,
-                        wspace=0.18
-                    )
-                
-                st.pyplot(fig_value)
+                plot_violin_values(
+                    vertex_df,
+                    valid_techs_value,
+                    value_time_map,
+                    plot_indices_val,
+                    current_indices,
+                    filtered_convex_data,
+                    MAA_PREFIX="MAA_"  # optional
+                )
                 
         st.markdown("### Installed Capacities Over Time")
     
