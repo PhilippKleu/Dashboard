@@ -171,16 +171,18 @@ def plot_operational_variables_over_time(
     vertex_df,
     current_indices,
     plot_indices_val,
-    value_time_map,
+    time_column_map,
     selected_vertex,
     n_cols_val=3,
     show_convex=False,
     filtered_convex_data=None,
     show_original_ranges=False,
     max_plot_vertices=20,
-    maa_prefix="MAA_"
+    maa_prefix="MAA_",
+    apply_prefix=True,
+    plot_title="Operational Variables Over Time"
 ):   
-    valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
+    valid_techs_value = sorted([tech for tech, v in time_column_map.items() if len(v) >= 1])
     n_techs_value = len(valid_techs_value)
     n_rows_val = ceil(n_techs_value / n_cols_val)
 
@@ -196,14 +198,14 @@ def plot_operational_variables_over_time(
     )
 
     for idx, tech in enumerate(valid_techs_value):
-        year_cols = value_time_map[tech]
+        year_cols = time_column_map[tech]
         if not year_cols:
             st.write(f"⚠️ No columns found for technology: {tech}")
             continue
 
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-        years = [y for y, c in years_cols_sorted if c.startswith(maa_prefix + tech)]
-        cols = [c for y, c in years_cols_sorted if c.startswith(maa_prefix + tech)]
+        years = [y for y, c in years_cols_sorted if (not apply_prefix or c.startswith(maa_prefix + tech))]
+        cols = [c for y, c in years_cols_sorted if (not apply_prefix or c.startswith(maa_prefix + tech))]
         plot_mode = 'markers' if len(years) == 1 else 'lines'
 
         if not cols:
@@ -221,7 +223,6 @@ def plot_operational_variables_over_time(
             st.write(f"⚠️ Empty values for {tech}, skipping.")
             continue
 
-        # Linien für jede Vertex
         for i in values_matrix.index:
             values = values_matrix.loc[i].values
             if len(values) != len(years):
@@ -231,7 +232,7 @@ def plot_operational_variables_over_time(
             is_sel = selected_vertex is not None and i == selected_vertex
 
             hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                [f"{year}: {val:.2f}" for year, val in zip(years, values)]
+                [f"{year}: {val:.2f}" if not np.isnan(val) else f"{year}: n/a" for year, val in zip(years, values)]
             )
 
             fig_val.add_trace(go.Scatter(
@@ -241,7 +242,11 @@ def plot_operational_variables_over_time(
                 line=dict(
                     color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                     width=4 if is_sel else 1
-                ),
+                ) if plot_mode == "lines" else None,
+                marker=dict(
+                    color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
+                    size=10
+                ) if plot_mode == "markers" else None,
                 text=[hover_text] * len(years),
                 hoverinfo='text',
                 showlegend=False
@@ -264,7 +269,7 @@ def plot_operational_variables_over_time(
             else:
                 st.write(f"⚠️ Convex data missing columns for {tech}: {cols}")
 
-        # Hintergrundbereich basierend auf current_indices (hellblau)
+        # Light blue area for current_indices (min/max)
         try:
             min_vals = full_values_matrix.min()
             max_vals = full_values_matrix.max()
@@ -289,7 +294,7 @@ def plot_operational_variables_over_time(
         except Exception as e:
             st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-        # Bei nur einem Jahr: X-Achse korrekt beschriften
+        # X-Axis ticks for single year
         if len(years) == 1:
             fig_val.update_xaxes(
                 tickvals=[years[0]],
@@ -298,7 +303,7 @@ def plot_operational_variables_over_time(
                 col=col
             )
 
-        # Originalbereich (optional, rot)
+        # Optional original range (red)
         if show_original_ranges:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -324,12 +329,12 @@ def plot_operational_variables_over_time(
             except Exception as e:
                 st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-    # Layout & Styling
+    # Layout
     fig_val.update_layout(
         height=fig_height_val * 100,
         width=fig_width_val * 100,
         title=dict(
-            text="Operational Variables Over Time",
+            text=plot_title,
             font=dict(size=18, family="Arial", color="#333"),
             x=0,
             xanchor="left"
@@ -342,7 +347,7 @@ def plot_operational_variables_over_time(
         showlegend=False
     )
 
-    # Achsenstyling
+    # Axis styling
     for i in range(1, len(valid_techs_value) + 1):
         suffix = "" if i == 1 else str(i)
         xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
@@ -369,7 +374,6 @@ def plot_operational_variables_over_time(
                 ticks="outside"
             )
 
-    # Subplot-Überschriften etwas anheben
     for ann in fig_val['layout']['annotations']:
         ann['y'] += 0.01
         ann['font'] = dict(size=12, color='#222', family="Arial")
@@ -1045,14 +1049,16 @@ with tab1:
                         vertex_df=vertex_df,
                         current_indices=current_indices,
                         plot_indices_val=plot_indices_val,
-                        value_time_map=value_time_map,
+                        time_column_map=value_time_map,  # statt value_time_map
                         selected_vertex=st.session_state.get("selected_vertex"),
                         n_cols_val=st.session_state.get("n_cols_plots", 3),
                         show_convex=st.session_state["show_convex"],
                         filtered_convex_data=st.session_state["convex_combinations"],
                         show_original_ranges=st.session_state["show_original_ranges"],
                         max_plot_vertices=st.session_state["max_plot_vertices"],
-                        maa_prefix=MAA_PREFIX
+                        maa_prefix=MAA_PREFIX,
+                        apply_prefix=True,  # wichtig: MAA_ Prefix verwenden
+                        plot_title="Operational Variables Over Time"
                     )
 
 
@@ -1181,12 +1187,7 @@ with tab1:
                    
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
-            
-            
-            if not valid_techs_all:
-                st.error("❌ No valid technologies with time series found.")
-                st.stop()
-            
+                        
             selected_techs = st.multiselect(
                 "Select technologies to display:",
                 options=valid_techs_all,
@@ -1194,12 +1195,7 @@ with tab1:
                 help="Select one or more technologies to display."
             )
             
-            valid_techs = selected_techs
-            
-            if not valid_techs:
-                st.warning("Please select at least one technology.")
-                st.stop()
-            
+            valid_techs = selected_techs          
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
@@ -1208,9 +1204,6 @@ with tab1:
                     year_cols = source_map.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
-            
-                
-                
             else:
                 # Fallback: Nur erste Technologie wie gehabt
                 year_cols = source_map[valid_techs_all[0]]
