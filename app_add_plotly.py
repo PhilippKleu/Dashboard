@@ -386,6 +386,7 @@ def plot_operational_variables_over_time(
         if show_convex and not st_convex.empty:
             if len(years) == 1:
                 convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
+                st.write(convex_cols)
                 if convex_col in filtered_convex_data.columns:
                     convex_vals = filtered_convex_data[convex_col].dropna()
                     fig.add_trace(go.Scatter(
@@ -398,6 +399,7 @@ def plot_operational_variables_over_time(
                     ), row=row, col=col)
             else:
                 convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                st.write(convex_cols)
                 if all(col in filtered_convex_data.columns for col in convex_cols):
                     for idx in filtered_convex_data.index:
                         values = filtered_convex_data.loc[idx, convex_cols].values
