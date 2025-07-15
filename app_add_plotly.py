@@ -299,7 +299,7 @@ def plot_operational_variables_over_time(
     selected_vertex,
     n_cols_val=3,
     show_convex=False,
-    st_convex,
+    st_convex=None,
     filtered_convex_data=None,
     show_original_ranges=False,
     max_plot_vertices=20,
