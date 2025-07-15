@@ -814,13 +814,7 @@ with tab1:
             
         
         with col2:
-            mpl.rcParams.update({
-                'axes.titlesize': 16,
-                'axes.labelsize': 14,
-                'xtick.labelsize': 12,
-                'ytick.labelsize': 12,
-                'legend.fontsize': 14,
-            })
+            
         
             n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
             n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
