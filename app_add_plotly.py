@@ -1306,7 +1306,7 @@ with tab1:
                     time_column_map=source_map,
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
-                    show_convex=False,
+                    show_convex=st.session_state["show_convex"],
                     st_convex =st.session_state["convex_combinations"],
                     filtered_convex_data=filtered_convex_data,
                     show_original_ranges=st.session_state.get("show_original_ranges", False),
