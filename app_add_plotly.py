@@ -195,16 +195,15 @@ def plot_violin_values(
     
     for tech,year_cols in sorted(value_time_map.items()):
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-        st.write(year_cols)
-        st.write(years_cols_sorted)
+        
         years = [y for y, _ in years_cols_sorted]
         cols = [col for _, col in years_cols_sorted]
         
         if not cols:
             continue
-        st.write(cols)
+        
         values_matrix = vertex_df.loc[plot_indices_val, cols]
-        st.write(values_matrix)
+        
         # === Konvexe Kombinationen ===
         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
             if all(col in filtered_convex_data.columns for col in cols):
