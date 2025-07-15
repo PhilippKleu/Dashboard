@@ -1696,24 +1696,8 @@ with tab1:
             selected_vertex = None
         
         st.divider()
-        # === Matplotlib-Style für Diagramme ===
-        mpl.rcParams.update({
-            'axes.titlesize': 16,
-            'axes.labelsize': 14,
-            'xtick.labelsize': 12,
-            'ytick.labelsize': 12,
-            'legend.fontsize': 14,
-        })
-         # === Layout-Optionen für Diagramme ===
-          
         
-        # === Plot-Vorbereitung ===
-        if "n_cols_plots" not in st.session_state:
-            st.session_state["n_cols_plots"] = 3
-        n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-        n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
-        plot_width_per_col = 6
-        plot_height_per_row = 3.5
+        
         if MAA_PREFIX == "VALUE_":
             
             st.markdown("### Operational Variables Over Time")
@@ -1765,349 +1749,102 @@ with tab1:
                 )
                 
         st.markdown("### Installed Capacities Over Time")
-    
-        n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-        n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
-        plot_width_per_col = 6
-        plot_height_per_row = 3.5
-        fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
-        fig_height = plot_height_per_row * n_rows
-    
-        fig, axes = plt.subplots(n_rows,st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
-        fig.patch.set_facecolor('#f4f4f4')
-        axes = axes.flatten() if n_techs > 1 else [axes]
-    
+        source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
+                        
+        # === Gültige Technologien + Auswahl
+        valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
+                    
+        selected_techs = st.multiselect(
+            "Select technologies to display:",
+            options=valid_techs_all,
+            default=valid_techs_all,
+            help="Select one or more technologies to display."
+        )
         
-                
-    
+        valid_techs = selected_techs          
         
-        if st.session_state.get("plot_type_selector2") == "Line Plot":
-            st.markdown("### Installed Capacities Over Time")
+        # === Initiale Spaltenauswahl für KMeans
+        if MAA_PREFIX == "VALUE_":
+            cols = []
+            for tech in valid_techs:
+                year_cols = source_map.get(tech, [])
+                cols.extend([col for _, col in year_cols])
+            cols = list(set(cols))  # Doppelte entfernen
+        else:
+            # Fallback: Nur erste Technologie wie gehabt
+            year_cols = source_map[valid_techs_all[0]]
+            years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+            try:
+                _, cols = zip(*years_cols_sorted)
+                cols = list(cols)
+               
+            except ValueError:
+                st.error("❌ Could not extract columns from years_cols_sorted.")
+                st.stop()
         
-            n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-            n_cols = st.session_state.get("n_cols_plots", 3)
-            n_rows = ceil(n_techs / n_cols)
-            fig_width = 9 * (1 / n_cols) * n_cols
-            fig_height = fig_width
+        if not cols:
+            st.error("❌ No matching columns found.")
+            st.stop()
         
-            fig = make_subplots(
-                rows=n_rows,
-                cols=n_cols,
-                subplot_titles=[tech.replace("_", " ").title() for tech in tech_time_map if len(tech_time_map[tech]) >= 1],
-                horizontal_spacing=0.08,
-                vertical_spacing=0.09
-            )
+        # === Data Check vor KMeans
+        subset_df = vertex_df.loc[current_indices, cols]
         
+        
+        # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
+        if MAA_PREFIX == "VALUE_":
+            plot_indices=plot_indices_val
             if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
-                
                 st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
             else:
                 st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+
         
-            selected_vertex = st.session_state.get("selected_vertex")
-            plot_idx = 0
-        
-            for tech, year_cols in sorted(tech_time_map.items()):
-                if len(year_cols) < 1:
-                    continue
-        
-                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                years = [y for y, _ in years_cols_sorted]
-                cols = [c for _, c in years_cols_sorted]
-        
-                full_values_matrix = vertex_df.loc[current_indices, cols]
-                values_matrix = vertex_df.loc[plot_indices, cols]
-        
-                row, col = divmod(plot_idx, n_cols)
-                row += 1
-                col += 1
-        
-                if values_matrix.dropna(how='all').empty:
-                    plot_idx += 1
-                    continue
-        
-                for idx in values_matrix.index:
-                    values = values_matrix.loc[idx].values
-                    if np.all(np.isnan(values)):
-                        continue
-        
-                    is_sel = selected_vertex is not None and idx == selected_vertex
-                    hover_text = f"<b>Vertex {idx}</b><br>" + "<br>".join(
-                        [f"{year}: {float(val):.2f}" if pd.notnull(val) else f"{year}: n/a"
-                         for year, val in zip(years, values)]
-                    )
-        
-                    fig.add_trace(go.Scatter(
-                        x=years,
-                        y=values,
-                        mode='lines' if len(years) > 1 else 'markers',
-                        line=dict(
-                            color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
-                            width=4 if is_sel else 1
-                        ) if len(years) > 1 else None,
-                        marker=dict(
-                            color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
-                            size=10
-                        ) if len(years) == 1 else None,
-                        text=[hover_text] * len(years),
-                        hoverinfo='text',
-                        showlegend=False
-                    ), row=row, col=col)
-        
-                # Konvexe Kombinationen
-                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                    if len(years) == 1:
-                        convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
-                        if convex_col in filtered_convex_data.columns:
-                            convex_vals = filtered_convex_data[convex_col].dropna()
-                            fig.add_trace(go.Scatter(
-                                x=[years[0]] * len(convex_vals),
-                                y=convex_vals,
-                                mode='markers',
-                                marker=dict(color="rgba(255,0,0,0.4)", size=10),
-                                hoverinfo="skip",
-                                showlegend=False
-                            ), row=row, col=col)
-                    else:
-                        convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                        if all(col in filtered_convex_data.columns for col in convex_cols):
-                            for idx in filtered_convex_data.index:
-                                values = filtered_convex_data.loc[idx, convex_cols].values
-                                if not np.isnan(values).all():
-                                    fig.add_trace(go.Scatter(
-                                        x=years,
-                                        y=values,
-                                        mode='lines',
-                                        line=dict(color="rgba(255,0,0,0.3)", width=1),
-                                        hoverinfo="skip",
-                                        showlegend=False
-                                    ), row=row, col=col)
-        
-                # Min/Max Bereich für aktuelle Vertices
-                try:
-                    min_vals = full_values_matrix.min()
-                    max_vals = full_values_matrix.max()
-        
-                    if len(years) == 1:
-                        year = years[0]
-                        x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
-                        y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                    else:
-                        x_vals = list(years) + list(reversed(years))
-                        y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-        
-                    fig.add_trace(go.Scatter(
-                        x=x_vals,
-                        y=y_vals,
-                        fill='toself',
-                        fillcolor="rgba(26,102,204,0.15)",
-                        line=dict(color='rgba(255,255,255,0)'),
-                        hoverinfo='skip',
-                        showlegend=False
-                    ), row=row, col=col)
-                except Exception as e:
-                    st.warning(f"❌ Error plotting min/max ranges for {tech}: {e}")
-        
-                # Originalbereiche anzeigen (z.B. für alle Datenpunkte, nicht nur aktuelle Auswahl)
-                if st.session_state.get('show_original_ranges', False):
-                    try:
-                        original_matrix = vertex_df.loc[tech_data.index, cols]
-                        orig_min = original_matrix.min()
-                        orig_max = original_matrix.max()
-        
-                        if len(years) == 1:
-                            year = years[0]
-                            x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
-                            y_vals = [orig_min.iloc[0], orig_min.iloc[0], orig_max.iloc[0], orig_max.iloc[0]]
-                        else:
-                            x_vals = list(years) + list(reversed(years))
-                            y_vals = orig_min.tolist() + orig_max.tolist()[::-1]
-        
-                        fig.add_trace(go.Scatter(
-                            x=x_vals,
-                            y=y_vals,
-                            fill='toself',
-                            fillcolor="rgba(255,0,0,0.08)",
-                            line=dict(color='rgba(255,255,255,0)'),
-                            hoverinfo='skip',
-                            showlegend=False
-                        ), row=row, col=col)
-                    except Exception as e:
-                        st.warning(f"❌ Error displaying original range for {tech}: {e}")
-        
-                plot_idx += 1
-        
-            # Layout
-            fig.update_layout(
-                height=fig_height * 100,
-                width=fig_width * 100,
-                title=dict(
-                    text="Installed Capacities Over Time",
-                    font=dict(size=18, family="Arial", color="#333"),
-                    x=0,
-                    xanchor="left"
-                ),
-                font=dict(size=12, family="Arial", color="#333"),
-                paper_bgcolor='#f4f4f4',
-                plot_bgcolor='#f4f4f4',
-                hovermode="closest",
-                margin=dict(l=40, r=40, t=80, b=50),
-                showlegend=False
-            )
-        
-            # Achsenstyling + X-Achsen auf Jahresbeschriftung setzen
-            for i in range(1, plot_idx + 1):
-                suffix = "" if i == 1 else str(i)
-                xaxis = getattr(fig.layout, f"xaxis{suffix}", None)
-                yaxis = getattr(fig.layout, f"yaxis{suffix}", None)
-            
-                if xaxis:
-                    # Tick-Labels auf echte Jahre begrenzen
-                    subplot_years = [y for tech, year_cols in sorted(tech_time_map.items())
-                                     for y, _ in year_cols][:1]  # fallback bei Fehler
-                    if plot_idx >= i:
-                        tech_idx = i - 1
-                        subplot_tech = list(sorted(tech_time_map.keys()))[tech_idx]
-                        subplot_years = [y for y, _ in sorted(tech_time_map[subplot_tech])]
-            
-                    xaxis.update(
-                        tickvals=subplot_years,
-                        ticktext=[str(y) for y in subplot_years],
-                        showgrid=True,
-                        gridcolor="rgba(0,0,0,0.1)",
-                        mirror=True,
-                        showline=True,
-                        linecolor="rgba(0,0,0,0.3)",
-                        linewidth=1,
-                        ticks="outside"
-                    )
-                if yaxis:
-                    yaxis.update(
-                        showgrid=True,
-                        gridcolor="rgba(0,0,0,0.1)",
-                        mirror=True,
-                        showline=True,
-                        linecolor="rgba(0,0,0,0.3)",
-                        linewidth=1,
-                        ticks="outside"
-                    )
-        
-            # Annotation-Titel etwas nach oben verschieben
-            for ann in fig['layout']['annotations']:
-                ann['y'] += 0.01
-                ann['font'] = dict(size=12, color='#222', family="Arial")
-        
-            # Anzeigen
-            st.plotly_chart(fig, use_container_width=True)
         else:
-            plot_idx = 0
-            for tech, year_cols in sorted(tech_time_map.items()):
-                if len(year_cols) < 1:
-                    continue
-            
-                years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                years = [y for y, _ in years_cols_sorted]
-                cols = [col for _, col in years_cols_sorted]
-            
-                values_matrix = vertex_df.loc[plot_indices, cols]
-                if values_matrix.dropna(how='all').empty:
-                    continue
-            
-                # ==== Konvexe Kombinationen einbeziehen ====
-                if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-                    convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                    if all(col in filtered_convex_data.columns for col in convex_cols):
-                        convex_matrix = filtered_convex_data[convex_cols]
-                        values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
-            
-                ax = axes[plot_idx]
-                ax.set_facecolor('#f0f0f0')
-            
-                # ==== Violinplot-Daten ====
-                data = [values_matrix[col].dropna().values for col in cols]
-            
-                if all(len(d) > 0 for d in data):
-                    ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
-            
-                    # ==== Selektierter Vertex als Punkt ====
-                    selected_vertex = st.session_state.get("selected_vertex", None)
-                    if selected_vertex is not None and selected_vertex in vertex_df.index:
-                        try:
-                            highlight_vals = vertex_df.loc[selected_vertex, cols]
-                            for y, val in zip(years, highlight_vals):
-                                if pd.notnull(val):
-                                    show_label = plot_idx == 0  # Nur erstes Subplot zeigt Legenden-Eintrag
-                                    ax.scatter(y, val, color="black", s=60, zorder=3,
-                                               label="Selected Vertex" if show_label else None)
-                        except Exception as e:
-                            st.warning(f"❌ Error drawing highlighted vertex for {tech}: {e}")
-            
-                # ==== Ursprünglicher Wertebereich (rote Fläche) ====
-                if st.session_state.get('show_original_ranges', False):
-                    try:
-                        original_matrix = vertex_df.loc[tech_data.index, cols]
-                    except Exception:
-                        original_matrix = vertex_df[cols]
-            
-                    original_min = original_matrix.min()
-                    original_max = original_matrix.max()
-            
-                    for y, omin, omax in zip(years, original_min, original_max):
-                        if not np.isnan(omin) and not np.isnan(omax):
-                            ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
-            
-                ax.set_title(tech.replace('_', ' ').title())
-                ax.set_xticks(years)
-                ax.set_xticklabels([str(y) for y in years])
-            
-                if plot_idx >= (n_rows - 1) * st.session_state.get("n_cols_plots", 3):
-                    ax.set_xlabel("Year")
-                if plot_idx % st.session_state.get("n_cols_plots", 3) == 0:
-                    ax.set_ylabel("Installed Capacity")
-                ax.grid(True, linestyle="--", alpha=0.4)
-            
-                if plot_idx == 0:
-                    handles_labels = ax.get_legend_handles_labels()
-            
-                plot_idx += 1
-            
-            # ==== Leere Achsen entfernen ====
-            for i in range(plot_idx, len(axes)):
-                if axes[i] in fig.axes:
-                    fig.delaxes(axes[i])
-            
-            # ==== Legende ====
-            if plot_idx > 0:
-                legend_items = []
-            
-                # Konvexe Daten-Linie
-                combined_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-                legend_items.append(combined_line)
-            
-                # Highlight-Punkt, falls vorhanden
-                if st.session_state.get("selected_vertex") is not None:
-                    highlight_point = mlines.Line2D([], [], color="black", marker='o', linestyle='None',
-                                                    markersize=8, label="Selected Vertex")
-                    legend_items.append(highlight_point)
-            
-                fig.legend(
-                    legend_items,
-                    [line.get_label() for line in legend_items],
-                    loc='upper center',
-                    bbox_to_anchor=(0.5, 1.2 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0)),
-                    ncol=1,
-                    frameon=True,
-                    fancybox=True,
-                    fontsize=14
+            try:
+                raw_plot_indices = select_representative_vertices_by_kmeans(
+                    df=vertex_df,
+                    cols=cols,
+                    n_vertices=st.session_state["max_plot_vertices"],
+                    index_subset=current_indices
                 )
-            
-                fig.subplots_adjust(
-                    top=1.14 - 0.02 * max(st.session_state.get("n_cols_plots", 3) - 2, 0),
-                    hspace=0.3,
-                    wspace=0.18
-                )
-            
-            st.pyplot(fig)
+                plot_indices = clean_plot_indices(raw_plot_indices)
+                if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
+                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                else:
+                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+            except Exception as e:
+                st.exception(f"❌ Error selecting vertices using KMeans: {e}")
+                st.stop()
+                
+        # === Plot-Erstellung
+        if st.session_state.get("plot_type_selector2") == "Line Plot":
+            st.markdown("### Installed Capacities Over Time")
+        
+            plot_operational_variables_over_time(
+                vertex_df=vertex_df,
+                current_indices=current_indices,
+                plot_indices_val=plot_indices,
+                time_column_map=source_map,
+                selected_vertex=st.session_state.get("selected_vertex"),
+                n_cols_val=st.session_state.get("n_cols_plots", 3),
+                show_convex=st.session_state["show_convex"],
+                st_convex =st.session_state["convex_combinations"],
+                filtered_convex_data=filtered_convex_data,
+                show_original_ranges=st.session_state.get("show_original_ranges", False),
+                apply_prefix=False,
+                plot_title="Installed Capacities Over Time"
+            )
+
+        else:
+            plot_violin_values(
+                vertex_df,
+                valid_techs_all,
+                source_map,
+                plot_indices,
+                current_indices,
+                filtered_convex_data,
+                MAA_PREFIX="MAA_"  # optional
+            )
         # === Dichteplots: Kernel Density Estimation über Zeitverläufe ===
         
         
