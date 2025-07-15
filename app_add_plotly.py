@@ -193,6 +193,8 @@ def plot_violin_values(
     for tech in valid_techs_value:
         year_cols = value_time_map[tech]
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+        st.write(year_cols)
+        st.write(years_cols_sorted)
         years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
         cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
         
