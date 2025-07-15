@@ -1173,23 +1173,24 @@ with tab1:
         
         with col2:        
             if MAA_PREFIX == "VALUE_":
+                
+                st.markdown("### Operational Variables Over Time")
+                if len(current_indices) > st.session_state["max_plot_vertices"]:
+                    plot_indices_val = select_representative_vertices_by_kmeans(
+                        df=vertex_df,
+                        cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
+                        n_vertices=st.session_state["max_plot_vertices"],
+                        index_subset=current_indices
+                    )
+                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                else:
+                    plot_indices_val = current_indices
+                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+                value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+                
+                valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
                 if st.session_state.get("plot_type_selector2") == "Line Plot":
-                    st.markdown("### Operational Variables Over Time")
-                    if len(current_indices) > st.session_state["max_plot_vertices"]:
-                        plot_indices_val = select_representative_vertices_by_kmeans(
-                            df=vertex_df,
-                            cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
-                            n_vertices=st.session_state["max_plot_vertices"],
-                            index_subset=current_indices
-                        )
-                        st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
-                    else:
-                        plot_indices_val = current_indices
-                        st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                    value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-                    
-                    valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
-                    
+                                        
                     plot_operational_variables_over_time(
                         vertex_df=vertex_df,
                         current_indices=current_indices,
