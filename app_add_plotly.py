@@ -1309,6 +1309,15 @@ with tab1:
                 )
 
             else:
+                plot_violin_values(
+                    vertex_df,
+                    valid_techs_all,
+                    source_map,
+                    plot_indices,
+                    current_indices,
+                    filtered_convex_data,
+                    MAA_PREFIX="MAA_"  # optional
+                )
                 n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
                 n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
                 plot_width_per_col = 6
