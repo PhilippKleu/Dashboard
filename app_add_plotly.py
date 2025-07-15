@@ -898,7 +898,7 @@ with tab1:
                             ), row=row, col=col)
                 
                         # Add convex combinations
-                        if show_convex and filtered_convex_data is not None:
+                        if show_convex and not filtered_convex_data.empty:
                             if all(col in filtered_convex_data.columns for col in cols):
                                 for i in filtered_convex_data.index:
                                     vals = filtered_convex_data.loc[i, cols].values
