@@ -377,9 +377,10 @@ def plot_operational_variables_over_time(
             ), row=row, col=col)
 
         # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
+        st.write(filtered_convex_data)
         if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
             convex_cols = [f"{maa_prefix}{tech}_{year}" for year in years] if apply_prefix else [f"{tech}_{year}" for year in years]
-
+            st.write(convex_cols)
             if all(col in filtered_convex_data.columns for col in convex_cols):
                 for i in filtered_convex_data.index:
                     vals = filtered_convex_data.loc[i, convex_cols].values
