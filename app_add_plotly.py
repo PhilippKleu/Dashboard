@@ -167,6 +167,112 @@ def select_and_show_vertex_info(plot_indices, current_indices, vertex_df, tech_d
 
     return selected_vertex
 
+def plot_density_contours(
+    tech_time_map,
+    vertex_df,
+    current_indices,
+    num_interpolated_points=3,
+    grid_density=50,
+    color_levels=10,
+    max_vertices_for_density=250,
+):
+    n_cols = st.session_state.get("n_cols_plots", 3)
+    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+    n_rows = ceil(n_techs / n_cols)
+    plot_width_per_col = 6
+    plot_height_per_row = 3.5
+    fig_width = plot_width_per_col * n_cols
+    fig_height = plot_height_per_row * n_rows
+
+    fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(fig_width, fig_height))
+    axs = axs.flatten()
+    fig_dichte.patch.set_facecolor('#f4f4f4')
+
+    plot_indices = st.session_state.get("plot_indices", current_indices)
+    df_base = vertex_df.loc[plot_indices]
+    if len(df_base) > max_vertices_for_density:
+        df_base = df_base.sample(n=max_vertices_for_density, random_state=42)
+
+    i = 0
+    for tech, year_cols in sorted(tech_time_map.items()):
+        if len(year_cols) < 1:
+            continue
+
+        year_cols = sorted(year_cols, key=lambda x: x[0])
+        years = [y for y, _ in year_cols]
+        cols = [col for _, col in year_cols]
+
+        if not all(c in df_base.columns for c in cols):
+            axs[i].set_visible(False)
+            i += 1
+            continue
+
+        df = df_base[cols]
+        if df.dropna(how='all').empty:
+            axs[i].set_visible(False)
+            i += 1
+            continue
+
+        axs[i].set_facecolor('#f0f0f0')
+
+        x_vals = np.array(years)
+        all_points = []
+        for row in df.itertuples(index=False):
+            y_vals = np.array(row)
+            if np.isnan(y_vals).any():
+                continue
+            for j in range(len(x_vals) - 1):
+                x_interp = np.linspace(x_vals[j], x_vals[j + 1], num_interpolated_points)
+                y_interp = np.linspace(y_vals[j], y_vals[j + 1], num_interpolated_points)
+                all_points.extend(zip(x_interp, y_interp))
+
+        if not all_points:
+            axs[i].set_visible(False)
+            i += 1
+            continue
+
+        X, Y = np.meshgrid(
+            np.linspace(min(years), max(years), grid_density),
+            np.linspace(-0.5, df.max().max() + 0.5, grid_density)
+        )
+
+        Z = np.reshape(
+            gaussian_kde(np.array(all_points).T, bw_method=0.1)(np.vstack([X.ravel(), Y.ravel()])),
+            X.shape
+        )
+
+        Z_masked = np.where((Y >= -0.5) & (Y <= df.max().max() + 0.5), Z, np.nan)
+
+        contour = axs[i].contourf(X, Y, Z_masked, levels=color_levels, cmap="inferno", extend="both")
+        axs[i].set_facecolor("white")
+        axs[i].set_title(tech.replace("_", " ").title())
+        axs[i].set_xlabel("Year")
+        axs[i].set_ylabel("Installed Capacity")
+        axs[i].set_ylim(-1, df.max().max() * 1.05)
+
+        min_vals = df.min()
+        max_vals = df.max()
+        axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
+        axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
+
+        cbar = plt.colorbar(contour, ax=axs[i], label="Density")
+        cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
+        cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
+
+        i += 1
+
+    for j in range(i, len(axs)):
+        fig_dichte.delaxes(axs[j])
+
+    fig_dichte.subplots_adjust(
+        top=0.95,
+        bottom=0.07,
+        hspace=0.44,
+        wspace=0.3
+    )
+
+    st.pyplot(fig_dichte)
+
 def plot_violin_values(
     vertex_df,
     valid_techs_value,
@@ -1327,106 +1433,11 @@ with tab1:
             
             if st.session_state.get("show_density"):
                 st.divider()
-                num_interpolated_points = 3
-                grid_density = 50
-                color_levels = 10
-                max_vertices_for_density = 250
-            
-                n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-                n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
-                plot_width_per_col = 6
-                plot_height_per_row = 3.5
-                fig_width = plot_width_per_col * st.session_state.get("n_cols_plots", 3)
-                fig_height = plot_height_per_row * n_rows
-            
-                fig_dichte, axs = plt.subplots(n_rows, st.session_state.get("n_cols_plots", 3), figsize=(fig_width, fig_height))
-                axs = axs.flatten()
-                fig_dichte.patch.set_facecolor('#f4f4f4')
-            
-                # Gleiche Datenbasis wie oben
-                plot_indices = st.session_state.get("plot_indices", current_indices)
-                df_base = vertex_df.loc[plot_indices]
-                if len(df_base) > max_vertices_for_density:
-                    df_base = df_base.sample(n=max_vertices_for_density, random_state=42)
-            
-                i = 0  # manueller Index für Achsen
-                for tech, year_cols in sorted(tech_time_map.items()):
-                    if len(year_cols) < 1:
-                        continue
-            
-                    year_cols = sorted(year_cols, key=lambda x: x[0])
-                    years = [y for y, _ in year_cols]
-                    cols = [col for _, col in year_cols]
-            
-                    if not all(c in df_base.columns for c in cols):
-                        axs[i].set_visible(False)
-                        i += 1
-                        continue
-            
-                    df = df_base[cols]
-                    if df.dropna(how='all').empty:
-                        axs[i].set_visible(False)
-                        i += 1
-                        continue
-            
-                    axs[i].set_facecolor('#f0f0f0')
-            
-                    x_vals = np.array(years)
-                    all_points = []
-                    for row in df.itertuples(index=False):
-                        y_vals = np.array(row)
-                        if np.isnan(y_vals).any():
-                            continue
-                        for j in range(len(x_vals) - 1):
-                            x_interp = np.linspace(x_vals[j], x_vals[j + 1], num_interpolated_points)
-                            y_interp = np.linspace(y_vals[j], y_vals[j + 1], num_interpolated_points)
-                            all_points.extend(zip(x_interp, y_interp))
-            
-                    if not all_points:
-                        axs[i].set_visible(False)
-                        i += 1
-                        continue
-            
-                    X, Y = np.meshgrid(
-                        np.linspace(min(years), max(years), grid_density),
-                        np.linspace(-0.5, df.max().max() + 0.5, grid_density)
-                    )
-            
-                    Z = np.reshape(
-                        gaussian_kde(np.array(all_points).T, bw_method=0.1)(np.vstack([X.ravel(), Y.ravel()])),
-                        X.shape
-                    )
-            
-                    Z_masked = np.where((Y >= -0.5) & (Y <= df.max().max() + 0.5), Z, np.nan)
-            
-                    contour = axs[i].contourf(X, Y, Z_masked, levels=color_levels, cmap="inferno", extend="both")
-                    axs[i].set_facecolor("white")
-                    axs[i].set_title(tech.replace("_", " ").title())
-                    axs[i].set_xlabel("Year")
-                    axs[i].set_ylabel("Installed Capacity")
-                    axs[i].set_ylim(-1, df.max().max() * 1.05)
-            
-                    min_vals = df.min()
-                    max_vals = df.max()
-                    axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
-                    axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
-            
-                    cbar = plt.colorbar(contour, ax=axs[i], label="Density")
-                    cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
-                    cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
-            
-                    i += 1
-            
-                for j in range(i, len(axs)):
-                    fig_dichte.delaxes(axs[j])
-            
-                fig_dichte.subplots_adjust(
-                    top=0.95,
-                    bottom=0.07,
-                    hspace=0.44,
-                    wspace=0.3
+                plot_density_contours(
+                    tech_time_map=tech_time_map,
+                    vertex_df=vertex_df,
+                    current_indices=current_indices
                 )
-                st.pyplot(fig_dichte)
                 
         
     else:
@@ -1850,93 +1861,11 @@ with tab1:
         
         if st.session_state.get("show_density"):
             st.divider()
-            num_interpolated_points = 3
-            grid_density = 50
-            color_levels = 10
-            max_vertices_for_density = 250
-    
-            techs_with_time_data = [tech for tech in tech_time_map if len(tech_time_map[tech]) > 1]
-            n_techs = len(techs_with_time_data)
-            n_cols = 2
-            n_rows = ceil(n_techs / n_cols)
-    
-            fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(13, 4 * n_rows))
-            axs = axs.flatten()
-            fig_dichte.patch.set_facecolor('#f4f4f4')
-    
-            df_base = vertex_df.loc[current_indices]
-            if len(df_base) > max_vertices_for_density:
-                df_base = df_base.sample(n=max_vertices_for_density, random_state=42)
-    
-            for i, tech in enumerate(techs_with_time_data):
-                year_cols = sorted(tech_time_map[tech], key=lambda x: x[0])
-                years = [y for y, _ in year_cols]
-                cols = [col for _, col in year_cols]
-    
-                if not all(c in df_base.columns for c in cols):
-                    axs[i].set_visible(False)
-                    continue
-    
-                df = df_base[cols]
-                if df.dropna(how='all').empty:
-                    axs[i].set_visible(False)
-                    continue
-    
-                axs[i].set_facecolor('#f0f0f0')
-    
-                x_vals = np.array(years)
-                all_points = []
-                for row in df.itertuples(index=False):
-                    y_vals = np.array(row)
-                    if np.isnan(y_vals).any():
-                        continue
-                    for j in range(len(x_vals) - 1):
-                        x_interp = np.linspace(x_vals[j], x_vals[j + 1], num_interpolated_points)
-                        y_interp = np.linspace(y_vals[j], y_vals[j + 1], num_interpolated_points)
-                        all_points.extend(zip(x_interp, y_interp))
-    
-                if not all_points:
-                    axs[i].set_visible(False)
-                    continue
-    
-                X, Y = np.meshgrid(
-                    np.linspace(min(years), max(years), grid_density),
-                    np.linspace(-0.5, df.max().max() + 0.5, grid_density)
-                )
-    
-                Z = np.reshape(
-                    gaussian_kde(np.array(all_points).T, bw_method=0.1)(np.vstack([X.ravel(), Y.ravel()])),
-                    X.shape
-                )
-    
-                Z_masked = np.where((Y >= -0.5) & (Y <= df.max().max() + 0.5), Z, np.nan)
-    
-                contour = axs[i].contourf(X, Y, Z_masked, levels=color_levels, cmap="inferno", extend="both")
-                axs[i].set_facecolor("white")
-                axs[i].set_title(tech.replace("_", " ").title())
-                axs[i].set_xlabel("Year")
-                axs[i].set_ylabel("Installed Capacity")
-                axs[i].set_ylim(-1, df.max().max() * 1.05)
-    
-                min_vals = df.min()
-                max_vals = df.max()
-                axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
-                axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
-    
-                cbar = plt.colorbar(contour, ax=axs[i], label="Density")
-                cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
-                cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
-    
-            for j in range(i + 1, len(axs)):
-                fig_dichte.delaxes(axs[j])
-    
-            fig_dichte.subplots_adjust(
-                top=0.95,
-                bottom=0.07,
-                hspace=0.44,
-                wspace=0.3
+            plot_density_contours(
+                tech_time_map=tech_time_map,
+                vertex_df=vertex_df,
+                current_indices=current_indices
             )
-            st.pyplot(fig_dichte)
            
         
     st.divider()
