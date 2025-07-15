@@ -976,13 +976,12 @@ with tab1:
                         margin=dict(l=40, r=40, t=80, b=50),
                         showlegend=False
                     )
-                
-                    # Grid styling
+                    
                     for i in range(1, len(valid_techs_value) + 1):
                         suffix = "" if i == 1 else str(i)
                         xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
                         yaxis = getattr(fig_val.layout, f"yaxis{suffix}", None)
-                
+                    
                         if isinstance(xaxis, XAxis):
                             xaxis.update(
                                 showgrid=True,
@@ -1003,7 +1002,7 @@ with tab1:
                                 linewidth=1,
                                 ticks="outside"
                             )
-                
+                    
                     for ann in fig_val['layout']['annotations']:
                         ann['y'] += 0.01
                         ann['font'] = dict(size=12, color='#222', family="Arial")
