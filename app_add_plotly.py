@@ -1291,8 +1291,6 @@ with tab1:
                     st.exception(f"❌ Error selecting vertices using KMeans: {e}")
                     st.stop()
                     
-            
-            
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 st.markdown("### Installed Capacities Over Time")
