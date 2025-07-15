@@ -305,7 +305,7 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time"
-):   
+):
     valid_techs_value = sorted([tech for tech, v in time_column_map.items() if len(v) >= 1])
     n_techs_value = len(valid_techs_value)
     n_rows_val = ceil(n_techs_value / n_cols_val)
@@ -376,24 +376,27 @@ def plot_operational_variables_over_time(
                 showlegend=False
             ), row=row, col=col)
 
-        # Convex combinations
-        if show_convex and not filtered_convex_data.empty:
-            if all(col in filtered_convex_data.columns for col in cols):
+        # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
+        if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
+            convex_cols = [f"{maa_prefix}{tech}_{year}" for year in years] if apply_prefix else [f"{tech}_{year}" for year in years]
+
+            if all(col in filtered_convex_data.columns for col in convex_cols):
                 for i in filtered_convex_data.index:
-                    vals = filtered_convex_data.loc[i, cols].values
+                    vals = filtered_convex_data.loc[i, convex_cols].values
                     if not np.isnan(vals).all():
                         fig_val.add_trace(go.Scatter(
                             x=years,
                             y=vals,
                             mode=plot_mode,
-                            line=dict(color="rgba(255, 50, 50, 0.4)"),
+                            line=dict(color="rgba(255, 50, 50, 0.4)", width=1),
                             hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
                             showlegend=False
                         ), row=row, col=col)
             else:
-                st.write(f"⚠️ Convex data missing columns for {tech}: {cols}")
+                missing = [col for col in convex_cols if col not in filtered_convex_data.columns]
+                st.warning(f"⚠️ Convex data missing columns for {tech}: {missing}")
 
-        # Light blue area for current_indices (min/max)
+        # Min/Max Bereich für aktuelle Vertices
         try:
             min_vals = full_values_matrix.min()
             max_vals = full_values_matrix.max()
@@ -418,7 +421,7 @@ def plot_operational_variables_over_time(
         except Exception as e:
             st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-        # X-Axis ticks for single year
+        # X-Achse bei Ein-Jahres-Daten
         if len(years) == 1:
             fig_val.update_xaxes(
                 tickvals=[years[0]],
@@ -427,7 +430,7 @@ def plot_operational_variables_over_time(
                 col=col
             )
 
-        # Optional original range (red)
+        # Originalbereiche (rot)
         if show_original_ranges:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -471,7 +474,7 @@ def plot_operational_variables_over_time(
         showlegend=False
     )
 
-    # Axis styling
+    # Achsenstyling
     for i in range(1, len(valid_techs_value) + 1):
         suffix = "" if i == 1 else str(i)
         xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
