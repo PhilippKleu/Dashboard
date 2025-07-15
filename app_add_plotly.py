@@ -814,18 +814,11 @@ with tab1:
             
         
         with col2:
-            mpl.rcParams.update({
-                'axes.titlesize': 16,
-                'axes.labelsize': 14,
-                'xtick.labelsize': 12,
-                'ytick.labelsize': 12,
-                'legend.fontsize': 14,
-            })
-        
-            n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-            n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
-            plot_width_per_col = 6
-            plot_height_per_row = 3.5
+                  
+            #n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
+            #n_rows = ceil(n_techs / st.session_state.get("n_cols_plots", 3))
+            #plot_width_per_col = 6
+            #plot_height_per_row = 3.5
         
             if MAA_PREFIX == "VALUE_":
                 st.markdown("### Operational Variables Over Time")
