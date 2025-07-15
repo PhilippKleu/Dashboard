@@ -377,7 +377,7 @@ def plot_operational_variables_over_time(
             ), row=row, col=col)
 
         # Convex combinations
-        if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
+        if show_convex and not filtered_convex_data.empty:
             if all(col in filtered_convex_data.columns for col in cols):
                 for i in filtered_convex_data.index:
                     vals = filtered_convex_data.loc[i, cols].values
