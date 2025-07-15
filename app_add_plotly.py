@@ -202,7 +202,7 @@ def plot_violin_values(
         if not cols:
             continue
         
-        values_matrix = vertex_df.loc[plot_indices_val, cols]
+        values_matrix = vertex_df.loc[current_indices, cols]
         
         # === Konvexe Kombinationen ===
         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
@@ -236,7 +236,7 @@ def plot_violin_values(
         # === Originalbereich ===
         if st.session_state.get('show_original_ranges', False):
             try:
-                original_matrix = vertex_df.loc[current_indices, cols]
+                original_matrix = vertex_df.[cols]
             except Exception:
                 original_matrix = vertex_df[cols]
 
