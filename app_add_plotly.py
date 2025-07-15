@@ -385,6 +385,7 @@ def plot_operational_variables_over_time(
         st.write(st_convex)
         if show_convex and not st_convex.empty:
             if len(years) == 1:
+                st.write("hier1")
                 convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
                 st.write(convex_cols)
                 if convex_col in filtered_convex_data.columns:
@@ -398,6 +399,7 @@ def plot_operational_variables_over_time(
                         showlegend=False
                     ), row=row, col=col)
             else:
+                st.write("hier2")
                 convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
                 st.write(convex_cols)
                 if all(col in filtered_convex_data.columns for col in convex_cols):
