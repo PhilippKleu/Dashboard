@@ -378,7 +378,7 @@ def plot_operational_variables_over_time(
             ), row=row, col=col)
 
         # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
-        st.writer("NEW")
+        st.write("NEW")
         st.write("Filtered:")
         st.write(filtered_convex_data)
         st.write("Convex")
