@@ -188,7 +188,7 @@ def plot_violin_values(
     fig_val, axes_val = plt.subplots(n_rows_val, n_cols_val, figsize=(fig_width_val, fig_height_val))
     fig_val.patch.set_facecolor('#f4f4f4')
     axes_val = axes_val.flatten() if n_techs_value > 1 else [axes_val]
-    st.write(valid_techs_value)
+    
     plot_idx_val = 0
 
     
