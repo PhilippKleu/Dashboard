@@ -200,7 +200,7 @@ def plot_violin_values(
             continue
 
         values_matrix = vertex_df.loc[plot_indices_val, cols]
-
+        st.write(values_matrix)
         # === Konvexe Kombinationen ===
         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
             if all(col in filtered_convex_data.columns for col in cols):
