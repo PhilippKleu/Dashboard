@@ -376,7 +376,7 @@ st.title(" Technology Decision Tool")
 # === Excel-Datei Ladebereich via Upload ===
 DEFAULT_EXCEL_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/vertex_results_default.xlsx"
 
-@st.cache_data(show_spinner="📥 Lade Standard-Excel ...")
+@st.cache_data(show_spinner="📥 Load Default-Excel ...")
 def read_default_excel_from_url(url):
     response = requests.get(url)
     if response.status_code != 200:
