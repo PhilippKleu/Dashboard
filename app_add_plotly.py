@@ -1010,36 +1010,36 @@ with tab1:
         
         with col2:        
             if MAA_PREFIX == "VALUE_":
-                
-                st.markdown("### Operational Variables Over Time")
-                if len(current_indices) > st.session_state["max_plot_vertices"]:
-                    plot_indices_val = select_representative_vertices_by_kmeans(
-                        df=vertex_df,
-                        cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
-                        n_vertices=st.session_state["max_plot_vertices"],
-                        index_subset=current_indices
+                if st.session_state.get("plot_type_selector2") == "Line Plot":
+                    st.markdown("### Operational Variables Over Time")
+                    if len(current_indices) > st.session_state["max_plot_vertices"]:
+                        plot_indices_val = select_representative_vertices_by_kmeans(
+                            df=vertex_df,
+                            cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
+                            n_vertices=st.session_state["max_plot_vertices"],
+                            index_subset=current_indices
+                        )
+                        st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                    else:
+                        plot_indices_val = current_indices
+                        st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+                    value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+                    
+                    valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
+                    
+                    plot_operational_variables_over_time(
+                        vertex_df=vertex_df,
+                        current_indices=current_indices,
+                        plot_indices_val=plot_indices_val,
+                        value_time_map=value_time_map,
+                        selected_vertex=st.session_state.get("selected_vertex"),
+                        n_cols_val=st.session_state.get("n_cols_plots", 3),
+                        show_convex=st.session_state["show_convex"],
+                        filtered_convex_data=st.session_state["convex_combinations"],
+                        show_original_ranges=st.session_state["show_original_ranges"],
+                        max_plot_vertices=st.session_state["max_plot_vertices"],
+                        maa_prefix=MAA_PREFIX
                     )
-                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
-                else:
-                    plot_indices_val = current_indices
-                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-                
-                valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
-                
-                plot_operational_variables_over_time(
-                    vertex_df=vertex_df,
-                    current_indices=current_indices,
-                    plot_indices_val=plot_indices_val,
-                    value_time_map=value_time_map,
-                    selected_vertex=st.session_state.get("selected_vertex"),
-                    n_cols_val=st.session_state.get("n_cols_plots", 3),
-                    show_convex=st.session_state["show_convex"],
-                    filtered_convex_data=st.session_state["convex_combinations"],
-                    show_original_ranges=st.session_state["show_original_ranges"],
-                    max_plot_vertices=st.session_state["max_plot_vertices"],
-                    maa_prefix=MAA_PREFIX
-                )
 
 
                 else:
