@@ -383,6 +383,8 @@ def plot_operational_variables_over_time(
         st.write(filtered_convex_data)
         st.write("Convex")
         st.write(st_convex)
+        st.write(show_convex)
+        st.write(st_convex.empty)
         if show_convex and not st_convex.empty:
             if len(years) == 1:
                 st.write("hier1")
