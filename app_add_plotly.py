@@ -247,7 +247,7 @@ def plot_operational_variables_over_time(
             ), row=row, col=col)
 
         # Add convex combinations
-        if show_convex and not filtered_convex_data.empty:
+        if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
             if all(col in filtered_convex_data.columns for col in cols):
                 for i in filtered_convex_data.index:
                     vals = filtered_convex_data.loc[i, cols].values
@@ -274,7 +274,17 @@ def plot_operational_variables_over_time(
             showlegend=False
         ), row=row, col=col)
 
-        # Add original range
+        # Ensure x-axis is correct even without original ranges
+        if len(years) == 1:
+            year = years[0]
+            fig_val.update_xaxes(
+                tickvals=[year],
+                ticktext=[str(year)],
+                row=row,
+                col=col
+            )
+
+        # Add original range if enabled
         if show_original_ranges:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -282,15 +292,8 @@ def plot_operational_variables_over_time(
                 max_vals = original_matrix.max()
 
                 if len(years) == 1:
-                    year = years[0]
                     x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
                     y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                    fig_val.update_xaxes(
-                        tickvals=[year],
-                        ticktext=[str(year)],
-                        row=row,
-                        col=col
-                    )
                 else:
                     x_vals = list(years) + list(reversed(years))
                     y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
@@ -325,12 +328,13 @@ def plot_operational_variables_over_time(
         margin=dict(l=40, r=40, t=80, b=50),
         showlegend=False
     )
-    
+
+    # Grid styling
     for i in range(1, len(valid_techs_value) + 1):
         suffix = "" if i == 1 else str(i)
         xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
         yaxis = getattr(fig_val.layout, f"yaxis{suffix}", None)
-    
+
         if isinstance(xaxis, XAxis):
             xaxis.update(
                 showgrid=True,
@@ -351,7 +355,7 @@ def plot_operational_variables_over_time(
                 linewidth=1,
                 ticks="outside"
             )
-    
+
     for ann in fig_val['layout']['annotations']:
         ann['y'] += 0.01
         ann['font'] = dict(size=12, color='#222', family="Arial")
@@ -1006,10 +1010,6 @@ with tab1:
         
         with col2:        
             if MAA_PREFIX == "VALUE_":
-                #####################################################
-                
-
-
                 
                 st.markdown("### Operational Variables Over Time")
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
@@ -1041,215 +1041,6 @@ with tab1:
                     maa_prefix=MAA_PREFIX
                 )
 
-
-
-
-
-                #######################################################
-                
-            
-                value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-                
-                valid_techs_value = sorted([tech for tech, v in value_time_map.items() if len(v) >= 1])
-                
-                
-                n_techs_value = len(valid_techs_value)
-                n_cols_val = st.session_state.get("n_cols_plots", 3)
-                n_rows_val = ceil(n_techs_value / n_cols_val)
-                
-                fig_width_val = 9 * (1 / n_cols_val) * n_cols_val
-                fig_height_val = fig_width_val
-                
-                if len(current_indices) > st.session_state["max_plot_vertices"]:
-                    plot_indices_val = select_representative_vertices_by_kmeans(
-                        df=vertex_df,
-                        cols=list(cols),
-                        n_vertices=st.session_state["max_plot_vertices"],
-                        index_subset=current_indices
-                    )
-                   
-                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
-                else:
-                    st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-                    plot_indices_val = current_indices
-                
-                selected_vertex = st.session_state.get("selected_vertex")
-                if st.session_state.get("plot_type_selector2") == "Line Plot":
-                    fig_val = make_subplots(
-                        rows=n_rows_val,
-                        cols=n_cols_val,
-                        subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs_value],
-                        horizontal_spacing=0.08,
-                        vertical_spacing=0.09
-                    )
-                    
-                    for idx, tech in enumerate(valid_techs_value):
-                        year_cols = value_time_map[tech]
-                        if not year_cols:
-                            st.write(f"⚠️ No columns found for technology: {tech}")
-                            continue
-                    
-                        years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                        years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-                        cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-                        plot_mode = 'markers' if len(years) == 1 else 'lines'
-                    
-                       
-                    
-                        if not cols:
-                            st.write(f"🚫 Skipping technology {tech} – no matching columns found.")
-                            continue
-                    
-                        row, col = divmod(idx, n_cols_val)
-                        row += 1
-                        col += 1
-                    
-                        full_values_matrix = vertex_df.loc[current_indices, cols]
-                        values_matrix = vertex_df.loc[plot_indices_val, cols]
-                    
-                        if values_matrix.dropna(how='all').empty:
-                            st.write(f"⚠️ Empty values for {tech}, skipping.")
-                            continue
-                    
-                        
-                    
-                        for i in values_matrix.index:
-                            values = values_matrix.loc[i].values
-                            if len(values) != len(years):
-                                st.write(f"⚠️ Row {i}: Mismatch between number of years and values ({len(years)} vs {len(values)})")
-                                continue
-                    
-                            is_sel = selected_vertex is not None and i == selected_vertex
-                    
-                            hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                                [f"{year}: {val:.2f}" for year, val in zip(years, values)]
-                            )
-                    
-                            fig_val.add_trace(go.Scatter(
-                                x=years,
-                                y=values,
-                                mode=plot_mode,
-                                line=dict(
-                                    color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
-                                    width=4 if is_sel else 1
-                                ),
-                                text=[hover_text] * len(years),
-                                hoverinfo='text',
-                                showlegend=False
-                            ), row=row, col=col)
-                    
-                        if st.session_state["show_convex"] and not st.session_state["convex_combinations"].empty:
-                            if all(col in filtered_convex_data.columns for col in cols):
-                                
-                                for i in filtered_convex_data.index:
-                                    vals = filtered_convex_data.loc[i, cols].values
-                                    if not np.isnan(vals).all():
-                                        fig_val.add_trace(go.Scatter(
-                                            x=years,
-                                            y=vals,
-                                            mode=plot_mode,
-                                            line=dict(color="rgba(255, 50, 50, 0.4)"),
-                                            hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
-                                            showlegend=False
-                                        ), row=row, col=col)
-                            else:
-                                st.write(f"⚠️ Convex data missing columns for {tech}: {cols}")
-                    
-                        fig_val.add_trace(go.Scatter(
-                            x=list(years) + list(reversed(years)),
-                            y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
-                            fill='toself',
-                            fillcolor="rgba(26, 102, 204, 0.15)",
-                            line=dict(color='rgba(255,255,255,0)'),
-                            hoverinfo='skip',
-                            showlegend=False
-                        ), row=row, col=col)
-                    
-                        if st.session_state["show_original_ranges"]:
-                            try:                    
-                                original_matrix = vertex_df.loc[current_indices, cols]
-                                                    
-                                min_vals = original_matrix.min()
-                                max_vals = original_matrix.max()
-                        
-                                if len(years) == 1:
-                                    # Nur ein Jahr vorhanden → künstlich verbreitern für sichtbare Fläche
-                                    year = years[0]
-                                    x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
-                                    y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                        
-                                    # Setze Tick-Position manuell zurück auf den echten Wert
-                                    fig_val.update_xaxes(
-                                        tickvals=[year],
-                                        ticktext=[str(year)],
-                                        row=row,
-                                        col=col
-                                    )
-                                else:
-                                    x_vals = list(years) + list(reversed(years))
-                                    y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-                        
-                                fig_val.add_trace(go.Scatter(
-                                    x=x_vals,
-                                    y=y_vals,
-                                    fill='toself',
-                                    fillcolor="rgba(255, 0, 0, 0.08)",
-                                    line=dict(color='rgba(255,255,255,0)'),
-                                    hoverinfo='skip',
-                                    showlegend=False
-                                ), row=row, col=col)
-                        
-                            except Exception as e:
-                                st.write(f"❌ Error displaying original range for {tech}: {e}")
-                    
-                    fig_val.update_layout(
-                        height=fig_height_val * 100,
-                        width=fig_width_val * 100,
-                        title=dict(
-                            text="Operational Variables Over Time",
-                            font=dict(size=18, family="Arial", color="#333"),
-                            x=0,
-                            xanchor="left"
-                        ),
-                        font=dict(size=12, family="Arial", color="#333"),
-                        paper_bgcolor='#f4f4f4',
-                        plot_bgcolor='#f4f4f4',
-                        hovermode="closest",
-                        margin=dict(l=40, r=40, t=80, b=50),
-                        showlegend=False
-                    )
-                    
-                    for i in range(1, len(valid_techs_value) + 1):
-                        suffix = "" if i == 1 else str(i)
-                        xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
-                        yaxis = getattr(fig_val.layout, f"yaxis{suffix}", None)
-                    
-                        if isinstance(xaxis, XAxis):
-                            xaxis.update(
-                                showgrid=True,
-                                gridcolor="rgba(0,0,0,0.1)",
-                                mirror=True,
-                                showline=True,
-                                linecolor="rgba(0,0,0,0.3)",
-                                linewidth=1,
-                                ticks="outside"
-                            )
-                        if isinstance(yaxis, YAxis):
-                            yaxis.update(
-                                showgrid=True,
-                                gridcolor="rgba(0,0,0,0.1)",
-                                mirror=True,
-                                showline=True,
-                                linecolor="rgba(0,0,0,0.3)",
-                                linewidth=1,
-                                ticks="outside"
-                            )
-                    
-                    for ann in fig_val['layout']['annotations']:
-                        ann['y'] += 0.01
-                        ann['font'] = dict(size=12, color='#222', family="Arial")
-                    
-                    st.plotly_chart(fig_val, use_container_width=True)
 
                 else:
                     n_techs_value = len(valid_techs_value)
