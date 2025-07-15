@@ -195,10 +195,10 @@ def plot_violin_values(
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
         years = [y for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
         cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-
+        
         if not cols:
             continue
-
+        st.write(cols)
         values_matrix = vertex_df.loc[plot_indices_val, cols]
         st.write(values_matrix)
         # === Konvexe Kombinationen ===
