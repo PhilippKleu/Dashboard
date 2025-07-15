@@ -221,6 +221,7 @@ def plot_operational_variables_over_time(
             st.write(f"⚠️ Empty values for {tech}, skipping.")
             continue
 
+        # Linien für jede Vertex
         for i in values_matrix.index:
             values = values_matrix.loc[i].values
             if len(values) != len(years):
@@ -246,7 +247,7 @@ def plot_operational_variables_over_time(
                 showlegend=False
             ), row=row, col=col)
 
-        # Add convex combinations
+        # Convex combinations
         if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
             if all(col in filtered_convex_data.columns for col in cols):
                 for i in filtered_convex_data.index:
@@ -263,28 +264,41 @@ def plot_operational_variables_over_time(
             else:
                 st.write(f"⚠️ Convex data missing columns for {tech}: {cols}")
 
-        # Add background fill
-        fig_val.add_trace(go.Scatter(
-            x=list(years) + list(reversed(years)),
-            y=list(full_values_matrix.min()) + list(full_values_matrix.max())[::-1],
-            fill='toself',
-            fillcolor="rgba(26, 102, 204, 0.15)",
-            line=dict(color='rgba(255,255,255,0)'),
-            hoverinfo='skip',
-            showlegend=False
-        ), row=row, col=col)
+        # Hintergrundbereich basierend auf current_indices (hellblau)
+        try:
+            min_vals = full_values_matrix.min()
+            max_vals = full_values_matrix.max()
 
-        # Ensure x-axis is correct even without original ranges
+            if len(years) == 1:
+                year = years[0]
+                x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
+            else:
+                x_vals = list(years) + list(reversed(years))
+                y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
+
+            fig_val.add_trace(go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                fill='toself',
+                fillcolor="rgba(26, 102, 204, 0.15)",
+                line=dict(color='rgba(255,255,255,0)'),
+                hoverinfo='skip',
+                showlegend=False
+            ), row=row, col=col)
+        except Exception as e:
+            st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
+
+        # Bei nur einem Jahr: X-Achse korrekt beschriften
         if len(years) == 1:
-            year = years[0]
             fig_val.update_xaxes(
-                tickvals=[year],
-                ticktext=[str(year)],
+                tickvals=[years[0]],
+                ticktext=[str(years[0])],
                 row=row,
                 col=col
             )
 
-        # Add original range if enabled
+        # Originalbereich (optional, rot)
         if show_original_ranges:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -292,7 +306,7 @@ def plot_operational_variables_over_time(
                 max_vals = original_matrix.max()
 
                 if len(years) == 1:
-                    x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
+                    x_vals = [years[0] - 0.25, years[0] + 0.25, years[0] + 0.25, years[0] - 0.25]
                     y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
                 else:
                     x_vals = list(years) + list(reversed(years))
@@ -307,11 +321,10 @@ def plot_operational_variables_over_time(
                     hoverinfo='skip',
                     showlegend=False
                 ), row=row, col=col)
-
             except Exception as e:
                 st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-    # Layout and styling
+    # Layout & Styling
     fig_val.update_layout(
         height=fig_height_val * 100,
         width=fig_width_val * 100,
@@ -329,7 +342,7 @@ def plot_operational_variables_over_time(
         showlegend=False
     )
 
-    # Grid styling
+    # Achsenstyling
     for i in range(1, len(valid_techs_value) + 1):
         suffix = "" if i == 1 else str(i)
         xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
@@ -356,6 +369,7 @@ def plot_operational_variables_over_time(
                 ticks="outside"
             )
 
+    # Subplot-Überschriften etwas anheben
     for ann in fig_val['layout']['annotations']:
         ann['y'] += 0.01
         ann['font'] = dict(size=12, color='#222', family="Arial")
