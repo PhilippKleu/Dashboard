@@ -299,6 +299,7 @@ def plot_operational_variables_over_time(
     selected_vertex,
     n_cols_val=3,
     show_convex=False,
+    st_convex,
     filtered_convex_data=None,
     show_original_ranges=False,
     max_plot_vertices=20,
@@ -378,24 +379,33 @@ def plot_operational_variables_over_time(
 
         # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
         st.write(filtered_convex_data)
-        if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
-            convex_cols = [f"{maa_prefix}{tech}_{year}" for year in years] if apply_prefix else [f"{tech}_{year}" for year in years]
-            st.write(convex_cols)
-            if all(col in filtered_convex_data.columns for col in convex_cols):
-                for i in filtered_convex_data.index:
-                    vals = filtered_convex_data.loc[i, convex_cols].values
-                    if not np.isnan(vals).all():
-                        fig_val.add_trace(go.Scatter(
-                            x=years,
-                            y=vals,
-                            mode=plot_mode,
-                            line=dict(color="rgba(255, 50, 50, 0.4)", width=1),
-                            hovertemplate='Year: %{x}<br>Convex: %{y}<extra></extra>',
-                            showlegend=False
-                        ), row=row, col=col)
+        if show_convex and not st_convex.empty:
+            if len(years) == 1:
+                convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
+                if convex_col in filtered_convex_data.columns:
+                    convex_vals = filtered_convex_data[convex_col].dropna()
+                    fig.add_trace(go.Scatter(
+                        x=[years[0]] * len(convex_vals),
+                        y=convex_vals,
+                        mode='markers',
+                        marker=dict(color="rgba(255,0,0,0.4)", size=10),
+                        hoverinfo="skip",
+                        showlegend=False
+                    ), row=row, col=col)
             else:
-                missing = [col for col in convex_cols if col not in filtered_convex_data.columns]
-                st.warning(f"⚠️ Convex data missing columns for {tech}: {missing}")
+                convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
+                if all(col in filtered_convex_data.columns for col in convex_cols):
+                    for idx in filtered_convex_data.index:
+                        values = filtered_convex_data.loc[idx, convex_cols].values
+                        if not np.isnan(values).all():
+                            fig.add_trace(go.Scatter(
+                                x=years,
+                                y=values,
+                                mode='lines',
+                                line=dict(color="rgba(255,0,0,0.3)", width=1),
+                                hoverinfo="skip",
+                                showlegend=False
+                            ), row=row, col=col)
 
         # Min/Max Bereich für aktuelle Vertices
         try:
@@ -1181,7 +1191,8 @@ with tab1:
                         selected_vertex=st.session_state.get("selected_vertex"),
                         n_cols_val=st.session_state.get("n_cols_plots", 3),
                         show_convex=st.session_state["show_convex"],
-                        filtered_convex_data=st.session_state["convex_combinations"],
+                        st_convex =st.session_state["convex_combinations"],
+                        filtered_convex_data=filtered_convex_data,
                         show_original_ranges=st.session_state["show_original_ranges"],
                         max_plot_vertices=st.session_state["max_plot_vertices"],
                         maa_prefix=MAA_PREFIX,
@@ -1287,11 +1298,15 @@ with tab1:
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=False,
-                    filtered_convex_data=None,
+                    st_convex =st.session_state["convex_combinations"],
+                    filtered_convex_data=filtered_convex_data,
                     show_original_ranges=st.session_state.get("show_original_ranges", False),
                     apply_prefix=False,
                     plot_title="Installed Capacities Over Time"
                 )
+
+
+            
 
 
 
