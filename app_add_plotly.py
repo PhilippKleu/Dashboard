@@ -2159,7 +2159,7 @@ with tab2:
     with col2:
         st.markdown("""
         <div style="border: 3px solid #ccc; padding: 10px; border-radius: 10px; background-color: #f9f9f9; width: 1000px; margin: auto;">
-            <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Bild1.png" width="100%">
+            <img src="https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/overview.png" width="100%">
             <p style="text-align: center; font-style: italic; margin-top: 5px;"></p>
         </div>
         """, unsafe_allow_html=True)
