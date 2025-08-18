@@ -701,6 +701,8 @@ def prepare_vertex_selection(
             return time_map, valid_techs, [], tech, []
 
         if len(current_indices) > max_plot_vertices:
+            st.write("cols for left side")
+            st.write(cols)
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=cols,
@@ -1398,7 +1400,8 @@ with tab1:
             else:
                 
                 cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX)
-            
+            st.write("cols for right side")
+            st.write(cols)
             if not cols:
                 st.error("❌ No matching columns found.")
                 st.stop()
