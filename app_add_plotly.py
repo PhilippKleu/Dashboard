@@ -631,6 +631,34 @@ def plot_operational_variables_over_time(
 
     st.plotly_chart(fig_val, use_container_width=True)
 
+def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
+    """
+    Erzeugt die Spaltenliste (cols) aus dem time_map für die gegebenen Technologien.
+    - Sortiert pro Technologie nach Jahr (Index 0 der Tupel).
+    - Für VALUE_: nimmt nur Spaltennamen, die mit f"{MAA_PREFIX}{tech}" beginnen.
+    - Für MAA_: entpackt (year, col)-Paare und sammelt die Spalten.
+    - Entfernt Duplikate bei gleichzeitiger Stabilisierung der Reihenfolge.
+    """
+    cols = []
+    for tech in techs:
+        year_cols = time_map.get(tech, [])
+        years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+
+        if MAA_PREFIX == "VALUE_":
+            cols.extend([c for _, c in years_cols_sorted
+                         if isinstance(c, str) and c.startswith(MAA_PREFIX + tech)])
+        else:  # MAA_
+            try:
+                _, cols_tech = zip(*years_cols_sorted) if years_cols_sorted else ([], [])
+                cols.extend(list(cols_tech))
+            except ValueError:
+                # Falls year_cols leer/unkonsistent sind: überspringen
+                continue
+
+    # Duplikate entfernen, Reihenfolge beibehalten
+    cols = list(dict.fromkeys(cols))
+    return cols
+
 def prepare_vertex_selection(
     MAA_PREFIX,
     vertex_df,
@@ -663,16 +691,14 @@ def prepare_vertex_selection(
         return time_map, valid_techs, [], None, []
 
     tech = valid_techs[0]
-    year_cols = time_map[tech]
 
     try:
-        years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+        # ⬇️ Neu: Cols-Erstellung ausgelagert; Verhalten bleibt: nur erste Tech
+        cols = build_cols_from_time_map(time_map, [tech], MAA_PREFIX)
 
-        if source == "value_time_map":
-            cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
-        else:
-            _, cols = zip(*years_cols_sorted)
-            cols = list(cols)
+        if not cols:
+            st.error(f"❌ No matching columns found for technology '{tech}'.")
+            return time_map, valid_techs, [], tech, []
 
         if len(current_indices) > max_plot_vertices:
             plot_indices = select_representative_vertices_by_kmeans(
