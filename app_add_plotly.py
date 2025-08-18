@@ -1293,17 +1293,7 @@ with tab1:
                 
                 st.markdown("### Operational Variables Over Time")
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
-                    # Debug-Ausgaben
-                    st.markdown("### 🔍 Debug vor KMeans")
-                    st.write("**current_indices (Anzahl):**", len(current_indices))
-                    st.write("**max_plot_vertices:**", st.session_state["max_plot_vertices"])
-                    st.write("**cols (erste 10):**", list(cols)[:10])
-                    st.write("**vertex_df Shape:**", vertex_df.shape)
-                    st.write("**vertex_df dtypes:**")
-                    st.write(vertex_df.dtypes)
-                    st.write("**NaN counts:**")
-                    st.write(vertex_df[list(cols)].isna().sum())
-                
+                    
                     try:
                         plot_indices_val = select_representative_vertices_by_kmeans(
                             df=vertex_df,
