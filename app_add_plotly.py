@@ -1361,23 +1361,26 @@ with tab1:
                 help="Select one or more technologies to display."
             )
             
-            valid_techs = selected_techs          
+            valid_techs = selected_techs
+            
+            # << neu: nur selektierte Techs in eigener Map
+            source_map_selected = {tech: source_map.get(tech, []) for tech in valid_techs}
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
                 cols = []
-                for tech in valid_techs:
-                    year_cols = source_map.get(tech, [])
+                for tech in valid_techs:  # << nur selektierte Techs
+                    year_cols = source_map_selected.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
             else:
-                # Fallback: Nur erste Technologie wie gehabt
-                year_cols = source_map[valid_techs_all[0]]
+                # Fallback: Nur erste **selektierte** Technologie wie gehabt
+                year_cols = source_map_selected[valid_techs[0]]  # << statt valid_techs_all[0]
                 years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                 try:
                     _, cols = zip(*years_cols_sorted)
                     cols = list(cols)
-                   
+                    
                 except ValueError:
                     st.error("❌ Could not extract columns from years_cols_sorted.")
                     st.stop()
@@ -1397,7 +1400,6 @@ with tab1:
                     st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
                     st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
-
             
             else:
                 try:
@@ -1415,7 +1417,7 @@ with tab1:
                 except Exception as e:
                     st.exception(f"❌ Error selecting vertices using KMeans: {e}")
                     st.stop()
-                    
+                            
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 st.markdown("### Installed Capacities Over Time")
@@ -1424,7 +1426,7 @@ with tab1:
                     vertex_df=vertex_df,
                     current_indices=current_indices,
                     plot_indices_val=plot_indices,
-                    time_column_map=source_map,
+                    time_column_map=source_map_selected,  # << nur selektierte Techs
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=st.session_state["show_convex"],
@@ -1434,12 +1436,12 @@ with tab1:
                     apply_prefix=False,
                     plot_title="Installed Capacities Over Time"
                 )
-
+            
             else:
                 plot_violin_values(
                     vertex_df,
-                    valid_techs_all,
-                    source_map,
+                    valid_techs,            # << selektierte Techs
+                    source_map_selected,    # << nur selektierte Techs
                     plot_indices,
                     current_indices,
                     filtered_convex_data,
