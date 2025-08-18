@@ -1399,7 +1399,7 @@ with tab1:
                 cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational"), valid_techs_all, MAA_PREFIX)
             else:
                 
-                cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX)
+                cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_value, MAA_PREFIX)
             st.write("cols for right side")
             st.write(cols)
             if not cols:
