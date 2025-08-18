@@ -1350,10 +1350,10 @@ with tab1:
 
             # === Auswahl Mapping je nach Prefix
             source_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
-            
+                        
             # === Gültige Technologien + Auswahl
             valid_techs_all = sorted([tech for tech, v in source_map.items() if len(v) >= 1])
-            
+                        
             selected_techs = st.multiselect(
                 "Select technologies to display:",
                 options=valid_techs_all,
@@ -1361,28 +1361,23 @@ with tab1:
                 help="Select one or more technologies to display."
             )
             
-            # Nur Änderung: Auswahl verwenden + gefilterte Map bilden
-            valid_techs = selected_techs
-            source_map_selected = {tech: source_map[tech] for tech in valid_techs if tech in source_map}
-            
-            if not valid_techs:
-                st.warning("Bitte mindestens eine Technologie auswählen.")
-                st.stop()
+            valid_techs = selected_techs          
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
                 cols = []
-                for tech in valid_techs:  # << selektierte Techs
-                    year_cols = source_map_selected.get(tech, [])
+                for tech in valid_techs:
+                    year_cols = source_map.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
             else:
-                # Fallback: Nur **erste selektierte** Technologie wie gehabt
-                year_cols = source_map_selected[valid_techs[0]]
+                # Fallback: Nur erste Technologie wie gehabt
+                year_cols = source_map[valid_techs_all[0]]
                 years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                 try:
                     _, cols = zip(*years_cols_sorted)
                     cols = list(cols)
+                   
                 except ValueError:
                     st.error("❌ Could not extract columns from years_cols_sorted.")
                     st.stop()
@@ -1394,13 +1389,16 @@ with tab1:
             # === Data Check vor KMeans
             subset_df = vertex_df.loc[current_indices, cols]
             
+            
             # === Auswahl von Vertices mittels KMeans mit Fehlerbehandlung
             if MAA_PREFIX == "VALUE_":
-                plot_indices = plot_indices_val  # (unverändert)
+                plot_indices=plot_indices_val
                 if len(current_indices) > st.session_state["max_plot_vertices"] and st.session_state.get("plot_type_selector2") == "Line Plot":
                     st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
                 else:
                     st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
+
+            
             else:
                 try:
                     raw_plot_indices = select_representative_vertices_by_kmeans(
@@ -1417,7 +1415,7 @@ with tab1:
                 except Exception as e:
                     st.exception(f"❌ Error selecting vertices using KMeans: {e}")
                     st.stop()
-            
+                    
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
                 st.markdown("### Installed Capacities Over Time")
@@ -1426,22 +1424,22 @@ with tab1:
                     vertex_df=vertex_df,
                     current_indices=current_indices,
                     plot_indices_val=plot_indices,
-                    time_column_map=source_map_selected,  # << nur selektierte Techs
+                    time_column_map=source_map,
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=st.session_state["show_convex"],
-                    st_convex=st.session_state["convex_combinations"],
+                    st_convex =st.session_state["convex_combinations"],
                     filtered_convex_data=filtered_convex_data,
                     show_original_ranges=st.session_state.get("show_original_ranges", False),
                     apply_prefix=False,
                     plot_title="Installed Capacities Over Time"
                 )
-            
+
             else:
                 plot_violin_values(
                     vertex_df,
-                    valid_techs,            # << selektierte Techs
-                    source_map_selected,    # << gefilterte Map
+                    valid_techs_all,
+                    source_map,
                     plot_indices,
                     current_indices,
                     filtered_convex_data,
