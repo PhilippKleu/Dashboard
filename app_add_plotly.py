@@ -1394,25 +1394,10 @@ with tab1:
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
-                cols = []
-                for tech in valid_techs:  # << nur selektierte Techs
-                    year_cols = source_map_selected.get(tech, [])
-                    cols.extend([col for _, col in year_cols])
-                cols = list(set(cols))  # Doppelte entfernen
+                build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode), valid_techs_all, MAA_PREFIX):
             else:
-                # Fallback: gehe über alle selektierten Technologien
-                cols = []
-                for tech in valid_techs:
-                    year_cols = source_map_selected.get(tech, [])
-                    years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-                    try:
-                        _, cols_tech = zip(*years_cols_sorted)
-                        cols.extend(list(cols_tech))
-                    except ValueError:
-                        # Wenn eine Tech keine gültigen year_cols hat, einfach überspringen
-                        continue
-                cols = list(set(cols))  # Doppelte entfernen
-                st.write(cols)
+                
+                build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX):
             
             if not cols:
                 st.error("❌ No matching columns found.")
