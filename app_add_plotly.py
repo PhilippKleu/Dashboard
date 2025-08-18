@@ -658,6 +658,15 @@ def prepare_vertex_selection(
         st.error(f"❌ Unknown MAA_PREFIX: '{MAA_PREFIX}'. Expected 'VALUE_' or 'MAA_'.")
         return {}, [], [], None, []
 
+    # Debug-Ausgaben direkt nach Erstellung von time_map und valid_techs
+    st.markdown("### 🔍 Debug: Technologie-Erkennung")
+    st.write("**MAA_PREFIX:**", MAA_PREFIX)
+    st.write("**Source:**", source)
+    st.write("**Anzahl Technologien in time_map:**", len(time_map))
+    st.write("**Beispiel keys (erste 5):**", list(time_map.keys())[:5])
+    st.write("**Gefundene valid_techs (Anzahl):**", len(valid_techs))
+    st.write("**valid_techs (erste 10):**", valid_techs[:10])
+
     if not valid_techs:
         st.warning(f"⚠️ No valid technologies found in `{source}`.")
         return time_map, valid_techs, [], None, []
