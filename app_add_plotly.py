@@ -658,15 +658,6 @@ def prepare_vertex_selection(
         st.error(f"❌ Unknown MAA_PREFIX: '{MAA_PREFIX}'. Expected 'VALUE_' or 'MAA_'.")
         return {}, [], [], None, []
 
-    # Debug-Ausgaben direkt nach Erstellung von time_map und valid_techs
-    st.markdown("### 🔍 Debug: Technologie-Erkennung")
-    st.write("**MAA_PREFIX:**", MAA_PREFIX)
-    st.write("**Source:**", source)
-    st.write("**Anzahl Technologien in time_map:**", len(time_map))
-    st.write("**Beispiel keys (erste 5):**", list(time_map.keys())[:5])
-    st.write("**Gefundene valid_techs (Anzahl):**", len(valid_techs))
-    st.write("**valid_techs (erste 10):**", valid_techs[:10])
-
     if not valid_techs:
         st.warning(f"⚠️ No valid technologies found in `{source}`.")
         return time_map, valid_techs, [], None, []
@@ -675,15 +666,7 @@ def prepare_vertex_selection(
     year_cols = time_map[tech]
 
     try:
-        st.write("in try")
-        # Sortiere nach Jahr
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-
-        # Debug-Ausgabe: wie sieht die Input-Struktur aus?
-        st.markdown("### 🔍 Debug: Column-Erstellung")
-        st.write("**Technology:**", tech)
-        st.write("**MAA_PREFIX:**", MAA_PREFIX)
-        st.write("**years_cols_sorted (erste 10):**", years_cols_sorted[:10])
 
         if source == "value_time_map":
             cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
@@ -691,13 +674,7 @@ def prepare_vertex_selection(
             _, cols = zip(*years_cols_sorted)
             cols = list(cols)
 
-        # Debug-Ausgabe: fertige Spaltenliste
-        st.write("**Resultierende cols (Anzahl):**", len(cols))
-        st.write("**Erste 10 cols:**", cols[:10])
-
-        # Auswahl repräsentativer Vertices nur wenn nötig
         if len(current_indices) > max_plot_vertices:
-            st.write(f"Zu viele Vertices ({len(current_indices)}), KMeans wird gestartet …")
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=cols,
