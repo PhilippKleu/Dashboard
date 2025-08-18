@@ -774,7 +774,7 @@ def extract_time_series_map(df, maa_prefix, mode="installed"):
         # === Für VALUE-Daten: abhängig vom Modus ===
         elif maa_prefix == "VALUE_":
             if mode == "operational":
-                # Format: VALUE_Tech[(2025,)]
+                # 1) Normale Jahreswerte: VALUE_Tech[(2025,)]
                 match = re.match(r"^(VALUE_)([^[]+)\[\((\d{4}),?\)\]$", col)
                 if match:
                     _, tech, year = match.groups()
@@ -782,8 +782,21 @@ def extract_time_series_map(df, maa_prefix, mode="installed"):
                     if key not in seen_keys:
                         tech_time_map[tech].append((int(year), col))
                         seen_keys.add(key)
+                    continue
+
+                # 2) Kumulierte Werte ohne Jahr: VALUE_Tech_Cumulated
+                match = re.match(r"^VALUE_(.+)_Cumulated$", col)
+                if match:
+                    tech = match.group(1)
+                    pseudo_year = 0  # Default-Jahr für kumulierte Werte
+                    key = (tech, pseudo_year)
+                    if key not in seen_keys:
+                        tech_time_map[tech].append((pseudo_year, col))
+                        seen_keys.add(key)
+                    continue
+
             elif mode == "installed":
-                # Format: INSTALLED_CAPACITY_Tech_2025
+                # INSTALLED_CAPACITY_Tech_2025
                 match = re.match(r"^(INSTALLED_CAPACITY_)(.+)_(\d{4})$", col)
                 if match:
                     _, tech, year = match.groups()
