@@ -1282,13 +1282,31 @@ with tab1:
                 
                 st.markdown("### Operational Variables Over Time")
                 if len(current_indices) > st.session_state["max_plot_vertices"]:
-                    plot_indices_val = select_representative_vertices_by_kmeans(
-                        df=vertex_df,
-                        cols=list(cols),  # <- Stelle sicher, dass `cols` korrekt definiert ist
-                        n_vertices=st.session_state["max_plot_vertices"],
-                        index_subset=current_indices
-                    )
-                    st.caption(f"⚡️ **Note:** Displaying a clustered sample of {st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices.")
+                    # Debug-Ausgaben
+                    st.markdown("### 🔍 Debug vor KMeans")
+                    st.write("**current_indices (Anzahl):**", len(current_indices))
+                    st.write("**max_plot_vertices:**", st.session_state["max_plot_vertices"])
+                    st.write("**cols (erste 10):**", list(cols)[:10])
+                    st.write("**vertex_df Shape:**", vertex_df.shape)
+                    st.write("**vertex_df dtypes:**")
+                    st.write(vertex_df.dtypes)
+                    st.write("**NaN counts:**")
+                    st.write(vertex_df[list(cols)].isna().sum())
+                
+                    try:
+                        plot_indices_val = select_representative_vertices_by_kmeans(
+                            df=vertex_df,
+                            cols=list(cols),  # <- sicherstellen, dass die Spalten existieren
+                            n_vertices=st.session_state["max_plot_vertices"],
+                            index_subset=current_indices
+                        )
+                        st.caption(
+                            f"⚡️ **Note:** Displaying a clustered sample of "
+                            f"{st.session_state['max_plot_vertices']} out of {len(current_indices)} valid vertices."
+                        )
+                    except Exception as e:
+                        st.error(f"❌ Fehler in KMeans: {e}")
+                        st.stop()  # stoppt die Ausführung, damit nichts Falsches weiterläuft
                 else:
                     plot_indices_val = current_indices
                     st.caption(f"⚡️ **Note:** {len(current_indices)} valid vertices remaining.")
