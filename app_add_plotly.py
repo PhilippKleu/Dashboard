@@ -1394,10 +1394,10 @@ with tab1:
             
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
-                cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode), valid_techs_all, MAA_PREFIX):
+                cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode), valid_techs_all, MAA_PREFIX)
             else:
                 
-                cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX):
+                cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX)
             
             if not cols:
                 st.error("❌ No matching columns found.")
