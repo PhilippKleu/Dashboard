@@ -669,14 +669,25 @@ def prepare_vertex_selection(
         # Sortiere nach Jahr
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
 
+        # Debug-Ausgabe: wie sieht die Input-Struktur aus?
+        st.markdown("### 🔍 Debug: Column-Erstellung")
+        st.write("**Technology:**", tech)
+        st.write("**MAA_PREFIX:**", MAA_PREFIX)
+        st.write("**years_cols_sorted (erste 10):**", years_cols_sorted[:10])
+
         if source == "value_time_map":
             cols = [c for y, c in years_cols_sorted if c.startswith(MAA_PREFIX + tech)]
         else:
             _, cols = zip(*years_cols_sorted)
             cols = list(cols)
 
+        # Debug-Ausgabe: fertige Spaltenliste
+        st.write("**Resultierende cols (Anzahl):**", len(cols))
+        st.write("**Erste 10 cols:**", cols[:10])
+
         # Auswahl repräsentativer Vertices nur wenn nötig
         if len(current_indices) > max_plot_vertices:
+            st.write(f"Zu viele Vertices ({len(current_indices)}), KMeans wird gestartet …")
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=cols,
