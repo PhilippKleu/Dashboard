@@ -1260,7 +1260,7 @@ with tab1:
                 ordered_techs,
                 prefix=MAA_PREFIX
             )
-                
+            st.write("Hier")
             time_map, valid_techs, plot_indices, tech,cols = prepare_vertex_selection(
                 MAA_PREFIX=MAA_PREFIX,
                 vertex_df=vertex_df,
