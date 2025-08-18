@@ -1369,13 +1369,13 @@ with tab1:
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
                 cols = []
-                for tech in valid_techs:  # << nur selektierte Techs
+                for tech in valid_techs_all:  # << nur selektierte Techs
                     year_cols = source_map_selected.get(tech, [])
                     cols.extend([col for _, col in year_cols])
                 cols = list(set(cols))  # Doppelte entfernen
             else:
                 # Fallback: Nur erste **selektierte** Technologie wie gehabt
-                year_cols = source_map_selected[valid_techs[0]]  # << statt valid_techs_all[0]
+                year_cols = source_map_selected[valid_techs_all]  # << statt valid_techs_all[0]
                 years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
                 try:
                     _, cols = zip(*years_cols_sorted)
