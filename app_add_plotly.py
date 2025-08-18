@@ -1386,6 +1386,7 @@ with tab1:
                         # Wenn eine Tech keine gültigen year_cols hat, einfach überspringen
                         continue
                 cols = list(set(cols))  # Doppelte entfernen
+                st.write(cols)
             
             if not cols:
                 st.error("❌ No matching columns found.")
