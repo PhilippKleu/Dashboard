@@ -694,7 +694,7 @@ def prepare_vertex_selection(
 
     try:
         # ⬇️ Neu: Cols-Erstellung ausgelagert; Verhalten bleibt: nur erste Tech
-        cols = build_cols_from_time_map(time_map, [tech], MAA_PREFIX)
+        cols = build_cols_from_time_map(time_map, valid_techs, MAA_PREFIX)
 
         if not cols:
             st.error(f"❌ No matching columns found for technology '{tech}'.")
