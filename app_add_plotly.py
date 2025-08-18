@@ -666,6 +666,7 @@ def prepare_vertex_selection(
     year_cols = time_map[tech]
 
     try:
+        st.write("in try")
         # Sortiere nach Jahr
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
 
