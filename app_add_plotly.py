@@ -584,12 +584,7 @@ def plot_operational_variables_over_time(
     fig_val.update_layout(
         height=fig_height_val * 100,
         width=fig_width_val * 100,
-        title=dict(
-            
-            font=dict(size=18, family="Arial", color="#333"),
-            x=0,
-            xanchor="left"
-        ),
+        
         font=dict(size=12, family="Arial", color="#333"),
         paper_bgcolor='#f4f4f4',
         plot_bgcolor='#f4f4f4',
