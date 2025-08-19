@@ -649,7 +649,7 @@ def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
         
         if MAA_PREFIX == "VALUE_":
             cols.extend([c for _, c in years_cols_sorted
-                         if isinstance(c, str) and c.startswith(MAA_PREFIX + tech)])
+              if isinstance(c, str) and c.startswith("INSTALLED_CAPACITY_" + tech)])
             st.write("hier2")
             st.write(c for _, c in years_cols_sorted
                          if isinstance(c, str) and c.startswith(MAA_PREFIX + tech))
