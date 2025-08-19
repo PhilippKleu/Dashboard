@@ -1443,7 +1443,7 @@ with tab1:
                             
             # === Plot-Erstellung
             if st.session_state.get("plot_type_selector2") == "Line Plot":
-                st.markdown("### Installed Capacities Over Time")
+                
             
                 plot_operational_variables_over_time(
                     vertex_df=vertex_df,
