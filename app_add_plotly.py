@@ -640,6 +640,8 @@ def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
     - Entfernt Duplikate bei gleichzeitiger Stabilisierung der Reihenfolge.
     """
     cols = []
+    st.write(techs)
+    st.write(time_map)
     for tech in techs:
         year_cols = time_map.get(tech, [])
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
