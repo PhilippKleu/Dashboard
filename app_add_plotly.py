@@ -708,8 +708,7 @@ def prepare_vertex_selection(
             return time_map, valid_techs, [], tech, []
 
         if len(current_indices) > max_plot_vertices:
-            st.write("cols for left side")
-            st.write(cols)
+            
             plot_indices = select_representative_vertices_by_kmeans(
                 df=vertex_df,
                 cols=cols,
