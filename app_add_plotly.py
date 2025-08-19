@@ -643,10 +643,12 @@ def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
     for tech in techs:
         year_cols = time_map.get(tech, [])
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-
+        
         if MAA_PREFIX == "VALUE_":
             cols.extend([c for _, c in years_cols_sorted
                          if isinstance(c, str) and c.startswith(MAA_PREFIX + tech)])
+            st.write(c for _, c in years_cols_sorted
+                         if isinstance(c, str) and c.startswith(MAA_PREFIX + tech))
         else:  # MAA_
             try:
                 _, cols_tech = zip(*years_cols_sorted) if years_cols_sorted else ([], [])
