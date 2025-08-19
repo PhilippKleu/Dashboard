@@ -585,7 +585,7 @@ def plot_operational_variables_over_time(
         height=fig_height_val * 100,
         width=fig_width_val * 100,
         title=dict(
-            text=plot_title,
+            
             font=dict(size=18, family="Arial", color="#333"),
             x=0,
             xanchor="left"
