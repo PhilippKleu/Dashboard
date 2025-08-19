@@ -1397,6 +1397,8 @@ with tab1:
             # === Initiale Spaltenauswahl für KMeans
             if MAA_PREFIX == "VALUE_":
                 st.write("hier")
+                st.write(extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed"))
+                st.write(valid_techs_value)
                 cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed"), valid_techs_value, MAA_PREFIX)
             else:
                 st.write(valid_techs_value)
