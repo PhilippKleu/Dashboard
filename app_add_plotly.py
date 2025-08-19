@@ -631,7 +631,7 @@ def plot_operational_variables_over_time(
 
     st.plotly_chart(fig_val, use_container_width=True)
 
-def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
+def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode):
     """
     Erzeugt die Spaltenliste (cols) aus dem time_map für die gegebenen Technologien.
     - Sortiert pro Technologie nach Jahr (Index 0 der Tupel).
@@ -648,11 +648,12 @@ def build_cols_from_time_map(time_map, techs, MAA_PREFIX):
         st.write(years_cols_sorted)
         
         if MAA_PREFIX == "VALUE_":
-            cols.extend([c for _, c in years_cols_sorted
-              if isinstance(c, str) and c.startswith("INSTALLED_CAPACITY_" + tech)])
-            st.write("hier2")
-            st.write(c for _, c in years_cols_sorted
-                         if isinstance(c, str) and c.startswith(MAA_PREFIX + tech))
+            if mode == "operational":
+                cols.extend([c for _, c in years_cols_sorted
+                 if isinstance(c, str) and c.startswith(MAA_PREFIX + tech)])
+            else:
+                cols.extend([c for _, c in years_cols_sorted
+                      if isinstance(c, str) and c.startswith("INSTALLED_CAPACITY_" + tech)])
         else:  # MAA_
             try:
                 _, cols_tech = zip(*years_cols_sorted) if years_cols_sorted else ([], [])
@@ -673,7 +674,8 @@ def prepare_vertex_selection(
     select_representative_vertices_by_kmeans,
     current_indices,
     max_plot_vertices,
-    st
+    st,
+    mode=None,
 ):
     """
     Bereitet die Vertex-Auswahl basierend auf dem MAA_PREFIX vor.
@@ -681,8 +683,8 @@ def prepare_vertex_selection(
     """
     if MAA_PREFIX == "VALUE_":
         source = "value_time_map"
-        mode = "operational"
-        time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode=mode)
+        
+        time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
         valid_techs = sorted([tech for tech, v in time_map.items() if len(v) >= 1])
     elif MAA_PREFIX == "MAA_":
         source = "tech_time_map"
@@ -700,7 +702,7 @@ def prepare_vertex_selection(
 
     try:
         # ⬇️ Neu: Cols-Erstellung ausgelagert; Verhalten bleibt: nur erste Tech
-        cols = build_cols_from_time_map(time_map, valid_techs, MAA_PREFIX)
+        cols = build_cols_from_time_map(time_map, valid_techs, MAA_PREFIX,mode)
 
         if not cols:
             st.error(f"❌ No matching columns found for technology '{tech}'.")
@@ -1302,7 +1304,8 @@ with tab1:
                 select_representative_vertices_by_kmeans=select_representative_vertices_by_kmeans,
                 current_indices=current_indices,
                 max_plot_vertices=st.session_state["max_plot_vertices"],
-                st=st
+                st=st,
+                mode="operational"
             )
             
             if valid_techs:
