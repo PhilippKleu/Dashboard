@@ -1400,7 +1400,7 @@ with tab1:
                 st.write(extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed"))
                 st.write(valid_techs_value)
                 st.write(valid_techs_all)
-                cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed"), valid_techs_value, MAA_PREFIX)
+                cols = build_cols_from_time_map(extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed"), valid_techs_all, MAA_PREFIX)
             else:
                 st.write(valid_techs_value)
                 cols = build_cols_from_time_map(extract_time_series_map(vertex_df,MAA_PREFIX), valid_techs_all, MAA_PREFIX)
