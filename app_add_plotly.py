@@ -631,7 +631,7 @@ def plot_operational_variables_over_time(
 
     st.plotly_chart(fig_val, use_container_width=True)
 
-def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode):
+def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
     """
     Erzeugt die Spaltenliste (cols) aus dem time_map für die gegebenen Technologien.
     - Sortiert pro Technologie nach Jahr (Index 0 der Tupel).
