@@ -53,15 +53,12 @@ section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
   font-weight: 600;
 }
 
-
-
-/* ========= Select/Multiselect: keine Glows/Frames ========= */
-div[data-testid^="stSelectbox"]:hover,
-div[data-testid^="stMultiSelect"]:hover,
-div[data-testid^="stSelectbox"]:focus-within,
-div[data-testid^="stMultiSelect"]:focus-within {
-  transform:none !important; box-shadow:none !important; outline:none !important;
+/* ========= Buttons ========= */
+.stButton > button{
+  background:#C0C6D2; color:#000; border:none; padding:.5em 1.2em; border-radius:8px; font-weight:600;
 }
+
+
 div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
 div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
   box-shadow:none !important; border:none !important;
