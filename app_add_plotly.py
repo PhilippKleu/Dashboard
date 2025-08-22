@@ -51,10 +51,10 @@ st.markdown("""
         /* Überschriften */
         h1, h2, h3, h4, h5, h6 {
             font-family: var(--font-body) !important;
-            font-weight: 600; /* Montserrat wirkt so am ruhigsten */
+            font-weight: 600;
         }
 
-        /* Buttons */
+        /* Buttons (inkl. "📁 Use default Excel file") */
         .stButton > button {
             background-color: #C0C6D2;
             color: black;
@@ -62,20 +62,18 @@ st.markdown("""
             padding: 0.5em 1.2em;
             border-radius: 8px;
             font-weight: 600;
-            font-family: var(--font-body);
+            font-family: var(--font-body) !important;
         }
 
         /* File-Uploader komplett auf Montserrat */
         div[data-testid="stFileUploader"] * {
             font-family: var(--font-body) !important;
         }
-        
         /* Label explizit (falls geerbte Schrift überschrieben wurde) */
         div[data-testid="stFileUploader"] label {
             font-family: var(--font-body) !important;
             font-weight: 600;
         }
-        
         /* Upload-Button im Widget */
         div[data-testid="stFileUploader"] button {
             font-family: var(--font-body) !important;
@@ -90,7 +88,15 @@ st.markdown("""
         div[data-testid^="stRadio"] label,
         div[data-testid^="stSlider"] label,
         input, textarea, select {
-            font-family: var(--font-body);
+            font-family: var(--font-body) !important;
+        }
+
+        /* Selectbox: Wert im geschlossenen Zustand + Dropdown-Menü (Portal) */
+        div[data-testid^="stSelectbox"] div[data-baseweb="select"] * { 
+            font-family: var(--font-body) !important; 
+        }
+        div[role="listbox"] * {
+            font-family: var(--font-body) !important;
         }
 
         /* Hover-Scaling beibehalten */
