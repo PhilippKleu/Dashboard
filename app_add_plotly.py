@@ -61,60 +61,12 @@ section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) 
   font-weight: 600;
 }
 
-
-
-/* Checkbox-Optionen (nur Text) */
-section[data-testid="stSidebar"] [data-baseweb="checkbox"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+/* Radio-Optionen (nur Text) */
+section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
 }
 
-/* Slider: Label + Zahlen (nicht die Griffe/Icons) */
-section[data-testid="stSidebar"] [data-baseweb="slider"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
 
-/* Number Input */
-section[data-testid="stSidebar"] [data-testid^="stNumberInput"] input,
-section[data-testid="stSidebar"] [data-testid^="stNumberInput"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Selectbox/Multiselect – nur Textteile (nicht die Dropdown-Pfeile) */
-section[data-testid="stSidebar"] [data-baseweb="select"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* File Uploader – nur Text */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* (Falls in der Sidebar Tabs verwendet werden) */
-section[data-testid="stSidebar"] [role="tablist"] :not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* ================= Sidebar: Icons/Pfeile explizit NICHT ändern ================= */
-section[data-testid="stSidebar"] :is(
-  .material-symbols-outlined,
-  .material-symbols-rounded,
-  .material-icons,
-  .material-icons-outlined,
-  .material-icons-round,
-  [data-baseweb="icon"],
-  span[aria-hidden="true"],
-  i[aria-hidden="true"]
-){
-  font-family: 'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
-  font-weight: 400 !important;
-  font-style: normal !important;
-  font-variant-ligatures: normal !important;
-  text-transform: none !important;
-  line-height: 1 !important;
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-}
 </style>
 """, unsafe_allow_html=True)
 
