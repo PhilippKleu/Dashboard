@@ -23,6 +23,7 @@ from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 
 
+
 DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_FILENAME)
 
@@ -33,18 +34,49 @@ st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathway
 
 st.markdown("""
     <style>
-        body, .stApp {
+        /* Montserrat von Google Fonts laden */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+        /* zentrale Font-Variable */
+        :root {
+            --font-body: 'Montserrat', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Global */
+        html, body, .stApp {
             background-color: #f4f4f4;
-            font-family: 'Segoe UI', sans-serif;
-        } 
-        .stButton>button {
+            font-family: var(--font-body);
+        }
+
+        /* Überschriften */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-body) !important;
+            font-weight: 600; /* Montserrat wirkt so am ruhigsten */
+        }
+
+        /* Buttons */
+        .stButton > button {
             background-color: #C0C6D2;
             color: black;
             border: none;
             padding: 0.5em 1.2em;
             border-radius: 8px;
-            font-weight: 500;
+            font-weight: 600;
+            font-family: var(--font-body);
         }
+
+        /* Form-Controls & Labels */
+        div[data-testid="stFileUploader"] label,
+        div[data-testid^="stSelectbox"] label,
+        div[data-testid^="stMultiSelect"] label,
+        div[data-testid^="stNumberInput"] label,
+        div[data-testid^="stRadio"] label,
+        div[data-testid^="stSlider"] label,
+        input, textarea, select {
+            font-family: var(--font-body);
+        }
+
+        /* Hover-Scaling beibehalten */
         div[data-testid="stFileUploader"]:hover,
         div[data-testid^="stSelectbox"]:hover,
         div[data-testid^="stMultiSelect"]:hover,
@@ -54,7 +86,6 @@ st.markdown("""
             transform: scale(1.01);
             transition: transform 0.2s ease;
         }
-        
     </style>
 """, unsafe_allow_html=True)
 def clean_plot_indices(raw_indices):
