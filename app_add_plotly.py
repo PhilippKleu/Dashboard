@@ -42,6 +42,17 @@ div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
   font-family: var(--font-body) !important;
 }
 
+/* ========= Sidebar (Text) ========= */
+section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
+
+/* Expander-Titel (nur Text, nicht Pfeil) */
+section[data-testid="stSidebar"] details > summary,
+section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+  font-weight: 600;
+}
+
+
 
 /* ========= Select/Multiselect: keine Glows/Frames ========= */
 div[data-testid^="stSelectbox"]:hover,
