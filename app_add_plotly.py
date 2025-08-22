@@ -43,6 +43,18 @@ div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
 }
 
 
+/* ========= Select/Multiselect: keine Glows/Frames ========= */
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover,
+div[data-testid^="stSelectbox"]:focus-within,
+div[data-testid^="stMultiSelect"]:focus-within {
+  transform:none !important; box-shadow:none !important; outline:none !important;
+}
+
+div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
+div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
+  box-shadow:none !important; border:none !important;
+}
 
 
 /* ========= Dropdown-Portal (Listbox/Menu) ========= */
