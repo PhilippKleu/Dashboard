@@ -303,6 +303,59 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* === Sidebar-TOGGLE explizit auf Material Symbols setzen === */
+/* Trifft typische Varianten (TestIDs/Aria/Title) und alle Kinder */
+[data-testid*="collapse"],
+[data-testid*="Collapse"],
+[data-testid*="sidebar"] [role="button"],
+[data-testid*="Sidebar"] [role="button"],
+button[aria-label*="sidebar"],
+button[aria-label*="Sidebar"],
+button[title*="sidebar"],
+button[title*="Sidebar"],
+div[aria-label*="sidebar"],
+div[aria-label*="Sidebar"] {
+  font-family: 'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  font-variant-ligatures: normal !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+
+/* auch alle Kinder-Elemente des Toggles */
+[data-testid*="collapse"] *, [data-testid*="Collapse"] *,
+[data-testid*="sidebar"] [role="button"] *, [data-testid*="Sidebar"] [role="button"] *,
+button[aria-label*="sidebar"] *, button[aria-label*="Sidebar"] *,
+button[title*="sidebar"] *,  button[title*="Sidebar"] *,
+div[aria-label*="sidebar"] *, div[aria-label*="Sidebar"] * {
+  font-family: 'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
+}
+
+/* --- Fallback, falls der Toggle ohne Klassen/Textknoten rendert ---
+   Verbirgt den Ligatur-Text und zeichnet das Icon via Pseudo-Element.
+   Greift nur, wenn obige Selektoren nichts erwischen. */
+[data-testid*="collapse"] span,
+button[aria-label*="sidebar"] span,
+button[title*="sidebar"] span {
+  font-size: 0 !important;
+}
+[data-testid*="collapse"]::before,
+button[aria-label*="sidebar"]::before,
+button[title*="sidebar"]::before {
+  content: "keyboard_double_arrow_right";
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+  font-size: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
