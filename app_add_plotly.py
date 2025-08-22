@@ -45,13 +45,11 @@ div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
 /* ========= Sidebar (Text) ========= */
 section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
 
-/* Expander-Titel (nur Text, nicht Pfeil) */
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
 
+/* ========= Buttons ========= */
+.stButton > button{
+  background:#C0C6D2; color:#000; border:none; padding:.5em 1.2em; border-radius:8px; font-weight:600;
+}
 
 
 /* ========= Select/Multiselect: keine Glows/Frames ========= */
