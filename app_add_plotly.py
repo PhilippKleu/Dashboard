@@ -171,6 +171,47 @@ div[data-testid^="stSelectbox"]:focus-within {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* 1) Keine Hover-/Fokus-Rahmen für (Multi)Select */
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover,
+div[data-testid^="stSelectbox"]:focus-within,
+div[data-testid^="stMultiSelect"]:focus-within {
+    transform: none !important;
+    box-shadow: none !important;  /* entfernt den „Rahmen“ */
+    outline: none !important;
+}
+
+/* 2) Rahmen/Borders am geschlossenen Select-Control selbst entfernen (BaseWeb nutzt box-shadow als Border) */
+div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
+div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* 3) Montserrat im Label + geschlossenem Control erzwingen */
+label[data-testid="stWidgetLabel"],
+label[data-testid="stWidgetLabel"] *,
+div[data-testid^="stSelectbox"] [data-baseweb="select"] *,
+div[data-testid^="stMultiSelect"] [data-baseweb="select"] * {
+    font-family: var(--font-body) !important;
+}
+
+/* 4) Montserrat IM DROPDOWN (Portal/Popover) sicherstellen */
+div[role="listbox"],
+div[role="listbox"] *,
+ul[role="listbox"],
+ul[role="listbox"] *,
+li[role="option"],
+li[role="option"] *,
+[data-baseweb="menu"],
+[data-baseweb="menu"] * {
+    font-family: var(--font-body) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
