@@ -22,7 +22,7 @@ import plotly.express as px
 from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 
-)
+
 
 st.markdown("""
 <style>
