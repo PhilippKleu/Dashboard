@@ -41,12 +41,7 @@ section[data-testid="stSidebar"] .stMarkdown *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
 }
 
-/* Expander-Titel (nur Text, nicht der Pfeil) */
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
+
 
 /* Widget-Labels */
 section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
