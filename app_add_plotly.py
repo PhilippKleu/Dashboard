@@ -46,11 +46,6 @@ div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
 section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
 
 
-/* ========= Buttons ========= */
-.stButton > button{
-  background:#C0C6D2; color:#000; border:none; padding:.5em 1.2em; border-radius:8px; font-weight:600;
-}
-
 
 /* ========= Select/Multiselect: keine Glows/Frames ========= */
 div[data-testid^="stSelectbox"]:hover,
