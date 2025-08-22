@@ -65,6 +65,23 @@ st.markdown("""
             font-family: var(--font-body);
         }
 
+        /* File-Uploader komplett auf Montserrat */
+        div[data-testid="stFileUploader"] * {
+            font-family: var(--font-body) !important;
+        }
+        
+        /* Label explizit (falls geerbte Schrift überschrieben wurde) */
+        div[data-testid="stFileUploader"] label {
+            font-family: var(--font-body) !important;
+            font-weight: 600;
+        }
+        
+        /* Upload-Button im Widget */
+        div[data-testid="stFileUploader"] button {
+            font-family: var(--font-body) !important;
+            font-weight: 600;
+        }
+
         /* Form-Controls & Labels */
         div[data-testid="stFileUploader"] label,
         div[data-testid^="stSelectbox"] label,
