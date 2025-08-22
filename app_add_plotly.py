@@ -48,14 +48,13 @@ section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
   font-weight: 600;
 }
 
-
-
-/* Buttons in der Sidebar (nur Text) */
-section[data-testid="stSidebar"] .stButton > button,
-section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) {
+/* Widget-Labels */
+section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
+section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
-  font-weight: 600;
 }
+
+
 
 /* Radio-Optionen (nur Text) */
 section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
