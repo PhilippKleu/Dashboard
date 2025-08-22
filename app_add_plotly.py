@@ -258,6 +258,40 @@ button[role="tab"] {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* Material Symbols/Icons laden (Outlined + Rounded, sicherheitshalber beide) */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0');
+
+/* Icon-Elemente NICHT mit Montserrat überschreiben */
+.material-icons,
+.material-icons-outlined,
+.material-symbols-outlined,
+.material-symbols-rounded,
+[class^="material-"],
+[class*=" material-"] {
+  font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons' !important;
+  font-weight: normal !important;       /* keine fette Schrift auf Icons */
+  font-style: normal !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sidebar-spezifisch (falls du dort global alles auf Montserrat stellst) */
+section[data-testid="stSidebar"] .material-icons,
+section[data-testid="stSidebar"] .material-icons-outlined,
+section[data-testid="stSidebar"] .material-symbols-outlined,
+section[data-testid="stSidebar"] .material-symbols-rounded {
+  font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons' !important;
+  font-weight: normal !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
