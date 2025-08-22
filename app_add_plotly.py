@@ -41,13 +41,14 @@ section[data-testid="stSidebar"] .stMarkdown *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
 }
 
-
-
-/* Widget-Labels */
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-hidden="true"]) {
+/* Expander-Titel (nur Text, nicht der Pfeil) */
+section[data-testid="stSidebar"] details > summary,
+section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
+  font-weight: 600;
 }
+
+
 
 /* Buttons in der Sidebar (nur Text) */
 section[data-testid="stSidebar"] .stButton > button,
