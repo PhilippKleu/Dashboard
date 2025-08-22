@@ -90,30 +90,7 @@ div[data-testid="stFileUploader"] :not([aria-hidden="true"]) { font-family: var(
   font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
 }
 
-/* ========= Sidebar Toggle im Header ========= */
-header button[aria-label*="sidebar"],
-header button[title*="sidebar"],
-header [data-testid*="collapse"] button,
-header [data-testid*="Collapse"] button {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
-header button[aria-label*="sidebar"] *,
-header button[title*="sidebar"] *,
-header [data-testid*="collapse"] button *,
-header [data-testid*="Collapse"] button * {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
 
-/* Fallback: Ligaturtext ausblenden, Icon per ::before */
-header button[aria-label*="sidebar"] span,
-header button[title*="sidebar"] span { font-size:0 !important; }
-header button[aria-label*="sidebar"]::before,
-header button[title*="sidebar"]::before {
-  content:"keyboard_double_arrow_right"; /* ggf. auf "keyboard_double_arrow_left" ändern */
-  font-family:'Material Symbols Outlined' !important;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-  font-size:20px;
-}
 </style>
 """, unsafe_allow_html=True)
 
