@@ -111,6 +111,33 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+/* --- Harte Overrides für ALLE Streamlit-Buttons --- */
+.stButton button,
+.stButton button *,
+button[kind],
+button[kind] *,
+[data-testid^="baseButton"],
+[data-testid^="baseButton"] * {
+    font-family: var(--font-body) !important;
+    font-weight: 600 !important; /* falls BaseWeb leichter setzt */
+}
+
+/* Falls der Button als "secondary" gerendert wird */
+[data-testid="baseButton-secondary"],
+[data-testid="baseButton-secondary"] * {
+    font-family: var(--font-body) !important;
+}
+
+/* (Optional) Text-Knoten im Button, der oft als <p> gerendert wird */
+.stButton button p {
+    font-family: var(--font-body) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
