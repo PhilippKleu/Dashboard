@@ -182,6 +182,105 @@ section[data-testid="stSidebar"] [data-testid*="collapse"] button::before {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* ================= Sidebar: Typografie gezielt auf Montserrat ================= */
+
+/* Überschriften & Markdown-Text in der Sidebar */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] h5,
+section[data-testid="stSidebar"] h6,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] li,
+section[data-testid="stSidebar"] small,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .stMarkdown *:not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Expander-Titel (nur Text, nicht der Pfeil) */
+section[data-testid="stSidebar"] details > summary,
+section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+  font-weight: 600;
+}
+
+/* Widget-Labels */
+section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
+section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Buttons in der Sidebar (nur Text) */
+section[data-testid="stSidebar"] .stButton > button,
+section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+  font-weight: 600;
+}
+
+/* Radio-Optionen (nur Text) */
+section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Checkbox-Optionen (nur Text) */
+section[data-testid="stSidebar"] [data-baseweb="checkbox"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Slider: Label + Zahlen (nicht die Griffe/Icons) */
+section[data-testid="stSidebar"] [data-baseweb="slider"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Number Input */
+section[data-testid="stSidebar"] [data-testid^="stNumberInput"] input,
+section[data-testid="stSidebar"] [data-testid^="stNumberInput"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* Selectbox/Multiselect – nur Textteile (nicht die Dropdown-Pfeile) */
+section[data-testid="stSidebar"] [data-baseweb="select"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* File Uploader – nur Text */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+}
+
+/* (Falls in der Sidebar Tabs verwendet werden) */
+section[data-testid="stSidebar"] [role="tablist"] :not([aria-hidden="true"]) {
+  font-family: var(--font-body) !important;
+  font-weight: 600;
+}
+
+/* ================= Sidebar: Icons/Pfeile explizit NICHT ändern ================= */
+section[data-testid="stSidebar"] :is(
+  .material-symbols-outlined,
+  .material-symbols-rounded,
+  .material-icons,
+  .material-icons-outlined,
+  .material-icons-round,
+  [data-baseweb="icon"],
+  span[aria-hidden="true"],
+  i[aria-hidden="true"]
+){
+  font-family: 'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  font-variant-ligatures: normal !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
