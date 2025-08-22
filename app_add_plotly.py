@@ -125,6 +125,63 @@ header button[title*="sidebar"]::before {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* Icons in der SIDEBAR nicht von Montserrat überschreiben */
+section[data-testid="stSidebar"] :is(
+  .material-icons,
+  .material-icons-outlined,
+  .material-icons-round,
+  .material-symbols-outlined,
+  .material-symbols-rounded,
+  [data-baseweb="icon"],
+  [data-testid^="baseIcon"],
+  span[aria-hidden="true"]
+){
+  font-family:'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
+  font-weight:400 !important;
+  font-style:normal !important;
+  font-variant-ligatures:normal !important;
+  text-transform:none !important;
+  line-height:1 !important;
+  -webkit-font-smoothing:antialiased;
+  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+
+/* Speziell: Sidebar-Collapse/Expand-Button + Kinder */
+section[data-testid="stSidebar"] button[aria-label*="sidebar"],
+section[data-testid="stSidebar"] button[aria-label*="Sidebar"],
+section[data-testid="stSidebar"] button[title*="sidebar"],
+section[data-testid="stSidebar"] button[title*="Sidebar"],
+section[data-testid="stSidebar"] [data-testid*="collapse"] button,
+section[data-testid="stSidebar"] [data-testid*="Collapse"] button {
+  font-family:'Material Symbols Outlined','Material Icons' !important;
+}
+section[data-testid="stSidebar"] button[aria-label*="sidebar"] *,
+section[data-testid="stSidebar"] button[aria-label*="Sidebar"] *,
+section[data-testid="stSidebar"] button[title*="sidebar"] *,
+section[data-testid="stSidebar"] button[title*="Sidebar"] *,
+section[data-testid="stSidebar"] [data-testid*="collapse"] button * {
+  font-family:'Material Symbols Outlined','Material Icons' !important;
+}
+
+/* Fallback: falls trotzdem der Ligaturtext sichtbar wäre */
+section[data-testid="stSidebar"] button[aria-label*="sidebar"] span,
+section[data-testid="stSidebar"] button[title*="sidebar"] span,
+section[data-testid="stSidebar"] [data-testid*="collapse"] button span {
+  font-size:0 !important;
+}
+section[data-testid="stSidebar"] button[aria-label*="sidebar"]::before,
+section[data-testid="stSidebar"] button[title*="sidebar"]::before,
+section[data-testid="stSidebar"] [data-testid*="collapse"] button::before {
+  content:"keyboard_double_arrow_right"; /* ggf. auf _left ändern */
+  font-family:'Material Symbols Outlined' !important;
+  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+  font-size:20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
