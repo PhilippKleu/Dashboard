@@ -212,6 +212,52 @@ li[role="option"] *,
 </style>
 """, unsafe_allow_html=True)
 
+
+st.markdown("""
+<style>
+/* --- Sidebar komplett auf Montserrat --- */
+section[data-testid="stSidebar"] * {
+    font-family: var(--font-body) !important;
+}
+
+/* Expander-Titel in der Sidebar (summary) */
+section[data-testid="stSidebar"] details > summary,
+section[data-testid="stSidebar"] details > summary * {
+    font-family: var(--font-body) !important;
+    font-weight: 600;
+}
+
+/* Radio/Checkbox/Slider/Inputs in der Sidebar explizit */
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] label *,
+section[data-testid="stSidebar"] input,
+section[data-testid="stSidebar"] textarea,
+section[data-testid="stSidebar"] select,
+section[data-testid="stSidebar"] [data-baseweb="radio"] *,
+section[data-testid="stSidebar"] [data-baseweb="checkbox"] *,
+section[data-testid="stSidebar"] [data-baseweb="slider"] * {
+    font-family: var(--font-body) !important;
+}
+
+/* --- Tabs-Leiste & Tab-Labels auf Montserrat --- */
+div[role="tablist"],
+div[role="tablist"] * {
+    font-family: var(--font-body) !important;
+}
+button[role="tab"],
+button[role="tab"] * {
+    font-family: var(--font-body) !important;
+    font-weight: 600;
+}
+
+/* (Optional) den leichten Standard-Rand/Shadow der Tabs entfernen */
+button[role="tab"] {
+    box-shadow: none !important;
+    outline: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
