@@ -292,6 +292,42 @@ section[data-testid="stSidebar"] .material-symbols-rounded {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* 0) Material Icon-Fonts laden (alte Material Icons + neue Material Symbols) */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
+
+/* 1) Montserrat NICHT auf Icon-Container anwenden */
+.stApp *:not([data-baseweb="icon"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-symbols-outlined) {
+  font-family: var(--font-body) !important;
+}
+section[data-testid="stSidebar"] *:not([data-baseweb="icon"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-symbols-outlined) {
+  font-family: var(--font-body) !important;
+}
+
+/* 2) Icon-Container hart auf Material-Font setzen (sonst sieht man "double_arrow" als Text) */
+[data-baseweb="icon"], [data-baseweb="icon"] *,
+.material-icons, .material-icons-outlined, .material-icons-round,
+.material-symbols-outlined {
+  font-family: 'Material Icons','Material Icons Outlined','Material Icons Round','Material Symbols Outlined' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* 3) Catch-all: Viele Icon-Spans sind aria-hidden */
+span[aria-hidden="true"], i[aria-hidden="true"] {
+  font-family: 'Material Icons','Material Icons Outlined','Material Icons Round','Material Symbols Outlined' !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
