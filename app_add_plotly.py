@@ -34,127 +34,272 @@ st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathway
 
 st.markdown("""
 <style>
-/* === Fonts laden (Montserrat + Material Icons/Symbols) === */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0');
+    /* Montserrat von Google Fonts laden */
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
-/* Variable */
-:root { --font-body: 'Montserrat','Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif; }
+    /* zentrale Font-Variable */
+    :root {
+        --font-body: 'Montserrat', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
 
-/* === Globaler Text === */
-html, body, .stApp { background-color:#f4f4f4; font-family:var(--font-body); }
-h1,h2,h3,h4,h5,h6 { font-family:var(--font-body) !important; font-weight:600; }
+    /* Global */
+    html, body, .stApp {
+        background-color: #f4f4f4;
+        font-family: var(--font-body);
+    }
 
-/* === Buttons (inkl. „📁 Use default Excel file“) === */
-.stButton > button,
-.stButton button,
-.stButton button * ,
-button[kind],
-button[kind] *,
-[data-testid^="baseButton"],
-[data-testid^="baseButton"] * {
-  background-color:#C0C6D2; /* nur .stButton > button hat wirklich BG – andere selektoren erben */
-  color:#000;
-  border:none;
-  padding:.5em 1.2em;
-  border-radius:8px;
-  font-weight:600 !important;
-  font-family:var(--font-body) !important;
-}
+    /* Überschriften */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-body) !important;
+        font-weight: 600;
+    }
 
-/* === File Uploader (Texte) === */
-div[data-testid="stFileUploader"] label,
-div[data-testid="stFileUploader"] button,
-div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"],
-div[data-testid="stFileUploader"] [data-testid="stFileUploaderFileDetails"] {
-  font-family:var(--font-body) !important;
-  font-weight:500;
-}
+    /* Buttons (inkl. "📁 Use default Excel file") */
+    .stButton > button {
+        background-color: #C0C6D2;
+        color: black;
+        border: none;
+        padding: 0.5em 1.2em;
+        border-radius: 8px;
+        font-weight: 600;
+        font-family: var(--font-body) !important;
+    }
 
-/* === Form-Controls & Labels (Allgemein) === */
-label[data-testid="stWidgetLabel"],
-label[data-testid="stWidgetLabel"] *,
-input, textarea, select {
-  font-family:var(--font-body) !important;
-}
+    /* File-Uploader komplett auf Montserrat */
+    div[data-testid="stFileUploader"] * {
+        font-family: var(--font-body) !important;
+    }
+    /* Label explizit (falls geerbte Schrift überschrieben wurde) */
+    div[data-testid="stFileUploader"] label {
+        font-family: var(--font-body) !important;
+        font-weight: 600;
+    }
+    /* Upload-Button im Widget */
+    div[data-testid="stFileUploader"] button {
+        font-family: var(--font-body) !important;
+        font-weight: 600;
+    }
 
-/* === Selectbox / Multiselect === */
-/* Text im geschlossenen Control */
-div[data-testid^="stSelectbox"] [data-baseweb="select"] *,
-div[data-testid^="stMultiSelect"] [data-baseweb="select"] * {
-  font-family:var(--font-body) !important;
-  font-weight:500;
-}
-/* Dropdown-Portal (Listbox + Menu) */
-div[role="listbox"], div[role="listbox"] *,
-ul[role="listbox"], ul[role="listbox"] *,
-li[role="option"], li[role="option"] *,
-[data-baseweb="menu"], [data-baseweb="menu"] * {
-  font-family:var(--font-body) !important;
-}
-/* Keine Transform-/Rahmen-Effekte, die die Interaktion stören */
-div[data-testid^="stSelectbox"]:hover,
-div[data-testid^="stMultiSelect"]:hover,
-div[data-testid^="stSelectbox"]:focus-within,
-div[data-testid^="stMultiSelect"]:focus-within {
-  transform:none !important;
-  box-shadow:none !important;
-  outline:none !important;
-}
-/* BaseWeb nutzt box-shadow als Border – deaktivieren */
-div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
-div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
-  box-shadow:none !important;
-  border:none !important;
-}
+    /* Form-Controls & Labels */
+    div[data-testid="stFileUploader"] label,
+    div[data-testid^="stSelectbox"] label,
+    div[data-testid^="stMultiSelect"] label,
+    div[data-testid^="stNumberInput"] label,
+    div[data-testid^="stRadio"] label,
+    div[data-testid^="stSlider"] label,
+    input, textarea, select {
+        font-family: var(--font-body) !important;
+    }
 
-/* === Sidebar komplett (Typografie) === */
-section[data-testid="stSidebar"] * {
-  font-family:var(--font-body) !important;
-}
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary * {
-  font-weight:600;
-}
+    /* Selectbox: Wert im geschlossenen Zustand + Dropdown-Menü (Portal) */
+    div[data-testid^="stSelectbox"] div[data-baseweb="select"] * { 
+        font-family: var(--font-body) !important; 
+    }
+    div[role="listbox"] * {
+        font-family: var(--font-body) !important;
+    }
 
-/* === Tabs: Label-Typografie === */
-div[role="tablist"], div[role="tablist"] *,
-button[role="tab"], button[role="tab"] * {
-  font-family:var(--font-body) !important;
-  font-weight:600;
-}
-button[role="tab"] { box-shadow:none !important; outline:none !important; }
+    /* Hover-Scaling beibehalten */
+    div[data-testid="stFileUploader"]:hover,
+    div[data-testid^="stSelectbox"]:hover,
+    div[data-testid^="stMultiSelect"]:hover,
+    div[data-testid^="stNumberInput"]:hover,
+    div[data-testid^="stRadio"]:hover,
+    div[data-testid^="stSlider"]:hover {
+        transform: scale(1.01);
+        transition: transform 0.2s ease;
+    }
 
-/* === Optionale Hover-Skalierung (ohne Selectbox/Multiselect) === */
-div[data-testid="stFileUploader"]:hover,
-div[data-testid^="stNumberInput"]:hover,
-div[data-testid^="stRadio"]:hover,
-div[data-testid^="stSlider"]:hover {
-  transform: scale(1.01);
-  transition: transform .2s ease;
-}
+    /* --- Harte Overrides für ALLE Streamlit-Buttons --- */
+    .stButton button,
+    .stButton button *,
+    button[kind],
+    button[kind] *,
+    [data-testid^="baseButton"],
+    [data-testid^="baseButton"] * {
+        font-family: var(--font-body) !important;
+        font-weight: 600 !important; /* falls BaseWeb leichter setzt */
+    }
 
-/* === ICON-Fonts ERZWINGEN (verhindert „double_arrow“-Text) === */
-.material-icons, .material-icons-outlined, .material-icons-round,
-.material-symbols-outlined, .material-symbols-rounded,
-[data-baseweb="icon"], [data-testid^="baseIcon"],
-/* viele Icons sind aria-hidden Spans ohne Klassen */
-span[aria-hidden="true"][class*="material"],
-span[aria-hidden="true"][class*="icon"] {
-  font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons','Material Icons Outlined','Material Icons Round' !important;
-  font-weight:400 !important;
-  font-style:normal !important;
-  font-variant-ligatures: normal !important;
-  letter-spacing:normal !important;
-  text-transform:none !important;
-  line-height:1 !important;
-  -webkit-font-smoothing:antialiased;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-}
+    /* Falls der Button als "secondary" gerendert wird */
+    [data-testid="baseButton-secondary"],
+    [data-testid="baseButton-secondary"] * {
+        font-family: var(--font-body) !important;
+    }
+
+    /* (Optional) Text-Knoten im Button, der oft als <p> gerendert wird */
+    .stButton button p {
+        font-family: var(--font-body) !important;
+    }
+
+    /* 1) Transform für (Multi)Select auf Hover deaktivieren */
+    div[data-testid^="stSelectbox"]:hover,
+    div[data-testid^="stMultiSelect"]:hover {
+        transform: none !important;
+        /* alternative, unkritische Hover-Indikatoren */
+        box-shadow: 0 0 0 2px rgba(0,0,0,.06) inset;
+        transition: box-shadow .2s ease;
+    }
+
+    /* 2) Schrift sicher überall in der Selectbox erzwingen:
+          - Label
+          - geschlossener Zustand (value)
+          - Dropdown-Portal (Listbox + Options) */
+    label[data-testid="stWidgetLabel"],
+    label[data-testid="stWidgetLabel"] *,
+    div[data-baseweb="select"] *,
+    div[role="listbox"],
+    div[role="listbox"] *,
+    div[role="option"],
+    div[role="option"] * {
+        font-family: var(--font-body) !important;
+        font-weight: 500;
+    }
+
+    /* 3) Optional: leichter Fokusrahmen, ohne Transform */
+    div[data-testid^="stSelectbox"]:focus-within {
+        box-shadow: 0 0 0 2px rgba(0,0,0,.12) inset;
+    }
+
+    /* 1) Keine Hover-/Fokus-Rahmen für (Multi)Select */
+    div[data-testid^="stSelectbox"]:hover,
+    div[data-testid^="stMultiSelect"]:hover,
+    div[data-testid^="stSelectbox"]:focus-within,
+    div[data-testid^="stMultiSelect"]:focus-within {
+        transform: none !important;
+        box-shadow: none !important;  /* entfernt den „Rahmen“ */
+        outline: none !important;
+    }
+
+    /* 2) Rahmen/Borders am geschlossenen Select-Control selbst entfernen (BaseWeb nutzt box-shadow als Border) */
+    div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
+    div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* 3) Montserrat im Label + geschlossenem Control erzwingen */
+    label[data-testid="stWidgetLabel"],
+    label[data-testid="stWidgetLabel"] *,
+    div[data-testid^="stSelectbox"] [data-baseweb="select"] *,
+    div[data-testid^="stMultiSelect"] [data-baseweb="select"] * {
+        font-family: var(--font-body) !important;
+    }
+
+    /* 4) Montserrat IM DROPDOWN (Portal/Popover) sicherstellen */
+    div[role="listbox"],
+    div[role="listbox"] *,
+    ul[role="listbox"],
+    ul[role="listbox"] *,
+    li[role="option"],
+    li[role="option"] *,
+    [data-baseweb="menu"],
+    [data-baseweb="menu"] * {
+        font-family: var(--font-body) !important;
+    }
+
+    /* --- Sidebar komplett auf Montserrat --- */
+    section[data-testid="stSidebar"] * {
+        font-family: var(--font-body) !important;
+    }
+
+    /* Expander-Titel in der Sidebar (summary) */
+    section[data-testid="stSidebar"] details > summary,
+    section[data-testid="stSidebar"] details > summary * {
+        font-family: var(--font-body) !important;
+        font-weight: 600;
+    }
+
+    /* Radio/Checkbox/Slider/Inputs in der Sidebar explizit */
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] label *,
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] textarea,
+    section[data-testid="stSidebar"] select,
+    section[data-testid="stSidebar"] [data-baseweb="radio"] *,
+    section[data-testid="stSidebar"] [data-baseweb="checkbox"] *,
+    section[data-testid="stSidebar"] [data-baseweb="slider"] * {
+        font-family: var(--font-body) !important;
+    }
+
+    /* --- Tabs-Leiste & Tab-Labels auf Montserrat --- */
+    div[role="tablist"],
+    div[role="tablist"] * {
+        font-family: var(--font-body) !important;
+    }
+    button[role="tab"],
+    button[role="tab"] * {
+        font-family: var(--font-body) !important;
+        font-weight: 600;
+    }
+
+    /* (Optional) den leichten Standard-Rand/Shadow der Tabs entfernen */
+    button[role="tab"] {
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Material Symbols/Icons laden (Outlined + Rounded, sicherheitshalber beide) */
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0');
+
+    /* Icon-Elemente NICHT mit Montserrat überschreiben */
+    .material-icons,
+    .material-icons-outlined,
+    .material-symbols-outlined,
+    .material-symbols-rounded,
+    [class^="material-"],
+    [class*=" material-"] {
+      font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons' !important;
+      font-weight: normal !important;       /* keine fette Schrift auf Icons */
+      font-style: normal !important;
+      letter-spacing: normal !important;
+      text-transform: none !important;
+      line-height: 1 !important;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Sidebar-spezifisch (falls du dort global alles auf Montserrat stellst) */
+    section[data-testid="stSidebar"] .material-icons,
+    section[data-testid="stSidebar"] .material-icons-outlined,
+    section[data-testid="stSidebar"] .material-symbols-outlined,
+    section[data-testid="stSidebar"] .material-symbols-rounded {
+      font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons' !important;
+      font-weight: normal !important;
+    }
+
+    /* 0) Material Icon-Fonts laden (alte Material Icons + neue Material Symbols) */
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
+
+    /* 1) Montserrat NICHT auf Icon-Container anwenden */
+    .stApp *:not([data-baseweb="icon"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-symbols-outlined) {
+      font-family: var(--font-body) !important;
+    }
+    section[data-testid="stSidebar"] *:not([data-baseweb="icon"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-symbols-outlined) {
+      font-family: var(--font-body) !important;
+    }
+
+    /* 2) Icon-Container hart auf Material-Font setzen (sonst sieht man "double_arrow" als Text) */
+    [data-baseweb="icon"], [data-baseweb="icon"] *,
+    .material-icons, .material-icons-outlined, .material-icons-round,
+    .material-symbols-outlined {
+      font-family: 'Material Icons','Material Icons Outlined','Material Icons Round','Material Symbols Outlined' !important;
+      font-weight: normal !important;
+      font-style: normal !important;
+      letter-spacing: normal !important;
+      text-transform: none !important;
+      line-height: 1 !important;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* 3) Catch-all: Viele Icon-Spans sind aria-hidden */
+    span[aria-hidden="true"], i[aria-hidden="true"] {
+      font-family: 'Material Icons','Material Icons Outlined','Material Icons Round','Material Symbols Outlined' !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
