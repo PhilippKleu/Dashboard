@@ -65,12 +65,13 @@ div[data-testid^="stMultiSelect"]:focus-within {
   transform:none !important; box-shadow:none !important; outline:none !important;
 }
 
-div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
-div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
-  box-shadow:none !important; border:none !important;
+
+
+/* ========= Dropdown-Portal (Listbox/Menu) ========= */
+[role="listbox"], [role="listbox"] *,
+[data-baseweb="menu"], [data-baseweb="menu"] * {
+  font-family: var(--font-body) !important;
 }
-
-
 
 /* ========= File Uploader (Text) ========= */
 div[data-testid="stFileUploader"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
