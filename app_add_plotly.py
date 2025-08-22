@@ -42,8 +42,6 @@ div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
   font-family: var(--font-body) !important;
 }
 
-/* ========= Sidebar (Text) ========= */
-section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
 
 
 
