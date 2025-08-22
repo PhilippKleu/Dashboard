@@ -138,6 +138,39 @@ button[kind] *,
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* 1) Transform für (Multi)Select auf Hover deaktivieren */
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover {
+    transform: none !important;
+    /* alternative, unkritische Hover-Indikatoren */
+    box-shadow: 0 0 0 2px rgba(0,0,0,.06) inset;
+    transition: box-shadow .2s ease;
+}
+
+/* 2) Schrift sicher überall in der Selectbox erzwingen:
+      - Label
+      - geschlossener Zustand (value)
+      - Dropdown-Portal (Listbox + Options) */
+label[data-testid="stWidgetLabel"],
+label[data-testid="stWidgetLabel"] *,
+div[data-baseweb="select"] *,
+div[role="listbox"],
+div[role="listbox"] *,
+div[role="option"],
+div[role="option"] * {
+    font-family: var(--font-body) !important;
+    font-weight: 500;
+}
+
+/* 3) Optional: leichter Fokusrahmen, ohne Transform */
+div[data-testid^="stSelectbox"]:focus-within {
+    box-shadow: 0 0 0 2px rgba(0,0,0,.12) inset;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
