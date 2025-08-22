@@ -54,12 +54,14 @@ section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-
   font-family: var(--font-body) !important;
 }
 
-
-
-/* Radio-Optionen (nur Text) */
-section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
+/* Buttons in der Sidebar (nur Text) */
+section[data-testid="stSidebar"] .stButton > button,
+section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
+  font-weight: 600;
 }
+
+
 
 /* Checkbox-Optionen (nur Text) */
 section[data-testid="stSidebar"] [data-baseweb="checkbox"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
