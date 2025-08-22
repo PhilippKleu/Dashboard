@@ -33,40 +33,15 @@ st.markdown("""
 
 :root { --font-body: 'Montserrat','Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif; }
 
-
-
-/* ========= Sidebar (Text) ========= */
-section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
-
-/* Expander-Titel (nur Text, nicht Pfeil) */
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* ========= Buttons ========= */
-.stButton > button{
-  background:#C0C6D2; color:#000; border:none; padding:.5em 1.2em; border-radius:8px; font-weight:600;
-}
-
-/* ========= Select/Multiselect: keine Glows/Frames ========= */
-div[data-testid^="stSelectbox"]:hover,
-div[data-testid^="stMultiSelect"]:hover,
-div[data-testid^="stSelectbox"]:focus-within,
-div[data-testid^="stMultiSelect"]:focus-within {
-  transform:none !important; box-shadow:none !important; outline:none !important;
-}
-div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
-div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
-  box-shadow:none !important; border:none !important;
-}
-
-/* ========= Dropdown-Portal (Listbox/Menu) ========= */
-[role="listbox"], [role="listbox"] *,
-[data-baseweb="menu"], [data-baseweb="menu"] * {
+/* ========= Global (Text) ========= */
+html, body, .stApp { background:#f4f4f4; }
+h1,h2,h3,h4,h5,h6,
+label, input, textarea, select,
+div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
+.stButton > button {
   font-family: var(--font-body) !important;
 }
+
 
 /* ========= File Uploader (Text) ========= */
 div[data-testid="stFileUploader"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
