@@ -22,99 +22,42 @@ import plotly.express as px
 from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 
-st.markdown("""
-<style>
-/* ================= Sidebar: Typografie gezielt auf Montserrat ================= */
-
-/* Überschriften & Markdown-Text in der Sidebar */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] h4,
-section[data-testid="stSidebar"] h5,
-section[data-testid="stSidebar"] h6,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] li,
-section[data-testid="stSidebar"] small,
-section[data-testid="stSidebar"] .stMarkdown,
-section[data-testid="stSidebar"] .stMarkdown *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Expander-Titel (nur Text, nicht der Pfeil) */
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* Widget-Labels */
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Buttons in der Sidebar (nur Text) */
-section[data-testid="stSidebar"] .stButton > button,
-section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* Radio-Optionen (nur Text) */
-section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-
-</style>
-""", unsafe_allow_html=True)
-
-DEFAULT_FILENAME = "VERTEX_RESULTS.xlsx"
-DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_FILENAME)
-
-# === Streamlit Style ===
-st.set_page_config(page_title="Decision Tool for Near-Optimal Transition Pathways", layout="wide")
-# === body, .stApp background color website ===
-# === .stButton>button Reset Button ===
+)
 
 st.markdown("""
 <style>
-/* ========== Fonts laden ========== */
+/* ========= Fonts ========= */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
 
 :root { --font-body: 'Montserrat','Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif; }
 
-/* ========== Global (nur Nicht-Icons!) ========== */
+/* ========= Global (Text) ========= */
 html, body, .stApp { background:#f4f4f4; }
-html, body, .stApp,
 h1,h2,h3,h4,h5,h6,
 label, input, textarea, select,
 div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
-.stButton > button, .stButton > button * {
+.stButton > button {
   font-family: var(--font-body) !important;
 }
 
-/* ========== File Uploader & Sidebar-Texte (ohne Icons) ========== */
-section[data-testid="stSidebar"] :not([aria-hidden="true"]),
-div[data-testid="stFileUploader"] :not([aria-hidden="true"]) {
+/* ========= Sidebar (Text) ========= */
+section[data-testid="stSidebar"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
+
+/* Expander-Titel (nur Text, nicht Pfeil) */
+section[data-testid="stSidebar"] details > summary,
+section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
   font-family: var(--font-body) !important;
+  font-weight: 600;
 }
 
-/* ========== Selectbox/Multiselect: Dropdown-Portal ========== */
-[role="listbox"], [role="listbox"] *,
-[data-baseweb="menu"], [data-baseweb="menu"] * {
-  font-family: var(--font-body) !important;
-}
-
-/* ========== Buttons ========== */
+/* ========= Buttons ========= */
 .stButton > button{
   background:#C0C6D2; color:#000; border:none; padding:.5em 1.2em; border-radius:8px; font-weight:600;
 }
 
-/* ========== KEINE Rahmen/Transforms, die Select stören ========== */
+/* ========= Select/Multiselect: keine Glows/Frames ========= */
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
 div[data-testid^="stSelectbox"]:focus-within,
@@ -126,10 +69,20 @@ div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
   box-shadow:none !important; border:none !important;
 }
 
-/* ========== ICONS – überall NIEMALS Montserrat ========== */
+/* ========= Dropdown-Portal (Listbox/Menu) ========= */
+[role="listbox"], [role="listbox"] *,
+[data-baseweb="menu"], [data-baseweb="menu"] * {
+  font-family: var(--font-body) !important;
+}
+
+/* ========= File Uploader (Text) ========= */
+div[data-testid="stFileUploader"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
+
+/* ========= ICONS – niemals Montserrat ========= */
 [aria-hidden="true"],
 [data-baseweb="icon"], [data-testid^="baseIcon"],
-.material-icons, .material-symbols-outlined {
+.material-icons, .material-icons-outlined, .material-icons-round,
+.material-symbols-outlined, .material-symbols-rounded {
   font-family:'Material Symbols Outlined','Material Icons' !important;
   font-weight:400 !important; font-style:normal !important; line-height:1 !important;
   font-variant-ligatures:normal !important; text-transform:none !important;
@@ -137,192 +90,29 @@ div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
   font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
 }
 
-/* ========== SPEZIFISCH: Sidebar-Toggle erzwingen ========== */
-/* trifft gängige Varianten des Toggle-Buttons + seine Kinder */
+/* ========= Sidebar Toggle im Header ========= */
 header button[aria-label*="sidebar"],
 header button[title*="sidebar"],
 header [data-testid*="collapse"] button,
-header [data-testid*="Collapse"] button,
-header button[aria-label*="Sidebar"],
-header button[title*="Sidebar"],
-header [data-testid*="sidebar"] button {
+header [data-testid*="Collapse"] button {
   font-family:'Material Symbols Outlined','Material Icons' !important;
 }
 header button[aria-label*="sidebar"] *,
 header button[title*="sidebar"] *,
 header [data-testid*="collapse"] button *,
-header [data-testid*="Collapse"] button *,
-header [data-testid*="sidebar"] button * {
+header [data-testid*="Collapse"] button * {
   font-family:'Material Symbols Outlined','Material Icons' !important;
 }
 
-/* Falls der Toggle reinen Ligatur-Text rendert: Text ausblenden, Icon per ::before */
+/* Fallback: Ligaturtext ausblenden, Icon per ::before */
 header button[aria-label*="sidebar"] span,
-header button[title*="sidebar"] span {
-  font-size:0 !important;
-}
+header button[title*="sidebar"] span { font-size:0 !important; }
 header button[aria-label*="sidebar"]::before,
 header button[title*="sidebar"]::before {
-  content:"keyboard_double_arrow_right";
+  content:"keyboard_double_arrow_right"; /* ggf. auf "keyboard_double_arrow_left" ändern */
   font-family:'Material Symbols Outlined' !important;
   font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
   font-size:20px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* Icons in der SIDEBAR nicht von Montserrat überschreiben */
-section[data-testid="stSidebar"] :is(
-  .material-icons,
-  .material-icons-outlined,
-  .material-icons-round,
-  .material-symbols-outlined,
-  .material-symbols-rounded,
-  [data-baseweb="icon"],
-  [data-testid^="baseIcon"],
-  span[aria-hidden="true"]
-){
-  font-family:'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
-  font-weight:400 !important;
-  font-style:normal !important;
-  font-variant-ligatures:normal !important;
-  text-transform:none !important;
-  line-height:1 !important;
-  -webkit-font-smoothing:antialiased;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-}
-
-/* Speziell: Sidebar-Collapse/Expand-Button + Kinder */
-section[data-testid="stSidebar"] button[aria-label*="sidebar"],
-section[data-testid="stSidebar"] button[aria-label*="Sidebar"],
-section[data-testid="stSidebar"] button[title*="sidebar"],
-section[data-testid="stSidebar"] button[title*="Sidebar"],
-section[data-testid="stSidebar"] [data-testid*="collapse"] button,
-section[data-testid="stSidebar"] [data-testid*="Collapse"] button {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
-section[data-testid="stSidebar"] button[aria-label*="sidebar"] *,
-section[data-testid="stSidebar"] button[aria-label*="Sidebar"] *,
-section[data-testid="stSidebar"] button[title*="sidebar"] *,
-section[data-testid="stSidebar"] button[title*="Sidebar"] *,
-section[data-testid="stSidebar"] [data-testid*="collapse"] button * {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
-
-/* Fallback: falls trotzdem der Ligaturtext sichtbar wäre */
-section[data-testid="stSidebar"] button[aria-label*="sidebar"] span,
-section[data-testid="stSidebar"] button[title*="sidebar"] span,
-section[data-testid="stSidebar"] [data-testid*="collapse"] button span {
-  font-size:0 !important;
-}
-section[data-testid="stSidebar"] button[aria-label*="sidebar"]::before,
-section[data-testid="stSidebar"] button[title*="sidebar"]::before,
-section[data-testid="stSidebar"] [data-testid*="collapse"] button::before {
-  content:"keyboard_double_arrow_right"; /* ggf. auf _left ändern */
-  font-family:'Material Symbols Outlined' !important;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-  font-size:20px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* ================= Sidebar: Typografie gezielt auf Montserrat ================= */
-
-/* Überschriften & Markdown-Text in der Sidebar */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] h4,
-section[data-testid="stSidebar"] h5,
-section[data-testid="stSidebar"] h6,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] li,
-section[data-testid="stSidebar"] small,
-section[data-testid="stSidebar"] .stMarkdown,
-section[data-testid="stSidebar"] .stMarkdown *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Expander-Titel (nur Text, nicht der Pfeil) */
-section[data-testid="stSidebar"] details > summary,
-section[data-testid="stSidebar"] details > summary *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* Widget-Labels */
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"],
-section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Buttons in der Sidebar (nur Text) */
-section[data-testid="stSidebar"] .stButton > button,
-section[data-testid="stSidebar"] .stButton > button *:not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* Radio-Optionen (nur Text) */
-section[data-testid="stSidebar"] [data-baseweb="radio"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Checkbox-Optionen (nur Text) */
-section[data-testid="stSidebar"] [data-baseweb="checkbox"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Slider: Label + Zahlen (nicht die Griffe/Icons) */
-section[data-testid="stSidebar"] [data-baseweb="slider"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Number Input */
-section[data-testid="stSidebar"] [data-testid^="stNumberInput"] input,
-section[data-testid="stSidebar"] [data-testid^="stNumberInput"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* Selectbox/Multiselect – nur Textteile (nicht die Dropdown-Pfeile) */
-section[data-testid="stSidebar"] [data-baseweb="select"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* File Uploader – nur Text */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] :not([data-baseweb="icon"]):not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-}
-
-/* (Falls in der Sidebar Tabs verwendet werden) */
-section[data-testid="stSidebar"] [role="tablist"] :not([aria-hidden="true"]) {
-  font-family: var(--font-body) !important;
-  font-weight: 600;
-}
-
-/* ================= Sidebar: Icons/Pfeile explizit NICHT ändern ================= */
-section[data-testid="stSidebar"] :is(
-  .material-symbols-outlined,
-  .material-symbols-rounded,
-  .material-icons,
-  .material-icons-outlined,
-  .material-icons-round,
-  [data-baseweb="icon"],
-  span[aria-hidden="true"],
-  i[aria-hidden="true"]
-){
-  font-family: 'Material Symbols Outlined','Material Icons','Material Icons Outlined','Material Icons Round' !important;
-  font-weight: 400 !important;
-  font-style: normal !important;
-  font-variant-ligatures: normal !important;
-  text-transform: none !important;
-  line-height: 1 !important;
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
 }
 </style>
 """, unsafe_allow_html=True)
