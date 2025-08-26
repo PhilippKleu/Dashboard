@@ -36,6 +36,11 @@ font_b64 = load_font_b64(FONT_URL)
 
 st.markdown(f"""
 <style>
+/* 0) Material-Icon-Fonts laden (für die Sidebar-Pfeile etc.) */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+
+/* 1) Deine Montserrat-Font einbinden */
 @font-face {{
   font-family: 'Montserrat';
   src: url(data:font/ttf;base64,{font_b64}) format('truetype');
@@ -44,26 +49,38 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* globale Anwendung */
 :root {{
   --app-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }}
 
-/* Montserrat überall … */
-.stApp {{
+/* 2) Montserrat global anwenden – ABER Icons ausnehmen */
+.stApp *:not(.material-icons):not(.material-icons-outlined):not(.material-icons-round)
+       :not(.material-symbols-outlined):not(.material-symbols-rounded) {{
   font-family: var(--app-font) !important;
 }}
-/* … aber NICHT bei Icon-Schriften (Material Icons / Symbols) */
-.stApp *:not(i):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round)
-        :not(.material-symbols-outlined):not(.material-symbols-rounded) {{
-  font-family: inherit !important;
+
+/* 3) Sicherstellen, dass Icon-Elemente die richtige Font nutzen */
+.material-icons,
+.material-icons-outlined,
+.material-icons-round {{
+  font-family: 'Material Icons' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  direction: ltr !important;
+}}
+.material-symbols-outlined,
+.material-symbols-rounded {{
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
 }}
 
-/* Hintergrundfarbe + deine UI-Styles */
+/* 4) Deine bisherigen Styles */
 body, .stApp {{
   background-color: #f4f4f4;
 }}
-
 .stButton > button {{
   background-color: #C0C6D2;
   color: black;
@@ -72,7 +89,6 @@ body, .stApp {{
   border-radius: 8px;
   font-weight: 500;
 }}
-
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
@@ -82,13 +98,9 @@ div[data-testid^="stSlider"]:hover {{
   transform: scale(1.01);
   transition: transform 0.2s ease;
 }}
-
-/* (Optional) Falls bei dir keine Material-Font geladen ist, aktivieren:
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
-.material-symbols-outlined {{ font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }}
-*/
 </style>
 """, unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
