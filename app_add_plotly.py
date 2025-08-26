@@ -183,6 +183,49 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+
+st.markdown("""
+<style>
+/* === HEADER-TOGGLE: Inhalt ausblenden & eigene Pfeile überlagern === */
+
+/* 1) Container finden (versch. Streamlit-Versionen) */
+[data-testid="collapsedControl"],
+[data-testid="stHeader"] [data-testid="collapsedControl"],
+[data-testid="stHeader"] button[aria-label*="sidebar" i],
+[data-testid="stHeader"] button[title*="sidebar" i] {
+  position: relative !important;
+}
+
+/* 2) ALLES innen unsichtbar machen (Icon-/Ligatur-Text, Spans, SVGs, etc.) */
+[data-testid="collapsedControl"] * ,
+[data-testid="stHeader"] [data-testid="collapsedControl"] * ,
+[data-testid="stHeader"] button[aria-label*="sidebar" i] * ,
+[data-testid="stHeader"] button[title*="sidebar" i] * {
+  opacity: 0 !important;
+}
+
+/* 3) Eigene Pfeile anzeigen – Header (links einklappen) */
+[data-testid="collapsedControl"]::after,
+[data-testid="stHeader"] [data-testid="collapsedControl"]::after,
+[data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
+[data-testid="stHeader"] button[title*="sidebar" i]::after {
+  content: "❮❮";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* 4) Wenn der Toggle IN der Sidebar sitzt (ausgeklappt), rechts anzeigen */
+[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {
+  content: "❯❯";
+}
+</style>
+""", unsafe_allow_html=True)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
