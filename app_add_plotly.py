@@ -101,6 +101,22 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown(
+    """
+    <style>
+    /* Sidebar toggle button */
+    button[title="Toggle sidebar"]::before {
+        content: "▶";  /* Pfeil-Symbol */
+        font-size: 20px;
+    }
+    button[title="Toggle sidebar"] svg {
+        display: none;  /* ursprüngliches Icon ausblenden */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
