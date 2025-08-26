@@ -45,7 +45,7 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* 2) Icon-Schriften schützen (wenn Material-Fonts verfügbar sind) */
+/* 2) Icon-Schriften schützen */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round {{
@@ -106,13 +106,24 @@ textarea, select,
   font-weight: 500;
 }}
 
-/* 6a) Dropdowns (Selectbox & MultiSelect) */
+/* 6a) Dropdown-Feld (sichtbares Input) */
 [data-testid="stSelectbox"] *:not(.material-icons):not(.material-symbols-outlined),
 [data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 /* MultiSelect ausgewählte Tags */
 [data-baseweb="tag"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+/* 6b) >>> WICHTIG: Portal-Menü der Dropdowns (Base Web Popover/Menu) <<< */
+/* Das Optionsmenü wird außerhalb des Widgets im Body gerendert. */
+[data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-baseweb="popover"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="listbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="option"]:not(.material-icons):not(.material-symbols-outlined),
+[role="option"] *:not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
@@ -144,35 +155,24 @@ div[data-testid^="stSlider"]:hover {{
   transform: scale(1.01);
   transition: transform 0.2s ease;
 }}
-</style>
-""", unsafe_allow_html=True)
 
-
-st.markdown("""
-<style>
 /* === HEADER-TOGGLE: Inhalt ausblenden & eigene Pfeile überlagern === */
-
-/* 1) Container finden (versch. Streamlit-Versionen) */
 [data-testid="collapsedControl"],
 [data-testid="stHeader"] [data-testid="collapsedControl"],
 [data-testid="stHeader"] button[aria-label*="sidebar" i],
-[data-testid="stHeader"] button[title*="sidebar" i] {
+[data-testid="stHeader"] button[title*="sidebar" i] {{
   position: relative !important;
-}
-
-/* 2) ALLES innen unsichtbar machen (Icon-/Ligatur-Text, Spans, SVGs, etc.) */
+}}
 [data-testid="collapsedControl"] * ,
 [data-testid="stHeader"] [data-testid="collapsedControl"] * ,
 [data-testid="stHeader"] button[aria-label*="sidebar" i] * ,
-[data-testid="stHeader"] button[title*="sidebar" i] * {
+[data-testid="stHeader"] button[title*="sidebar" i] * {{
   opacity: 0 !important;
-}
-
-/* 3) Eigene Pfeile anzeigen – Header (links einklappen) */
+}}
 [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-[data-testid="stHeader"] button[title*="sidebar" i]::after {
+[data-testid="stHeader"] button[title*="sidebar" i]::after {{
   content: "❮❮";
   position: absolute;
   inset: 0;
@@ -181,12 +181,10 @@ st.markdown("""
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 22px;
   line-height: 1;
-}
-
-/* 4) Wenn der Toggle IN der Sidebar sitzt (ausgeklappt), rechts anzeigen */
-[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {
+}}
+[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
   content: "❯❯";
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
