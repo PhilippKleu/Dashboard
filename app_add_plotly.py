@@ -36,9 +36,7 @@ font_b64 = load_font_b64(FONT_URL)
 
 st.markdown(f"""
 <style>
-
-
-/* 1) Montserrat bereitstellen (kein globales Anwenden!) */
+/* 1) Montserrat bereitstellen (kein globales Anwenden) */
 @font-face {{
   font-family: 'Montserrat';
   src: url(data:font/ttf;base64,{font_b64}) format('truetype');
@@ -47,48 +45,82 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* 2) HAUPTINHALT: Überschriften + Markdown-Text */
+/* 2) ICON-SCHRIFTEN EXPLIZIT SCHÜTZEN (wichtiger Teil) */
+.material-icons,
+.material-icons-outlined,
+.material-icons-round {{
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+.material-symbols-outlined,
+.material-symbols-rounded {{
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+
+/* 3) HAUPTINHALT: Überschriften + Markdown-Text */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
-[data-testid="stMarkdownContainer"] *:not(i) {{
+[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 3) SIDEBAR: Überschriften + Text (ohne Icons) */
-[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
-[data-testid="stSidebar"] h4, [data-testid="stSidebar"] h5, [data-testid="stSidebar"] h6,
-[data-testid="stSidebar"] p,  [data-testid="stSidebar"] span:not(i),
-[data-testid="stSidebar"] label, [data-testid="stSidebar"] small {{
+/* 4) SIDEBAR: Überschriften + Text (ohne Icons) */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] small {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) WIDGETS: Labels, Inputs, Buttons (nur Text der Controls) */
-label, .stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
+/* 5) WIDGETS: Labels, Inputs, Buttons */
+label,
+.stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"],
-textarea, select, .stTextInput input, .stNumberInput input, .stTextArea textarea {{
+textarea, select,
+.stTextInput input, .stNumberInput input, .stTextArea textarea {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 .stButton > button, .stDownloadButton > button {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-  background-color: #C0C6D2; color: black; border: none; padding: 0.5em 1.2em; border-radius: 8px; font-weight: 500;
+  background-color: #C0C6D2;
+  color: black;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
 }}
 
-/* 5) TAB/TITEL/ELEMENTE mit TestIDs */
-[data-testid="stHeader"] *, [data-testid="stSubheader"] *,
-[data-testid="stCaption"] *, [data-testid="stMetricLabel"], [data-testid="stMetricDelta"], [data-testid="stMetricValue"],
-[data-testid="stExpander"] summary, [data-testid="stTabs"] button p {{
+/* 6) Tabs/Expander/Metrics */
+[data-testid="stHeader"] *,
+[data-testid="stSubheader"] *,
+[data-testid="stCaption"] *,
+[data-testid="stMetricLabel"],
+[data-testid="stMetricDelta"],
+[data-testid="stMetricValue"],
+[data-testid="stExpander"] summary,
+[data-testid="stTabs"] button p {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 6) TABELLEN & DATAFRAMES */
+/* 7) Tabellen & DataFrames */
 .stTable, .stTable table, .stTable th, .stTable td,
 .stDataFrame, .stDataFrame div, .stDataFrame table, .stDataFrame th, .stDataFrame td {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 7) Hintergrund & deine Hover-Animationen bleiben */
+/* 8) Hintergrund & deine Hover-Animationen */
 body, .stApp {{ background-color: #f4f4f4; }}
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
@@ -102,21 +134,7 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <style>
-    /* Sidebar toggle button */
-    button[title="Toggle sidebar"]::before {
-        content: "▶";  /* Pfeil-Symbol */
-        font-size: 20px;
-    }
-    button[title="Toggle sidebar"] svg {
-        display: none;  /* ursprüngliches Icon ausblenden */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
 
 def clean_plot_indices(raw_indices):
     """
