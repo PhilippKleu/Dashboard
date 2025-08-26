@@ -41,40 +41,42 @@ st.markdown(f"""
   font-style: normal;
   font-display: swap;
 }}
-html, body, [class*="css"] {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+
+/* globale Anwendung mit hoher Spezifität */
+:root {{
+  --app-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}}
+.stApp, .stApp * {{
+  font-family: var(--app-font) !important;
+}}
+
+/* Hintergrundfarbe + deine UI-Styles */
+body, .stApp {{
+  background-color: #f4f4f4;
+}}
+
+.stButton > button {{
+  background-color: #C0C6D2;
+  color: black;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
+}}
+
+div[data-testid="stFileUploader"]:hover,
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover,
+div[data-testid^="stNumberInput"]:hover,
+div[data-testid^="stRadio"]:hover,
+div[data-testid^="stSlider"]:hover {{
+  transform: scale(1.01);
+  transition: transform 0.2s ease;
 }}
 </style>
 """, unsafe_allow_html=True)
 
 
-st.markdown("""
-    <style>
-        body, .stApp {
-            background-color: #f4f4f4;
-            font-family: 'Montserrat';
-            src: url(data:font/ttf;base64,{font_b64}) format('truetype');
-        } 
-        .stButton>button {
-            background-color: #C0C6D2;
-            color: black;
-            border: none;
-            padding: 0.5em 1.2em;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        div[data-testid="stFileUploader"]:hover,
-        div[data-testid^="stSelectbox"]:hover,
-        div[data-testid^="stMultiSelect"]:hover,
-        div[data-testid^="stNumberInput"]:hover,
-        div[data-testid^="stRadio"]:hover,
-        div[data-testid^="stSlider"]:hover {
-            transform: scale(1.01);
-            transition: transform 0.2s ease;
-        }
-        
-    </style>
-""", unsafe_allow_html=True)
 st.set_page_config(layout="wide")
 def clean_plot_indices(raw_indices):
     """
