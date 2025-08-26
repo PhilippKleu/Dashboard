@@ -45,7 +45,7 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* 2) Icon-Schriften explizit schützen */
+/* 2) Icon-Schriften explizit schützen (wie zuvor) */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round {{
@@ -68,7 +68,7 @@ st.markdown(f"""
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) Sidebar: nur Text-Elemente (KEIN span, damit Pfeile intakt bleiben) */
+/* 4) Sidebar: nur typische Text-Elemente (KEIN span) – wie der funktionierende Fix */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -84,6 +84,39 @@ st.markdown(f"""
 /* 5) Header: alle Texte außer dem Toggle oben */
 [data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+/* 5a) Toggle oben (collapsedControl) – Icon-Klassen explizit korrekt setzen */
+[data-testid="collapsedControl"] .material-icons,
+[data-testid="collapsedControl"] .material-icons-outlined,
+[data-testid="collapsedControl"] .material-icons-round {{
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+[data-testid="collapsedControl"] .material-symbols-outlined,
+[data-testid="collapsedControl"] .material-symbols-rounded {{
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+
+/* 5b) Toggle oben – Fallback NUR wenn kein Icon-Span vorhanden ist:
+   Streamlit rendert manchmal einen classlosen <span> mit Ligatur-Text.
+   Den blenden wir aus und setzen eigene Pfeile davor (Segoe UI).
+   Das greift NICHT, wenn .material-* Klassen vorhanden sind. */
+[data-testid="collapsedControl"] span:not([class]) {{
+  font-size: 0 !important;  /* Ligatur-Text verstecken */
+  line-height: 1 !important;
+}}
+[data-testid="collapsedControl"] span:not([class])::before {{
+  content: "❮❮";            /* Header-Toggle zeigt standardmäßig 'einklappen' (links) */
+  font-family: "Segoe UI", sans-serif;
+  font-size: 22px;
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
 }}
 
 /* 6) Widgets: Labels, Inputs, Buttons */
