@@ -23,6 +23,8 @@ from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 import base64, requests
 
+st.set_page_config(layout="wide")
+
 @st.cache_data(show_spinner=False)
 def load_font_b64(raw_url: str) -> str:
     r = requests.get(raw_url, timeout=10)
