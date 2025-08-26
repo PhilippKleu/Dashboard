@@ -50,7 +50,7 @@ st.markdown("""
         
     </style>
 """, unsafe_allow_html=True)
-
+st.set_page_config(layout="wide")
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
