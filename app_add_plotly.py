@@ -45,7 +45,7 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* 2) Icon-Schriften explizit schützen (wie zuvor) */
+/* 2) Icon-Schriften schützen (wenn Material-Fonts verfügbar sind) */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round {{
@@ -61,14 +61,14 @@ st.markdown(f"""
   font-variant-ligatures: normal !important;
 }}
 
-/* 3) Hauptinhalt: Überschriften + Markdown-Text */
+/* 3) Hauptinhalt: Überschriften + Markdown-Text (ohne Icons) */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
 [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) Sidebar: nur typische Text-Elemente (KEIN span) – wie der funktionierende Fix */
+/* 4) Sidebar: nur Text-Elemente (KEIN span) – so hat es bei dir funktioniert */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -81,37 +81,50 @@ st.markdown(f"""
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 5) Header: alle Texte außer dem Toggle oben */
+/* 5) Header: alle Texte außer dem Toggle oben (collapsedControl) */
 [data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 5a) Toggle oben (collapsedControl) – Icon-Klassen explizit korrekt setzen */
-[data-testid="collapsedControl"] .material-icons,
-[data-testid="collapsedControl"] .material-icons-outlined,
-[data-testid="collapsedControl"] .material-icons-round {{
+/* 5a) Header-Toggle: wenn Material-Icon-Span vorhanden, Icon-Font erzwingen */
+[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons,
+[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons-outlined,
+[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons-round {{
   font-family: 'Material Icons' !important;
   font-feature-settings: 'liga' 1 !important;
   font-variant-ligatures: normal !important;
 }}
-[data-testid="collapsedControl"] .material-symbols-outlined,
-[data-testid="collapsedControl"] .material-symbols-rounded {{
+[data-testid="stHeader"] [data-testid="collapsedControl"] .material-symbols-outlined,
+[data-testid="stHeader"] [data-testid="collapsedControl"] .material-symbols-rounded {{
   font-family: 'Material Symbols Outlined' !important;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
   font-feature-settings: 'liga' 1 !important;
   font-variant-ligatures: normal !important;
 }}
 
-/* 5b) Toggle oben – Fallback NUR wenn kein Icon-Span vorhanden ist:
-   Streamlit rendert manchmal einen classlosen <span> mit Ligatur-Text.
-   Den blenden wir aus und setzen eigene Pfeile davor (Segoe UI).
-   Das greift NICHT, wenn .material-* Klassen vorhanden sind. */
-[data-testid="collapsedControl"] span:not([class]) {{
-  font-size: 0 !important;  /* Ligatur-Text verstecken */
+/* 5b) Header-Toggle Fallback (wenn KEIN Icon-Span → classloser Text-Span):
+       Text verstecken und Unicode-Pfeile anzeigen. */
+[data-testid="stHeader"] [data-testid="collapsedControl"] span:not([class]) {{
+  font-size: 0 !important;  /* Ligatur-Text ("keyboard_double_arrow_*") verstecken */
   line-height: 1 !important;
 }}
-[data-testid="collapsedControl"] span:not([class])::before {{
-  content: "❮❮";            /* Header-Toggle zeigt standardmäßig 'einklappen' (links) */
+[data-testid="stHeader"] [data-testid="collapsedControl"] button::before {{
+  content: "❮❮";  /* Header-Toggle standardmäßig als 'einklappen' */
+  font-family: "Segoe UI", sans-serif;
+  font-size: 22px;
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+}}
+
+/* 5c) Gleicher Fallback für alternative Header-Selektoren (robust für Streamlit-Versionen) */
+[data-testid="stHeader"] button[aria-label*="sidebar" i] span:not([class]),
+[data-testid="stHeader"] button[title*="sidebar" i] span:not([class]) {{
+  font-size: 0 !important;
+}}
+[data-testid="stHeader"] button[aria-label*="sidebar" i]::before,
+[data-testid="stHeader"] button[title*="sidebar" i]::before {{
+  content: "❮❮";
   font-family: "Segoe UI", sans-serif;
   font-size: 22px;
   display: inline-block;
