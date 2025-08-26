@@ -226,6 +226,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# === Montserrat für Matplotlib registrieren ===
+from matplotlib import font_manager as fm
+import tempfile, base64, os, matplotlib as mpl
+
+# Font-Datei aus dem vorhandenen base64-String schreiben
+_tmp_dir = tempfile.gettempdir()
+MONTSERRAT_TTF = os.path.join(_tmp_dir, "Montserrat-Regular.ttf")
+try:
+    if not os.path.exists(MONTSERRAT_TTF):
+        with open(MONTSERRAT_TTF, "wb") as _f:
+            _f.write(base64.b64decode(font_b64))
+
+    # Bei Matplotlib registrieren und als Standard setzen
+    fm.fontManager.addfont(MONTSERRAT_TTF)
+    mpl.rcParams["font.family"] = "Montserrat"
+    mpl.rcParams["font.sans-serif"] = ["Montserrat", "DejaVu Sans", "Arial", "sans-serif"]
+    mpl.rcParams["axes.unicode_minus"] = False  # minus korrekt mit Montserrat
+except Exception as e:
+    st.warning(f"⚠️ Konnte Montserrat nicht für Matplotlib setzen: {e}")
+
+# === Montserrat als Standard für Plotly setzen ===
+import plotly.io as pio
+
+# Bestehendes Template kopieren und Überschrift/Text-Font global setzen
+_mont = pio.templates["plotly_white"].layout.to_plotly_json()
+_mont["font"] = {"family": "Montserrat"}  # globaler Font für Titel, Achsen, Legend
+pio.templates["montserrat_white"] = pio.templates["plotly_white"]
+pio.templates["montserrat_white"].layout.font.family = "Montserrat"
+
+# global aktivieren (wirkt für alle nachfolgenden Plotly-Figuren)
+pio.templates.default = "montserrat_white"
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
@@ -754,7 +786,7 @@ def plot_operational_variables_over_time(
         height=fig_height_val * 100,
         width=fig_width_val * 100,
         
-        font=dict(size=12, family="Arial", color="#333"),
+        font=dict(size=12, family="Montserrat", color="#333"),
         paper_bgcolor='#f4f4f4',
         plot_bgcolor='#f4f4f4',
         hovermode="closest",
@@ -791,7 +823,7 @@ def plot_operational_variables_over_time(
 
     for ann in fig_val['layout']['annotations']:
         ann['y'] += 0.01
-        ann['font'] = dict(size=12, color='#222', family="Arial")
+        ann['font'] = dict(size=12, color='#222', family="Montserrat")
 
     st.plotly_chart(fig_val, use_container_width=True)
 
