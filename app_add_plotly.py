@@ -61,14 +61,14 @@ st.markdown(f"""
   font-variant-ligatures: normal !important;
 }}
 
-/* 3) Hauptinhalt: Überschriften + Markdown-Text (ohne Icons) */
+/* 3) Hauptinhalt: Überschriften + Markdown-Text */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
 [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) Sidebar: nur Text-Elemente (KEIN span) – so hat es bei dir funktioniert */
+/* 4) Sidebar-Text */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -81,55 +81,9 @@ st.markdown(f"""
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 5) Header: alle Texte außer dem Toggle oben (collapsedControl) */
+/* 5) Header-Text außer Toggle */
 [data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-
-/* 5a) Header-Toggle: wenn Material-Icon-Span vorhanden, Icon-Font erzwingen */
-[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons,
-[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons-outlined,
-[data-testid="stHeader"] [data-testid="collapsedControl"] .material-icons-round {{
-  font-family: 'Material Icons' !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
-}}
-[data-testid="stHeader"] [data-testid="collapsedControl"] .material-symbols-outlined,
-[data-testid="stHeader"] [data-testid="collapsedControl"] .material-symbols-rounded {{
-  font-family: 'Material Symbols Outlined' !important;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
-}}
-
-/* 5b) Header-Toggle Fallback (wenn KEIN Icon-Span → classloser Text-Span):
-       Text verstecken und Unicode-Pfeile anzeigen. */
-[data-testid="stHeader"] [data-testid="collapsedControl"] span:not([class]) {{
-  font-size: 0 !important;  /* Ligatur-Text ("keyboard_double_arrow_*") verstecken */
-  line-height: 1 !important;
-}}
-[data-testid="stHeader"] [data-testid="collapsedControl"] button::before {{
-  content: "❮❮";  /* Header-Toggle standardmäßig als 'einklappen' */
-  font-family: "Segoe UI", sans-serif;
-  font-size: 22px;
-  display: inline-block;
-  line-height: 1;
-  vertical-align: middle;
-}}
-
-/* 5c) Gleicher Fallback für alternative Header-Selektoren (robust für Streamlit-Versionen) */
-[data-testid="stHeader"] button[aria-label*="sidebar" i] span:not([class]),
-[data-testid="stHeader"] button[title*="sidebar" i] span:not([class]) {{
-  font-size: 0 !important;
-}}
-[data-testid="stHeader"] button[aria-label*="sidebar" i]::before,
-[data-testid="stHeader"] button[title*="sidebar" i]::before {{
-  content: "❮❮";
-  font-family: "Segoe UI", sans-serif;
-  font-size: 22px;
-  display: inline-block;
-  line-height: 1;
-  vertical-align: middle;
 }}
 
 /* 6) Widgets: Labels, Inputs, Buttons */
@@ -150,6 +104,16 @@ textarea, select,
   padding: 0.5em 1.2em;
   border-radius: 8px;
   font-weight: 500;
+}}
+
+/* 6a) Dropdowns (Selectbox & MultiSelect) */
+[data-testid="stSelectbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+/* MultiSelect ausgewählte Tags */
+[data-baseweb="tag"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
 /* 7) Tabs/Expander/Metrics */
