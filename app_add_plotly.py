@@ -23,10 +23,28 @@ from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 
 @st.cache_data(show_spinner=False)
-def load_font_b64_from_github_raw(raw_url: str) -> str:
+def load_font_b64(raw_url: str) -> str:
     r = requests.get(raw_url, timeout=10)
     r.raise_for_status()
     return base64.b64encode(r.content).decode()
+
+FONT_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Montserrat/static/Montserrat-Regular.ttf"
+font_b64 = load_font_b64(FONT_URL)
+
+st.markdown(f"""
+<style>
+@font-face {{
+  font-family: 'Montserrat';
+  src: url(data:font/ttf;base64,{font_b64}) format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}}
+html, body, [class*="css"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+</style>
+""", unsafe_allow_html=True)
 
 
 st.markdown("""
