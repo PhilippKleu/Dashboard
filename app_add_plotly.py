@@ -36,6 +36,9 @@ font_b64 = load_font_b64(FONT_URL)
 
 st.markdown(f"""
 <style>
+/* 0) Basis: App-Schrift bleibt Segoe UI (wie bei dir) */
+body, .stApp { font-family: 'Segoe UI', sans-serif; }
+
 /* 1) Montserrat bereitstellen (kein globales Anwenden!) */
 @font-face {{
   font-family: 'Montserrat';
