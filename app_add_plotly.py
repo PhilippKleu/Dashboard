@@ -241,7 +241,7 @@ try:
     # Bei Matplotlib registrieren und als Standard setzen
     fm.fontManager.addfont(MONTSERRAT_TTF)
     mpl.rcParams["font.family"] = "Montserrat"
-    mpl.rcParams["font.sans-serif"] = ["Montserrat", "DejaVu Sans", "Arial", "sans-serif"]
+    mpl.rcParams["font.sans-serif"] = ["Montserrat"]
     mpl.rcParams["axes.unicode_minus"] = False  # minus korrekt mit Montserrat
 except Exception as e:
     st.warning(f"⚠️ Konnte Montserrat nicht für Matplotlib setzen: {e}")
