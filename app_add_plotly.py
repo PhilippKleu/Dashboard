@@ -52,7 +52,8 @@ st.markdown("""
     <style>
         body, .stApp {
             background-color: #f4f4f4;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Montserrat';
+            src: url(data:font/ttf;base64,{font_b64}) format('truetype');
         } 
         .stButton>button {
             background-color: #C0C6D2;
