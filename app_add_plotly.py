@@ -36,7 +36,7 @@ font_b64 = load_font_b64(FONT_URL)
 
 st.markdown(f"""
 <style>
-/* 1) Montserrat bereitstellen (kein globales Anwenden) */
+/* 1) Montserrat einbetten – kein globales Anwenden */
 @font-face {{
   font-family: 'Montserrat';
   src: url(data:font/ttf;base64,{font_b64}) format('truetype');
@@ -45,7 +45,7 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* 2) ICON-SCHRIFTEN EXPLIZIT SCHÜTZEN (wichtiger Teil) */
+/* 2) Icon-Schriften explizit schützen */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round {{
@@ -61,14 +61,14 @@ st.markdown(f"""
   font-variant-ligatures: normal !important;
 }}
 
-/* 3) HAUPTINHALT: Überschriften + Markdown-Text */
+/* 3) Hauptinhalt: Überschriften + Markdown-Text */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
 [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) SIDEBAR: Überschriften + Text (ohne Icons) */
+/* 4) Sidebar: nur typische Text-Elemente (KEIN span, damit Pfeile intakt bleiben) */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -76,13 +76,17 @@ st.markdown(f"""
 [data-testid="stSidebar"] h5,
 [data-testid="stSidebar"] h6,
 [data-testid="stSidebar"] p,
-[data-testid="stSidebar"] span:not(.material-icons):not(.material-symbols-outlined),
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] small {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 5) WIDGETS: Labels, Inputs, Buttons */
+/* 5) Header: Toggle ausnehmen */
+[data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+/* 6) Widgets: Labels, Inputs, Buttons */
 label,
 .stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
@@ -102,8 +106,7 @@ textarea, select,
   font-weight: 500;
 }}
 
-/* 6) Tabs/Expander/Metrics */
-[data-testid="stHeader"] *,
+/* 7) Tabs/Expander/Metrics */
 [data-testid="stSubheader"] *,
 [data-testid="stCaption"] *,
 [data-testid="stMetricLabel"],
@@ -114,13 +117,13 @@ textarea, select,
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 7) Tabellen & DataFrames */
+/* 8) Tabellen & DataFrames */
 .stTable, .stTable table, .stTable th, .stTable td,
 .stDataFrame, .stDataFrame div, .stDataFrame table, .stDataFrame th, .stDataFrame td {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 8) Hintergrund & deine Hover-Animationen */
+/* 9) Hintergrund & deine Hover-Animationen */
 body, .stApp {{ background-color: #f4f4f4; }}
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
@@ -131,49 +134,6 @@ div[data-testid^="stSlider"]:hover {{
   transform: scale(1.01);
   transition: transform 0.2s ease;
 }}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* Sidebar-Toggle robust ersetzen:
-   1) Original-Text/Ligatur verstecken (font-size:0)
-   2) Eigene Pfeile via ::before mit Segoe UI anzeigen */
-
-/* Toggle im Header (wenn Sidebar offen → Button im Header, zeigt nach links schließen) */
-[data-testid="collapsedControl"] button,
-[data-testid="collapsedControl"] span {
-  font-size: 0 !important;              /* versteckt den Text "keyboard_double_arrow_*" */
-  line-height: 1 !important;
-}
-
-/* Unser Pfeil (Header-Variante): «« */
-[data-testid="collapsedControl"] button::before,
-[data-testid="collapsedControl"] span::before {
-  content: "❮❮";
-  font-family: "Segoe UI", sans-serif;
-  font-size: 22px;
-  display: inline-block;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-/* Wenn der Toggle IN der Sidebar sitzt (Sidebar ausgeklappt) → Pfeil nach rechts »» */
-[data-testid="stSidebar"] [data-testid="collapsedControl"] button::before,
-[data-testid="stSidebar"] [data-testid="collapsedControl"] span::before {
-  content: "❯❯";
-}
-
-/* Optional: leichter Hover-Effekt und Cursor */
-[data-testid="collapsedControl"] button:hover::before,
-[data-testid="collapsedControl"] span:hover::before {
-  transform: scale(1.05);
-  transition: transform .15s ease;
-}
-[data-testid="collapsedControl"] button,
-[data-testid="collapsedControl"] span {
-  cursor: pointer;
-}
 </style>
 """, unsafe_allow_html=True)
 
