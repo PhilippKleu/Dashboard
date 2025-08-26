@@ -36,11 +36,7 @@ font_b64 = load_font_b64(FONT_URL)
 
 st.markdown(f"""
 <style>
-/* 0) Material-Icon-Fonts laden (für die Sidebar-Pfeile etc.) */
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
-
-/* 1) Deine Montserrat-Font einbinden */
+/* 1) Montserrat bereitstellen (kein globales Anwenden!) */
 @font-face {{
   font-family: 'Montserrat';
   src: url(data:font/ttf;base64,{font_b64}) format('truetype');
@@ -49,46 +45,49 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-:root {{
-  --app-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+/* 2) HAUPTINHALT: Überschriften + Markdown-Text */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] *:not(i) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 2) Montserrat global anwenden – ABER Icons ausnehmen */
-.stApp *:not(.material-icons):not(.material-icons-outlined):not(.material-icons-round)
-       :not(.material-symbols-outlined):not(.material-symbols-rounded) {{
-  font-family: var(--app-font) !important;
+/* 3) SIDEBAR: Überschriften + Text (ohne Icons) */
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4, [data-testid="stSidebar"] h5, [data-testid="stSidebar"] h6,
+[data-testid="stSidebar"] p,  [data-testid="stSidebar"] span:not(i),
+[data-testid="stSidebar"] label, [data-testid="stSidebar"] small {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 3) Sicherstellen, dass Icon-Elemente die richtige Font nutzen */
-.material-icons,
-.material-icons-outlined,
-.material-icons-round {{
-  font-family: 'Material Icons' !important;
-  font-weight: normal !important;
-  font-style: normal !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-  white-space: nowrap !important;
-  direction: ltr !important;
+/* 4) WIDGETS: Labels, Inputs, Buttons (nur Text der Controls) */
+label, .stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
-.material-symbols-outlined,
-.material-symbols-rounded {{
-  font-family: 'Material Symbols Outlined' !important;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"],
+textarea, select, .stTextInput input, .stNumberInput input, .stTextArea textarea {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+.stButton > button, .stDownloadButton > button {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  background-color: #C0C6D2; color: black; border: none; padding: 0.5em 1.2em; border-radius: 8px; font-weight: 500;
 }}
 
-/* 4) Deine bisherigen Styles */
-body, .stApp {{
-  background-color: #f4f4f4;
+/* 5) TAB/TITEL/ELEMENTE mit TestIDs */
+[data-testid="stHeader"] *, [data-testid="stSubheader"] *,
+[data-testid="stCaption"] *, [data-testid="stMetricLabel"], [data-testid="stMetricDelta"], [data-testid="stMetricValue"],
+[data-testid="stExpander"] summary, [data-testid="stTabs"] button p {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
-.stButton > button {{
-  background-color: #C0C6D2;
-  color: black;
-  border: none;
-  padding: 0.5em 1.2em;
-  border-radius: 8px;
-  font-weight: 500;
+
+/* 6) TABELLEN & DATAFRAMES */
+.stTable, .stTable table, .stTable th, .stTable td,
+.stDataFrame, .stDataFrame div, .stDataFrame table, .stDataFrame th, .stDataFrame td {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
+
+/* 7) Hintergrund & deine Hover-Animationen bleiben */
+body, .stApp {{ background-color: #f4f4f4; }}
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
