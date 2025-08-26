@@ -134,7 +134,48 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* Sidebar-Toggle robust ersetzen:
+   1) Original-Text/Ligatur verstecken (font-size:0)
+   2) Eigene Pfeile via ::before mit Segoe UI anzeigen */
 
+/* Toggle im Header (wenn Sidebar offen → Button im Header, zeigt nach links schließen) */
+[data-testid="collapsedControl"] button,
+[data-testid="collapsedControl"] span {
+  font-size: 0 !important;              /* versteckt den Text "keyboard_double_arrow_*" */
+  line-height: 1 !important;
+}
+
+/* Unser Pfeil (Header-Variante): «« */
+[data-testid="collapsedControl"] button::before,
+[data-testid="collapsedControl"] span::before {
+  content: "❮❮";
+  font-family: "Segoe UI", sans-serif;
+  font-size: 22px;
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Wenn der Toggle IN der Sidebar sitzt (Sidebar ausgeklappt) → Pfeil nach rechts »» */
+[data-testid="stSidebar"] [data-testid="collapsedControl"] button::before,
+[data-testid="stSidebar"] [data-testid="collapsedControl"] span::before {
+  content: "❯❯";
+}
+
+/* Optional: leichter Hover-Effekt und Cursor */
+[data-testid="collapsedControl"] button:hover::before,
+[data-testid="collapsedControl"] span:hover::before {
+  transform: scale(1.05);
+  transition: transform .15s ease;
+}
+[data-testid="collapsedControl"] button,
+[data-testid="collapsedControl"] span {
+  cursor: pointer;
+}
+</style>
+""", unsafe_allow_html=True)
 
 def clean_plot_indices(raw_indices):
     """
