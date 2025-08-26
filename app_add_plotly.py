@@ -258,6 +258,22 @@ pio.templates["montserrat_white"].layout.font.family = "Montserrat"
 # global aktivieren (wirkt für alle nachfolgenden Plotly-Figuren)
 pio.templates.default = "montserrat_white"
 
+
+# === Erzwinge Montserrat je Achse (nur für Additional Metrics) ===
+def force_montserrat(ax):
+    # Titel & Achsentitel
+    if ax.get_title(): ax.title.set_fontfamily("Montserrat")
+    if ax.get_xlabel(): ax.xaxis.label.set_fontfamily("Montserrat")
+    if ax.get_ylabel(): ax.yaxis.label.set_fontfamily("Montserrat")
+    # Ticks
+    for tick in ax.get_xticklabels() + ax.get_yticklabels():
+        tick.set_fontfamily("Montserrat")
+    # Legende
+    leg = ax.get_legend()
+    if leg:
+        for text in leg.get_texts():
+            text.set_fontfamily("Montserrat")
+
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
@@ -2217,6 +2233,7 @@ with tab1:
                     ax.set_title(col, fontsize=12)
                     ax.set_ylabel("Value")
                     ax.grid(True, linestyle="--", alpha=0.4)
+                    force_montserrat(ax)
                     ax_idx += 1
     
             # === Jahresmetriken ===
@@ -2299,6 +2316,7 @@ with tab1:
                 ax.set_xlabel("Year")
                 ax.set_ylabel("Value")
                 ax.grid(True, linestyle="--", alpha=0.4)
+                force_montserrat(ax)
                 ax_idx += 1
     
             for i in range(ax_idx, len(axes)):
