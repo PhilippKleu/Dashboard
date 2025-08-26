@@ -21,6 +21,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 from plotly.graph_objs.layout import XAxis, YAxis
 import requests
+import base64, requests
 
 @st.cache_data(show_spinner=False)
 def load_font_b64(raw_url: str) -> str:
