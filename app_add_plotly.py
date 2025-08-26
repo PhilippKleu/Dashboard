@@ -60,12 +60,6 @@ st.markdown(f"""
   font-feature-settings: 'liga' 1 !important;
   font-variant-ligatures: normal !important;
 }}
-[class^="material-"],
-[class*=" material-"] {{
-  font-family: 'Material Symbols Outlined','Material Symbols Rounded','Material Icons' !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
-}}
 
 /* 3) Hauptinhalt: Überschriften + Markdown-Text */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
@@ -74,7 +68,7 @@ st.markdown(f"""
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 4) Sidebar: nur typische Text-Elemente */
+/* 4) Sidebar: nur Text-Elemente (KEIN span, damit Pfeile intakt bleiben) */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -87,16 +81,9 @@ st.markdown(f"""
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 5) Header: Toggle sauber ausnehmen */
-[data-testid="stHeader"] *:not([data-testid="collapsedControl"]) {{
+/* 5) Header: alle Texte außer dem Toggle oben */
+[data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-[data-testid="stHeader"] [data-testid="collapsedControl"],
-[data-testid="stHeader"] [data-testid="collapsedControl"] * {{
-  font-family: 'Material Symbols Outlined' !important;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
 }}
 
 /* 6) Widgets: Labels, Inputs, Buttons */
@@ -136,7 +123,7 @@ textarea, select,
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 9) Hintergrund & Hover-Animationen */
+/* 9) Hintergrund & Hover */
 body, .stApp {{ background-color: #f4f4f4; }}
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
