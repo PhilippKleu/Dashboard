@@ -42,12 +42,19 @@ st.markdown(f"""
   font-display: swap;
 }}
 
-/* globale Anwendung mit hoher Spezifität */
+/* globale Anwendung */
 :root {{
   --app-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }}
-.stApp, .stApp * {{
+
+/* Montserrat überall … */
+.stApp {{
   font-family: var(--app-font) !important;
+}}
+/* … aber NICHT bei Icon-Schriften (Material Icons / Symbols) */
+.stApp *:not(i):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round)
+        :not(.material-symbols-outlined):not(.material-symbols-rounded) {{
+  font-family: inherit !important;
 }}
 
 /* Hintergrundfarbe + deine UI-Styles */
@@ -73,11 +80,13 @@ div[data-testid^="stSlider"]:hover {{
   transform: scale(1.01);
   transition: transform 0.2s ease;
 }}
+
+/* (Optional) Falls bei dir keine Material-Font geladen ist, aktivieren:
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+.material-symbols-outlined {{ font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }}
+*/
 </style>
 """, unsafe_allow_html=True)
-
-
-st.set_page_config(layout="wide")
 def clean_plot_indices(raw_indices):
     """
     Wandelt eine Liste wie ['np.int64(22)', 'np.int64(738)'] in [22, 738] um.
