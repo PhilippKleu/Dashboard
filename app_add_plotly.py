@@ -22,6 +22,11 @@ import plotly.express as px
 from plotly.graph_objs.layout import XAxis, YAxis
 import requests
 
+@st.cache_data(show_spinner=False)
+def load_font_b64_from_github_raw(raw_url: str) -> str:
+    r = requests.get(raw_url, timeout=10)
+    r.raise_for_status()
+    return base64.b64encode(r.content).decode()
 
 
 st.markdown("""
