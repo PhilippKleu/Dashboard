@@ -25,86 +25,30 @@ import requests
 
 
 st.markdown("""
-<style>
-/* ========= Fonts ========= */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0');
-
-:root { --font-body: 'Montserrat','Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif; }
-
-/* ========= Global (Text) ========= */
-html, body, .stApp { background:#f4f4f4; }
-h1,h2,h3,h4,h5,h6,
-label, input, textarea, select,
-div[data-baseweb="select"], [role="tablist"], [role="listbox"], [role="option"],
-.stButton > button {
-  font-family: var(--font-body) !important;
-}
-
-
-
-
-/* ========= Select/Multiselect: keine Glows/Frames ========= */
-div[data-testid^="stSelectbox"]:hover,
-div[data-testid^="stMultiSelect"]:hover,
-div[data-testid^="stSelectbox"]:focus-within,
-div[data-testid^="stMultiSelect"]:focus-within {
-  transform:none !important; box-shadow:none !important; outline:none !important;
-}
-
-div[data-testid^="stSelectbox"] [data-baseweb="select"] > div,
-div[data-testid^="stMultiSelect"] [data-baseweb="select"] > div {
-  box-shadow:none !important; border:none !important;
-}
-
-
-/* ========= Dropdown-Portal (Listbox/Menu) ========= */
-[role="listbox"], [role="listbox"] *,
-[data-baseweb="menu"], [data-baseweb="menu"] * {
-  font-family: var(--font-body) !important;
-}
-
-/* ========= File Uploader (Text) ========= */
-div[data-testid="stFileUploader"] :not([aria-hidden="true"]) { font-family: var(--font-body) !important; }
-
-/* ========= ICONS – niemals Montserrat ========= */
-[aria-hidden="true"],
-[data-baseweb="icon"], [data-testid^="baseIcon"],
-.material-icons, .material-icons-outlined, .material-icons-round,
-.material-symbols-outlined, .material-symbols-rounded {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-  font-weight:400 !important; font-style:normal !important; line-height:1 !important;
-  font-variant-ligatures:normal !important; text-transform:none !important;
-  -webkit-font-smoothing:antialiased;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-}
-
-/* ========= Sidebar Toggle im Header ========= */
-header button[aria-label*="sidebar"],
-header button[title*="sidebar"],
-header [data-testid*="collapse"] button,
-header [data-testid*="Collapse"] button {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
-header button[aria-label*="sidebar"] *,
-header button[title*="sidebar"] *,
-header [data-testid*="collapse"] button *,
-header [data-testid*="Collapse"] button * {
-  font-family:'Material Symbols Outlined','Material Icons' !important;
-}
-
-/* Fallback: Ligaturtext ausblenden, Icon per ::before */
-header button[aria-label*="sidebar"] span,
-header button[title*="sidebar"] span { font-size:0 !important; }
-header button[aria-label*="sidebar"]::before,
-header button[title*="sidebar"]::before {
-  content:"keyboard_double_arrow_right"; /* ggf. auf "keyboard_double_arrow_left" ändern */
-  font-family:'Material Symbols Outlined' !important;
-  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-  font-size:20px;
-}
-</style>
+    <style>
+        body, .stApp {
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', sans-serif;
+        } 
+        .stButton>button {
+            background-color: #C0C6D2;
+            color: black;
+            border: none;
+            padding: 0.5em 1.2em;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        div[data-testid="stFileUploader"]:hover,
+        div[data-testid^="stSelectbox"]:hover,
+        div[data-testid^="stMultiSelect"]:hover,
+        div[data-testid^="stNumberInput"]:hover,
+        div[data-testid^="stRadio"]:hover,
+        div[data-testid^="stSlider"]:hover {
+            transform: scale(1.01);
+            transition: transform 0.2s ease;
+        }
+        
+    </style>
 """, unsafe_allow_html=True)
 
 def clean_plot_indices(raw_indices):
