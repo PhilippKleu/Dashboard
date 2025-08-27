@@ -610,9 +610,9 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
-    # >>> NEU: feste Abstände zwischen Subplots
-    h_gap=0.1,                # horizontaler Abstand (0..1), fix (wird nur gekappt wenn nötig)
-    v_gap=0.06,                # vertikaler Abstand (0..1), fix (wird nur gekappt wenn nötig)
+    # Feste Abstände zwischen Subplots:
+    h_gap=0.04,                # horizontal
+    v_gap=0.06,                # vertikal
 ):
     """
     Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
@@ -626,6 +626,7 @@ def plot_operational_variables_over_time(
       - Optional Originalbereich rot
       - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
       - Subplots nutzen volle Zellbreite (enge Außenränder), fester horizontaler/vertikaler Abstand
+      - Hover zeigt zusätzlich den Vertex-Index an
     """
     import numpy as np
     import pandas as pd
@@ -722,7 +723,7 @@ def plot_operational_variables_over_time(
             full_values_main = vertex_df.loc[current_indices, cols_main]
             values_main      = vertex_df.loc[plot_indices_val, cols_main]
 
-            # Linien/Marker
+            # Linien/Marker (+ Vertex-Index im Hover)
             if not values_main.dropna(how="all").empty:
                 plot_mode = "lines" if (len(years_labels) > 1 and all_numeric_years) else "markers"
                 for idx_v in values_main.index:
@@ -741,7 +742,7 @@ def plot_operational_variables_over_time(
                                 color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
                                 size=10,
                             ) if plot_mode == "markers" else None,
-                            hoverinfo="x+y",
+                            hovertemplate=f"Vertex {idx_v}<br>%{{x}}: %{{y:.2f}}<extra></extra>",
                             showlegend=False,
                         ),
                         row=row, col=col,
@@ -825,7 +826,7 @@ def plot_operational_variables_over_time(
             values_cum      = vertex_df.loc[plot_indices_val, cols_cum]
             full_values_cum = vertex_df.loc[current_indices, cols_cum]
 
-            # Punkte bei x="Cumulated"
+            # Punkte bei x="Cumulated" (+ Vertex-Index im Hover)
             if not values_cum.dropna(how="all").empty:
                 for idx_v in values_cum.index:
                     vals = values_cum.loc[idx_v].values
@@ -842,7 +843,7 @@ def plot_operational_variables_over_time(
                                 color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
                                 size=10,
                             ),
-                            hoverinfo="x+y",
+                            hovertemplate=f"Vertex {idx_v}<br>Cumulated: {v:.2f}<extra></extra>",
                             showlegend=False,
                         ),
                         row=row, col=col,
