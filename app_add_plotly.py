@@ -235,6 +235,25 @@ def force_montserrat(ax):
     if leg:
         for text in leg.get_texts():
             text.set_fontfamily("Montserrat")
+def _parse_selected_vertex(sel):
+    """
+    Gibt ('orig'| 'convex' | None, int|None) zurück.
+    Erlaubt: int/np.int (Original) oder 'convex:<id>' (Konvex).
+    """
+    import numpy as np
+    if sel is None:
+        return (None, None)
+    if isinstance(sel, str) and sel.startswith("convex:"):
+        try:
+            return ("convex", int(sel.split(":", 1)[1]))
+        except Exception:
+            return ("convex", None)
+    # Original (int oder str-zahl)
+    try:
+        val = int(sel)
+        return ("orig", val)
+    except Exception:
+        return (None, None)
 
 def clean_plot_indices(raw_indices):
     """
@@ -303,46 +322,82 @@ def select_representative_vertices_by_kmeans(
 
     return selected_indices
     
-def select_and_show_vertex_info(plot_indices, current_indices, vertex_df, tech_data, additional_cols):
+def select_and_show_vertex_info(
+    plot_indices,
+    current_indices,
+    vertex_df,
+    tech_data,
+    additional_cols,
+    convex_plot_indices=None,        # NEU
+    convex_additional=None           # NEU (gefilterte konvexe Zusatzmetriken)
+):
     vertex_placeholder = "— Please select —"
-    options_with_placeholder = [vertex_placeholder] + list(plot_indices)
-    selected_label = st.selectbox("Choose a displayed Vertex to highlight.", options=options_with_placeholder)
-    selected_vertex = selected_label if selected_label != vertex_placeholder else None
+    orig_opts = [str(i) for i in plot_indices]
+    conv_opts = [f"convex:{int(i)}" for i in (convex_plot_indices or [])]
+    options_with_placeholder = [vertex_placeholder] + orig_opts + conv_opts
 
-    filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
-    full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
+    # Hübschere Labels
+    def _fmt(label):
+        if label == vertex_placeholder:
+            return label
+        if isinstance(label, str) and label.startswith("convex:"):
+            return f"Convex #{label.split(':', 1)[1]}"
+        return f"Vertex {label}"
 
-    if selected_vertex is not None and selected_vertex in filtered_additional.index:
-        st.markdown("### ℹ️ Zusatzinformationen")
-        extra_data = filtered_additional.loc[selected_vertex]
-        col1_inner, col2_inner = st.columns(2)
-        extra_items = list(extra_data.items())
+    selected_label = st.selectbox(
+        "Choose a displayed Vertex to highlight.",
+        options=options_with_placeholder,
+        format_func=_fmt
+    )
+    selected_vertex = None if selected_label == vertex_placeholder else selected_label
 
-        for i in range(0, len(extra_items), 2):
-            for col, (key, val) in zip([col1_inner, col2_inner], extra_items[i:i+2]):
-                val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
-                col.markdown(f"**{key}**: {val_display}")
+    # ==== Zusatzinfos anzeigen (bis zu 5 Metriken) ====
+    if selected_vertex is not None and additional_cols:
+        sel_type, sel_id = _parse_selected_vertex(selected_vertex)
 
-                if pd.notna(val):
-                    col_vals = full_additional[key].dropna()
-                    if not col_vals.empty:
-                        q1 = col_vals.quantile(0.25)
-                        q2 = col_vals.quantile(0.5)
-                        q3 = col_vals.quantile(0.75)
-                        min_val = col_vals.min()
-                        max_val = col_vals.max()
+        if sel_type == "orig" and sel_id in current_indices:
+            st.markdown("### ℹ️ Zusatzinformationen (Original)")
+            filtered_additional = vertex_df.loc[current_indices, additional_cols[:5]]
+            full_additional = vertex_df.loc[tech_data.index, additional_cols[:5]]
+            extra_data = filtered_additional.loc[sel_id]
+            col1_inner, col2_inner = st.columns(2)
+            extra_items = list(extra_data.items())
+            for i in range(0, len(extra_items), 2):
+                for col, (key, val) in zip([col1_inner, col2_inner], extra_items[i:i+2]):
+                    val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
+                    col.markdown(f"**{key}**: {val_display}")
+                    if pd.notna(val):
+                        col_vals = full_additional[key].dropna()
+                        if not col_vals.empty:
+                            q1 = col_vals.quantile(0.25)
+                            q2 = col_vals.quantile(0.5)
+                            q3 = col_vals.quantile(0.75)
+                            min_val = col_vals.min()
+                            max_val = col_vals.max()
+                            fig, ax = plt.subplots(figsize=(3.5, 0.3))
+                            ax.hlines(0, min_val, max_val, color="lightgray", linewidth=6)
+                            for q in [q1, q2, q3]:
+                                ax.vlines(q, -0.1, 0.1, color="gray", linewidth=1)
+                            ax.plot(val, 0, 'o')
+                            ax.set_xlim(min_val, max_val)
+                            ax.set_yticks([]); ax.set_xticks([])
+                            for spine in ax.spines.values():
+                                spine.set_visible(False)
+                            col.pyplot(fig)
 
-                        fig, ax = plt.subplots(figsize=(3.5, 0.3))
-                        ax.hlines(0, min_val, max_val, color="lightgray", linewidth=6)
-                        for q in [q1, q2, q3]:
-                            ax.vlines(q, -0.1, 0.1, color="gray", linewidth=1)
-                        ax.plot(val, 0, 'o', color='blue')
-                        ax.set_xlim(min_val, max_val)
-                        ax.set_yticks([])
-                        ax.set_xticks([])
-                        for spine in ax.spines.values():
-                            spine.set_visible(False)
-                        col.pyplot(fig)
+        elif sel_type == "convex" and convex_additional is not None and not convex_additional.empty:
+            if 0 <= sel_id < len(convex_additional):
+                st.markdown("### ℹ️ Zusatzinformationen (Convex)")
+                # Nur innerhalb der konvexen Daten betrachten
+                filtered_additional = convex_additional[additional_cols[:5]].copy() if set(additional_cols[:5]).issubset(convex_additional.columns) else pd.DataFrame()
+                if not filtered_additional.empty:
+                    extra_data = filtered_additional.iloc[sel_id]
+                    col1_inner, col2_inner = st.columns(2)
+                    extra_items = list(extra_data.items())
+                    for i in range(0, len(extra_items), 2):
+                        for col, (key, val) in zip([col1_inner, col2_inner], extra_items[i:i+2]):
+                            val_display = f"{val:.2f}" if pd.notna(val) else "n/a"
+                            col.markdown(f"**{key}**: {val_display}")
 
     return selected_vertex
 
@@ -722,7 +777,7 @@ def plot_operational_variables_over_time(
     plot_indices_val,
     time_column_map,
     selected_vertex,
-    n_cols_val=3,              # Anzahl Spalten im Grid: JEDER Plot zählt (Yearly + Cumulated)
+    n_cols_val=3,
     show_convex=False,
     st_convex=None,
     filtered_convex_data=None,
@@ -731,17 +786,10 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
-    # Feste Abstände zwischen Subplots:
-    h_gap=0.09,                # horizontal
-    v_gap=0.08,                # vertikal
+    h_gap=0.09,
+    v_gap=0.08,
+    convex_cluster_indices=None,   # NEU: vorselektierte konvexe Repräsentanten
 ):
-    """
-    Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
-      - Yearly/Static (y != 0)  => Titel: <Technologie>
-      - Cumulated (y == 0)      => Titel: <Technologie>_Cumulated
-
-    Ergänzt: Konvexe Kombinationen werden auch für VALUE_-Operational Line Plots angezeigt.
-    """
     import numpy as np
     import pandas as pd
     import math
@@ -751,53 +799,37 @@ def plot_operational_variables_over_time(
     def _x_label(y: int) -> str:
         return "Static" if y == -1 else str(y)
 
-    # 1) Plot-Spezifikationen sammeln (jede Spezifikation = EIN Plot)
-    plot_specs = []  # [{'tech':..., 'kind':'main'|'cum', 'years':[...], 'cols':[...]}]
-    valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
+    sel_type, sel_id = _parse_selected_vertex(selected_vertex)
 
+    # 1) Plot-Spezifikationen
+    plot_specs = []
+    valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
     for tech in valid_techs:
         year_cols = sorted(time_column_map.get(tech, []), key=lambda x: x[0])
-        if not year_cols:
-            continue
+        if not year_cols: continue
 
-        # Yearly/Static (y != 0)
-        filt_main = [(y, c) for (y, c) in year_cols
-                     if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        filt_main = [(y, c) for (y, c) in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_main:
             years_main = [y for y, _ in filt_main]
             cols_main  = [c for _, c in filt_main]
-            plot_specs.append({
-                "tech": tech,
-                "kind": "main",
-                "years": years_main,
-                "cols": cols_main,
-            })
+            plot_specs.append({"tech": tech, "kind": "main", "years": years_main, "cols": cols_main})
 
-        # Cumulated (y == 0)
-        filt_cum = [(y, c) for (y, c) in year_cols
-                    if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        filt_cum = [(y, c) for (y, c) in year_cols if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_cum:
             cols_cum = [c for _, c in filt_cum]
-            plot_specs.append({
-                "tech": tech,
-                "kind": "cum",
-                "cols": cols_cum,
-            })
+            plot_specs.append({"tech": tech, "kind": "cum", "cols": cols_cum})
 
     if not plot_specs:
         st.info("ℹ️ No data to plot.")
         return
 
-    # 2) Grid bestimmen
+    # 2) Grid
     n_plots = len(plot_specs)
     n_cols  = max(1, int(n_cols_val))
     n_rows  = int(math.ceil(n_plots / n_cols))
-
-    # Feste Abstände
-    vertical_spacing = 0.0 if n_rows <= 1 else min(float(v_gap), 0.98 / (n_rows - 1))
+    vertical_spacing   = 0.0 if n_rows <= 1 else min(float(v_gap), 0.98 / (n_rows - 1))
     horizontal_spacing = 0.0 if n_cols <= 1 else min(float(h_gap), 0.98 / (n_cols - 1))
 
-    # Titel je Subplot
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
@@ -805,25 +837,22 @@ def plot_operational_variables_over_time(
     subplot_titles += [""] * (n_rows * n_cols - n_plots)
 
     fig = make_subplots(
-        rows=n_rows,
-        cols=n_cols,
+        rows=n_rows, cols=n_cols,
         subplot_titles=subplot_titles,
         horizontal_spacing=horizontal_spacing,
         vertical_spacing=vertical_spacing,
         specs=[[{"type": "xy"} for _ in range(n_cols)] for _ in range(n_rows)],
     )
 
-    # 3) Plots zeichnen
+    # 3) zeichnen
     for i, spec in enumerate(plot_specs):
         row = i // n_cols + 1
         col = i % n_cols + 1
         tech = spec["tech"]
 
         if spec["kind"] == "main":
-            years_main = spec["years"]
-            cols_main  = spec["cols"]
-            if not cols_main:
-                continue
+            years_main = spec["years"]; cols_main = spec["cols"]
+            if not cols_main: continue
 
             years_labels = [_x_label(y) for y in years_main]
             all_numeric_years = all(isinstance(y, int) and y >= 1000 for y in years_main)
@@ -831,24 +860,23 @@ def plot_operational_variables_over_time(
             full_values_main = vertex_df.loc[current_indices, cols_main]
             values_main      = vertex_df.loc[plot_indices_val, cols_main]
 
-            # Linien/Marker (+ Vertex-Index im Hover)
+            # Originale Vertices
             if not values_main.dropna(how="all").empty:
                 plot_mode = "lines" if (len(years_labels) > 1 and all_numeric_years) else "markers"
                 for idx_v in values_main.index:
                     vals = values_main.loc[idx_v].values
-                    is_sel = (selected_vertex is not None) and (idx_v == selected_vertex)
+                    is_sel = (sel_type == "orig" and idx_v == sel_id)
                     fig.add_trace(
                         go.Scatter(
-                            x=years_labels,
-                            y=vals,
+                            x=years_labels, y=vals,
                             mode=plot_mode,
                             line=dict(
-                                color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
+                                color="rgba(26,102,204,0.9)" if is_sel else "rgba(26,102,204,0.35)",
                                 width=4 if is_sel else 1,
                             ) if plot_mode == "lines" else None,
                             marker=dict(
-                                color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
                                 size=10,
+                                color="rgba(26,102,204,0.9)" if is_sel else "rgba(26,102,204,0.35)",
                             ) if plot_mode == "markers" else None,
                             hovertemplate=f"Vertex {idx_v}<br>%{{x}}: %{{y:.2f}}<extra></extra>",
                             showlegend=False,
@@ -856,76 +884,76 @@ def plot_operational_variables_over_time(
                         row=row, col=col,
                     )
 
-            # Gültiger Bereich (blau) – nur echte Jahresachsen
+            # Gültiger Bereich
             if all_numeric_years and not full_values_main.empty:
                 try:
-                    vmin = full_values_main.min()
-                    vmax = full_values_main.max()
+                    vmin = full_values_main.min(); vmax = full_values_main.max()
                     x_vals = list(map(str, years_main)) + list(map(str, years_main[::-1]))
                     y_vals = vmin.tolist() + vmax.tolist()[::-1]
                     fig.add_trace(
                         go.Scatter(
-                            x=x_vals,
-                            y=y_vals,
-                            fill="toself",
-                            fillcolor="rgba(26,102,204,0.15)",
+                            x=x_vals, y=y_vals,
+                            fill="toself", fillcolor="rgba(26,102,204,0.15)",
                             line=dict(color="rgba(255,255,255,0)"),
-                            hoverinfo="skip",
-                            showlegend=False,
+                            hoverinfo="skip", showlegend=False,
                         ),
                         row=row, col=col,
                     )
                 except Exception as e:
                     st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-            # Originalbereich (rot) – optional
+            # Original-Bereich (optional)
             if show_original_ranges and all_numeric_years:
                 try:
                     orig = vertex_df.loc[current_indices, cols_main]
-                    omin = orig.min()
-                    omax = orig.max()
+                    omin = orig.min(); omax = orig.max()
                     x_vals = list(map(str, years_main)) + list(map(str, years_main[::-1]))
                     y_vals = omin.tolist() + omax.tolist()[::-1]
                     fig.add_trace(
                         go.Scatter(
-                            x=x_vals,
-                            y=y_vals,
-                            fill="toself",
-                            fillcolor="rgba(255,0,0,0.08)",
+                            x=x_vals, y=y_vals,
+                            fill="toself", fillcolor="rgba(255,0,0,0.08)",
                             line=dict(color="rgba(255,255,255,0)"),
-                            hoverinfo="skip",
-                            showlegend=False,
+                            hoverinfo="skip", showlegend=False,
                         ),
                         row=row, col=col,
                     )
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # ==== NEU: Konvexe Kombinationen auch für VALUE_-Operational (Line Plot) ====
-            # Wir nutzen die exakt gleichen Spalten wie im Plot (cols_main).
-            # Es werden nur echte Jahreswerte (>= 1000) überlagert, "Static" (-1) wird ausgelassen.
+            # ==== KONVEX: 5 geclusterte Repräsentanten (nur echte Jahresachsen) ====
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
-                    # Nur Jahres-Spalten, die in den konvexen Daten vorhanden sind
                     numeric_pairs = [
                         (y, c) for y, c in sorted(zip(years_main, cols_main), key=lambda t: t[0])
                         if (isinstance(y, int) and y >= 1000) and (c in filtered_convex_data.columns)
                     ]
-                    if numeric_pairs:
+                    if numeric_pairs and all_numeric_years:
                         x_conv = [str(y) for y, _ in numeric_pairs]
                         conv_cols = [c for _, c in numeric_pairs]
 
-                        for idx_conv in filtered_convex_data.index:
+                        # Falls noch nicht extern vorgegeben, hier lokal 5 Repräsentanten bestimmen
+                        if not convex_cluster_indices:
+                            reps = select_representative_vertices_by_kmeans(
+                                df=filtered_convex_data, cols=conv_cols, n_vertices=5
+                            )
+                        else:
+                            # nur solche nehmen, die die benötigten Spalten haben
+                            reps = [r for r in convex_cluster_indices if r in filtered_convex_data.index]
+
+                        for idx_conv in reps:
                             vals = filtered_convex_data.loc[idx_conv, conv_cols].values.astype(float)
-                            if np.isnan(vals).all():
+                            if np.isnan(vals).all(): 
                                 continue
+                            is_sel = (sel_type == "convex" and idx_conv == sel_id)
                             fig.add_trace(
                                 go.Scatter(
-                                    x=x_conv,
-                                    y=vals,
-                                    mode="lines",
-                                    line=dict(color="rgba(255,0,0,0.30)", width=1),
-                                    hoverinfo="skip",
+                                    x=x_conv, y=vals, mode="lines",
+                                    line=dict(
+                                        color="rgba(200,0,0,0.9)" if is_sel else "rgba(255,0,0,0.35)",
+                                        width=4 if is_sel else 1
+                                    ),
+                                    hovertemplate=f"Convex {idx_conv}<br>%{{x}}: %{{y:.2f}}<extra></extra>",
                                     showlegend=False,
                                 ),
                                 row=row, col=col,
@@ -933,33 +961,28 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
 
-            # Kategorie-X-Achse, KEIN Achsentitel
             fig.update_xaxes(type="category", row=row, col=col, title_text=None)
 
-        else:  # spec["kind"] == "cum"
+        else:
             cols_cum = spec["cols"]
-            if not cols_cum:
-                continue
+            if not cols_cum: continue
 
             values_cum      = vertex_df.loc[plot_indices_val, cols_cum]
             full_values_cum = vertex_df.loc[current_indices, cols_cum]
 
-            # Punkte bei x="Cumulated" (+ Vertex-Index im Hover)
+            # Original
             if not values_cum.dropna(how="all").empty:
                 for idx_v in values_cum.index:
                     vals = values_cum.loc[idx_v].values
                     v = np.nanmean(vals) if len(vals) > 1 else (vals[0] if len(vals) == 1 else np.nan)
-                    if np.isnan(v):
-                        continue
-                    is_sel = (selected_vertex is not None) and (idx_v == selected_vertex)
+                    if np.isnan(v): continue
+                    is_sel = (sel_type == "orig" and idx_v == sel_id)
                     fig.add_trace(
                         go.Scatter(
-                            x=["Cumulated"],
-                            y=[v],
-                            mode="markers",
+                            x=["Cumulated"], y=[v], mode="markers",
                             marker=dict(
-                                color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
                                 size=10,
+                                color="rgba(26,102,204,0.9)" if is_sel else "rgba(26,102,204,0.35)",
                             ),
                             hovertemplate=f"Vertex {idx_v}<br>Cumulated: {v:.2f}<extra></extra>",
                             showlegend=False,
@@ -967,7 +990,7 @@ def plot_operational_variables_over_time(
                         row=row, col=col,
                     )
 
-            # Gültiger Bereich (blau) als vertikales Band
+            # Gültiger Bereich (blau)
             if not full_values_cum.dropna(how="all").empty:
                 try:
                     vmin = float(np.nanmin(full_values_cum.values))
@@ -975,21 +998,17 @@ def plot_operational_variables_over_time(
                     if np.isfinite(vmin) and np.isfinite(vmax):
                         fig.add_trace(
                             go.Scatter(
-                                x=["Cumulated", "Cumulated"],
-                                y=[vmin, vmax],
-                                mode="lines",
-                                line=dict(width=0),
-                                fill="toself",
-                                fillcolor="rgba(26,102,204,0.15)",
-                                hoverinfo="skip",
-                                showlegend=False,
+                                x=["Cumulated", "Cumulated"], y=[vmin, vmax],
+                                mode="lines", line=dict(width=0),
+                                fill="toself", fillcolor="rgba(26,102,204,0.15)",
+                                hoverinfo="skip", showlegend=False,
                             ),
                             row=row, col=col,
                         )
                 except Exception:
                     pass
 
-            # Originalbereich (rot) – optional
+            # Originalbereich (rot)
             if show_original_ranges and not full_values_cum.dropna(how="all").empty:
                 try:
                     vmin = float(np.nanmin(full_values_cum.values))
@@ -997,36 +1016,39 @@ def plot_operational_variables_over_time(
                     if np.isfinite(vmin) and np.isfinite(vmax):
                         fig.add_trace(
                             go.Scatter(
-                                x=["Cumulated", "Cumulated"],
-                                y=[vmin, vmax],
-                                mode="lines",
-                                line=dict(width=0),
-                                fill="toself",
-                                fillcolor="rgba(255,0,0,0.08)",
-                                hoverinfo="skip",
-                                showlegend=False,
+                                x=["Cumulated", "Cumulated"], y=[vmin, vmax],
+                                mode="lines", line=dict(width=0),
+                                fill="toself", fillcolor="rgba(255,0,0,0.08)",
+                                hoverinfo="skip", showlegend=False,
                             ),
                             row=row, col=col,
                         )
                 except Exception:
                     pass
 
-            # ==== NEU: Konvexe Kombinationen für Cumulated ====
+            # ==== KONVEX (als Punkte), nur Repräsentanten ====
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
-                    if all(c in filtered_convex_data.columns for c in cols_cum):
-                        for idx_conv in filtered_convex_data.index:
-                            vals = filtered_convex_data.loc[idx_conv, cols_cum].values
+                    needed = [c for c in cols_cum if c in filtered_convex_data.columns]
+                    if needed:
+                        reps = convex_cluster_indices or select_representative_vertices_by_kmeans(
+                            df=filtered_convex_data, cols=needed, n_vertices=5
+                        )
+                        for idx_conv in reps:
+                            vals = filtered_convex_data.loc[idx_conv, needed].values
                             v = float(np.nanmean(vals)) if len(vals) > 0 else np.nan
                             if np.isfinite(v):
+                                is_sel = (sel_type == "convex" and idx_conv == sel_id)
                                 fig.add_trace(
                                     go.Scatter(
-                                        x=["Cumulated"],
-                                        y=[v],
+                                        x=["Cumulated"], y=[v],
                                         mode="markers",
-                                        marker=dict(symbol="x", size=8, line=dict(width=1),
-                                                    color="rgba(255,0,0,0.60)"),
-                                        hoverinfo="skip",
+                                        marker=dict(
+                                            symbol="x",
+                                            size=12 if is_sel else 8,
+                                        ),
+                                        marker_color="rgba(200,0,0,0.9)" if is_sel else "rgba(255,0,0,0.6)",
+                                        hovertemplate=f"Convex {idx_conv}<br>Cumulated: {v:.2f}<extra></extra>",
                                         showlegend=False,
                                     ),
                                     row=row, col=col,
@@ -1039,22 +1061,17 @@ def plot_operational_variables_over_time(
     # 4) Layout
     base_h = 340
     height = max(520, n_rows * base_h)
-
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
         font=dict(size=12, family="Montserrat", color="#333"),
-        paper_bgcolor="#f4f4f4",
-        plot_bgcolor="#f4f4f4",
+        paper_bgcolor="#f4f4f4", plot_bgcolor="#f4f4f4",
         hovermode="closest",
         margin=dict(l=10, r=10, t=80, b=40),
-        showlegend=False,
-        height=height,
+        showlegend=False, height=height,
     )
-
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
-
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -1746,6 +1763,21 @@ with tab1:
                 st=st,
                 mode="operational"
             )
+
+            # === Repräsentative konvexe Vertices (für VALUE_ operational) vorab clustern ===
+            st.session_state["convex_cluster_indices"] = []
+            if st.session_state.get("show_convex") and filtered_convex_data is not None and not filtered_convex_data.empty:
+                try:
+                    # 'cols' kommt aus prepare_vertex_selection(..., mode="operational")
+                    conv_cols_for_kmeans = [c for c in list(cols) if c in filtered_convex_data.columns]
+                    if conv_cols_for_kmeans:
+                        st.session_state["convex_cluster_indices"] = select_representative_vertices_by_kmeans(
+                            df=filtered_convex_data,
+                            cols=conv_cols_for_kmeans,
+                            n_vertices=5
+                        )
+                except Exception as e:
+                    st.warning(f"⚠️ Could not cluster convex combinations: {e}")
             
             if valid_techs:
                 st.markdown("---")
@@ -1755,7 +1787,9 @@ with tab1:
                     current_indices=current_indices,
                     vertex_df=vertex_df,
                     tech_data=tech_data,
-                    additional_cols=additional_cols
+                    additional_cols=additional_cols,
+                    convex_plot_indices=st.session_state.get("convex_cluster_indices", []),    # NEU
+                    convex_additional=filtered_convex_additional                               # NEU
                 )
                 st.session_state["selected_vertex"] = (
                     selected_vertex if selected_vertex != "— Please select —" else None
@@ -1796,17 +1830,18 @@ with tab1:
                         vertex_df=vertex_df,
                         current_indices=current_indices,
                         plot_indices_val=plot_indices_val,
-                        time_column_map=value_time_map,  # statt value_time_map
+                        time_column_map=value_time_map,
                         selected_vertex=st.session_state.get("selected_vertex"),
                         n_cols_val=st.session_state.get("n_cols_plots", 3),
                         show_convex=st.session_state["show_convex"],
-                        st_convex =st.session_state["convex_combinations"],
+                        st_convex=st.session_state["convex_combinations"],
                         filtered_convex_data=filtered_convex_data,
                         show_original_ranges=st.session_state["show_original_ranges"],
                         max_plot_vertices=st.session_state["max_plot_vertices"],
                         maa_prefix=MAA_PREFIX,
-                        apply_prefix=True,  # wichtig: MAA_ Prefix verwenden
-                        plot_title="Operational Variables Over Time"
+                        apply_prefix=True,
+                        plot_title="Operational Variables Over Time",
+                        convex_cluster_indices=st.session_state.get("convex_cluster_indices", [])   # << NEU
                     )
 
 
@@ -2164,17 +2199,32 @@ with tab1:
         
        
         # === Highlight ===
-        time_map, valid_techs, plot_indices, tech,cols = prepare_vertex_selection(
-                MAA_PREFIX=MAA_PREFIX,
-                vertex_df=vertex_df,
-                tech_time_map=tech_time_map,
-                extract_time_series_map=extract_time_series_map,
-                select_representative_vertices_by_kmeans=select_representative_vertices_by_kmeans,
-                current_indices=current_indices,
-                max_plot_vertices=st.session_state["max_plot_vertices"],
-                st=st
-            )
-            
+        time_map, valid_techs, plot_indices, tech, cols = prepare_vertex_selection(
+            MAA_PREFIX=MAA_PREFIX,
+            vertex_df=vertex_df,
+            tech_time_map=tech_time_map,
+            extract_time_series_map=extract_time_series_map,
+            select_representative_vertices_by_kmeans=select_representative_vertices_by_kmeans,
+            current_indices=current_indices,
+            max_plot_vertices=st.session_state["max_plot_vertices"],
+            st=st,
+            mode="operational"  # << hinzufügen
+        )
+
+        # === Repräsentative konvexe Vertices (für VALUE_ operational) vorab clustern ===
+        st.session_state["convex_cluster_indices"] = []
+        if st.session_state.get("show_convex") and filtered_convex_data is not None and not filtered_convex_data.empty:
+            try:
+                conv_cols_for_kmeans = [c for c in list(cols) if c in filtered_convex_data.columns]
+                if conv_cols_for_kmeans:
+                    st.session_state["convex_cluster_indices"] = select_representative_vertices_by_kmeans(
+                        df=filtered_convex_data,
+                        cols=conv_cols_for_kmeans,
+                        n_vertices=5
+                    )
+            except Exception as e:
+                st.warning(f"⚠️ Could not cluster convex combinations: {e}")
+
         if valid_techs:
             st.markdown("---")
             st.markdown("### Highlight Vertex & View Details")
@@ -2183,7 +2233,9 @@ with tab1:
                 current_indices=current_indices,
                 vertex_df=vertex_df,
                 tech_data=tech_data,
-                additional_cols=additional_cols
+                additional_cols=additional_cols,
+                convex_plot_indices=st.session_state.get("convex_cluster_indices", []),    # NEU
+                convex_additional=filtered_convex_additional                               # NEU
             )
             st.session_state["selected_vertex"] = (
                 selected_vertex if selected_vertex != "— Please select —" else None
@@ -2219,17 +2271,18 @@ with tab1:
                     vertex_df=vertex_df,
                     current_indices=current_indices,
                     plot_indices_val=plot_indices_val,
-                    time_column_map=value_time_map,  # statt value_time_map
+                    time_column_map=value_time_map,
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=st.session_state["show_convex"],
-                    st_convex =st.session_state["convex_combinations"],
+                    st_convex=st.session_state["convex_combinations"],
                     filtered_convex_data=filtered_convex_data,
                     show_original_ranges=st.session_state["show_original_ranges"],
                     max_plot_vertices=st.session_state["max_plot_vertices"],
                     maa_prefix=MAA_PREFIX,
-                    apply_prefix=True,  # wichtig: MAA_ Prefix verwenden
-                    plot_title="Operational Variables Over Time"
+                    apply_prefix=True,
+                    plot_title="Operational Variables Over Time",
+                    convex_cluster_indices=st.session_state.get("convex_cluster_indices", [])   # << NEU
                 )
 
 
