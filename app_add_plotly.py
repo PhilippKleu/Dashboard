@@ -814,9 +814,9 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
-    h_gap=0.09,
-    v_gap=0.08,
-    convex_cluster_indices=None,   # NEU: vorselektierte konvexe Repräsentanten
+    h_gap=0.09,          # ungenutzt, bleibt als Fallback-API
+    v_gap=0.08,          # ungenutzt, bleibt als Fallback-API
+    convex_cluster_indices=None,
 ):
     import numpy as np
     import pandas as pd
@@ -834,7 +834,8 @@ def plot_operational_variables_over_time(
     valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
     for tech in valid_techs:
         year_cols = sorted(time_column_map.get(tech, []), key=lambda x: x[0])
-        if not year_cols: continue
+        if not year_cols:
+            continue
 
         filt_main = [(y, c) for (y, c) in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_main:
@@ -847,31 +848,34 @@ def plot_operational_variables_over_time(
             cols_cum = [c for _, c in filt_cum]
             plot_specs.append({"tech": tech, "kind": "cum", "cols": cols_cum})
 
-    if not plot_specs:
+    n_plots = len(plot_specs)
+    if n_plots == 0:
         st.info("ℹ️ No data to plot.")
         return
 
-    # 2) Grid
-    # --- NEU: Row-based sizing aus Sidebar ---
-    row_h_px = st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX)
-    hgap     = st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC)
-    vgap     = st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC)
-    
-    # n_plots ist bereits berechnet (len(plot_specs))
-    n_plots = len(plot_specs)
+    # 2) Grid & Abstände aus Sidebar (row-based sizing)
+    # Diese Defaults MUSS du einmalig definieren (siehe vorheriger Schritt):
+    # DEFAULT_ROW_HEIGHT_PX, DEFAULT_HSPACE_FRAC, DEFAULT_VSPACE_FRAC
+    row_h_px = int(st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX))
+    hgap     = float(st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC))
+    vgap     = float(st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC))
+
+    # compute_plotly_grid MUSS vorher im File definiert sein (siehe vorheriger Schritt)
     n_rows, n_cols, horizontal_spacing, vertical_spacing, height = compute_plotly_grid(
-        n_plots=len(plot_specs),
-        n_cols=n_cols_val,              # <- Spalten kommen aus deiner Sidebar
+        n_plots=n_plots,
+        n_cols=n_cols_val,
         row_height_px=row_h_px,
         hspace_frac=hgap,
         vspace_frac=vgap
     )
 
+    # Subplot-Titel
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
         subplot_titles.append(nice if spec["kind"] == "main" else f"{nice}_Cumulated")
-    subplot_titles += [""] * (n_rows * n_cols - n_plots)
+    pad = max(0, n_rows * n_cols - n_plots)
+    subplot_titles += [""] * pad
 
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
@@ -881,7 +885,7 @@ def plot_operational_variables_over_time(
         specs=[[{"type": "xy"} for _ in range(n_cols)] for _ in range(n_rows)],
     )
 
-    # 3) zeichnen
+    # 3) Zeichnen
     for i, spec in enumerate(plot_specs):
         row = i // n_cols + 1
         col = i % n_cols + 1
@@ -889,7 +893,8 @@ def plot_operational_variables_over_time(
 
         if spec["kind"] == "main":
             years_main = spec["years"]; cols_main = spec["cols"]
-            if not cols_main: continue
+            if not cols_main:
+                continue
 
             years_labels = [_x_label(y) for y in years_main]
             all_numeric_years = all(isinstance(y, int) and y >= 1000 for y in years_main)
@@ -958,7 +963,7 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # ==== KONVEX: 5 geclusterte Repräsentanten (nur echte Jahresachsen) ====
+            # Konvex: 5 Repräsentanten
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
                     numeric_pairs = [
@@ -968,19 +973,12 @@ def plot_operational_variables_over_time(
                     if numeric_pairs and all_numeric_years:
                         x_conv = [str(y) for y, _ in numeric_pairs]
                         conv_cols = [c for _, c in numeric_pairs]
-
-                        # Falls noch nicht extern vorgegeben, hier lokal 5 Repräsentanten bestimmen
-                        if not convex_cluster_indices:
-                            reps = select_representative_vertices_by_kmeans(
-                                df=filtered_convex_data, cols=conv_cols, n_vertices=5
-                            )
-                        else:
-                            # nur solche nehmen, die die benötigten Spalten haben
-                            reps = [r for r in convex_cluster_indices if r in filtered_convex_data.index]
-
+                        reps = (convex_cluster_indices or
+                                select_representative_vertices_by_kmeans(filtered_convex_data, conv_cols, 5))
+                        reps = [r for r in reps if r in filtered_convex_data.index]
                         for idx_conv in reps:
                             vals = filtered_convex_data.loc[idx_conv, conv_cols].values.astype(float)
-                            if np.isnan(vals).all(): 
+                            if np.isnan(vals).all():
                                 continue
                             is_sel = (sel_type == "convex" and idx_conv == sel_id)
                             fig.add_trace(
@@ -1002,7 +1000,8 @@ def plot_operational_variables_over_time(
 
         else:
             cols_cum = spec["cols"]
-            if not cols_cum: continue
+            if not cols_cum:
+                continue
 
             values_cum      = vertex_df.loc[plot_indices_val, cols_cum]
             full_values_cum = vertex_df.loc[current_indices, cols_cum]
@@ -1012,7 +1011,8 @@ def plot_operational_variables_over_time(
                 for idx_v in values_cum.index:
                     vals = values_cum.loc[idx_v].values
                     v = np.nanmean(vals) if len(vals) > 1 else (vals[0] if len(vals) == 1 else np.nan)
-                    if np.isnan(v): continue
+                    if np.isnan(v):
+                        continue
                     is_sel = (sel_type == "orig" and idx_v == sel_id)
                     fig.add_trace(
                         go.Scatter(
@@ -1063,14 +1063,14 @@ def plot_operational_variables_over_time(
                 except Exception:
                     pass
 
-            # ==== KONVEX (als Punkte), nur Repräsentanten ====
+            # Konvex (Punkte)
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
                     needed = [c for c in cols_cum if c in filtered_convex_data.columns]
                     if needed:
-                        reps = convex_cluster_indices or select_representative_vertices_by_kmeans(
-                            df=filtered_convex_data, cols=needed, n_vertices=5
-                        )
+                        reps = (convex_cluster_indices or
+                                select_representative_vertices_by_kmeans(filtered_convex_data, needed, 5))
+                        reps = [r for r in reps if r in filtered_convex_data.index]
                         for idx_conv in reps:
                             vals = filtered_convex_data.loc[idx_conv, needed].values
                             v = float(np.nanmean(vals)) if len(vals) > 0 else np.nan
@@ -1080,10 +1080,7 @@ def plot_operational_variables_over_time(
                                     go.Scatter(
                                         x=["Cumulated"], y=[v],
                                         mode="markers",
-                                        marker=dict(
-                                            symbol="x",
-                                            size=12 if is_sel else 8,
-                                        ),
+                                        marker=dict(symbol="x", size=12 if is_sel else 8),
                                         marker_color="rgba(200,0,0,0.9)" if is_sel else "rgba(255,0,0,0.6)",
                                         hovertemplate=f"Convex {idx_conv}<br>Cumulated: {v:.2f}<extra></extra>",
                                         showlegend=False,
@@ -1095,16 +1092,16 @@ def plot_operational_variables_over_time(
 
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout
-    base_h = 340
-    height = max(520, n_rows * base_h)
+    # 4) Layout – WICHTIG: Höhe aus compute_plotly_grid nutzen (NICHT überschreiben!)
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
         font=dict(size=12, family="Montserrat", color="#333"),
-        paper_bgcolor="#f4f4f4", plot_bgcolor="#f4f4f4",
+        paper_bgcolor="#f4f4f4",
+        plot_bgcolor="#f4f4f4",
         hovermode="closest",
         margin=dict(l=10, r=10, t=80, b=40),
-        showlegend=False, height=height,
+        showlegend=False,
+        height=height,  # <- Sidebar-Zeilenhöhe wirksam
     )
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
