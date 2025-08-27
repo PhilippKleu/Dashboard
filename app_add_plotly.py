@@ -242,7 +242,47 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* === Ultra-compact height for the MultiSelect input box === */
+/* reduziert die Gesamthöhe des sichtbaren Eingabefelds auf ~32px */
 
+[data-testid="stMultiSelect"] [data-baseweb="select"],
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] div[aria-haspopup="listbox"] {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+/* sichtbarer Bereich für Chips/Text im Input */
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {
+  max-height: 28px !important;   /* kleiner = flacher */
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  overflow-y: auto !important;    /* wenn viele Chips */
+}
+
+/* tatsächliches Text-Input im Control */
+[data-testid="stMultiSelect"] input {
+  min-height: 18px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Caret/Clear Icons etwas kleiner, damit sie vertikal passen */
+[data-testid="stMultiSelect"] svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Optional: Außenabstände des Widgets minimal halten */
+div[data-testid="stMultiSelect"] {
+  margin-bottom: 0.25rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ==== Row-based sizing (Plotly & Matplotlib) ====
 DEFAULT_ROW_HEIGHT_PX = 320   # feste Pixelhöhe je Plot-Zeile in Plotly
