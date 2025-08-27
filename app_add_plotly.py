@@ -737,17 +737,10 @@ def plot_operational_variables_over_time(
 ):
     """
     Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
-    Für jede Technologie werden bis zu zwei Einzelplots erzeugt:
       - Yearly/Static (y != 0)  => Titel: <Technologie>
       - Cumulated (y == 0)      => Titel: <Technologie>_Cumulated
 
-    Eigenschaften:
-      - Keine X-Achsentitel
-      - Gültiger Bereich (Min/Max über aktuelle Vertices) blau
-      - Optional Originalbereich rot
-      - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
-      - Subplots nutzen volle Zellbreite (enge Außenränder), fester horizontaler/vertikaler Abstand
-      - Hover zeigt zusätzlich den Vertex-Index an
+    Ergänzt: Konvexe Kombinationen werden auch für VALUE_-Operational Line Plots angezeigt.
     """
     import numpy as np
     import pandas as pd
@@ -756,7 +749,6 @@ def plot_operational_variables_over_time(
     from plotly.subplots import make_subplots
 
     def _x_label(y: int) -> str:
-        # -1 => "Static", >=1000 => Jahr als String
         return "Static" if y == -1 else str(y)
 
     # 1) Plot-Spezifikationen sammeln (jede Spezifikation = EIN Plot)
@@ -769,7 +761,8 @@ def plot_operational_variables_over_time(
             continue
 
         # Yearly/Static (y != 0)
-        filt_main = [(y, c) for (y, c) in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        filt_main = [(y, c) for (y, c) in year_cols
+                     if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_main:
             years_main = [y for y, _ in filt_main]
             cols_main  = [c for _, c in filt_main]
@@ -781,7 +774,8 @@ def plot_operational_variables_over_time(
             })
 
         # Cumulated (y == 0)
-        filt_cum = [(y, c) for (y, c) in year_cols if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        filt_cum = [(y, c) for (y, c) in year_cols
+                    if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_cum:
             cols_cum = [c for _, c in filt_cum]
             plot_specs.append({
@@ -794,23 +788,16 @@ def plot_operational_variables_over_time(
         st.info("ℹ️ No data to plot.")
         return
 
-    # 2) Grid bestimmen: JEDER plot_specs-Eintrag zählt als EIN Plot
+    # 2) Grid bestimmen
     n_plots = len(plot_specs)
     n_cols  = max(1, int(n_cols_val))
     n_rows  = int(math.ceil(n_plots / n_cols))
 
-    # Feste Abstände: h_gap / v_gap (nur minimal kappen, falls Plotly-Grenzen überschritten würden)
-    if n_rows <= 1:
-        vertical_spacing = 0.0
-    else:
-        vertical_spacing = min(float(v_gap), 0.98 / (n_rows - 1))
+    # Feste Abstände
+    vertical_spacing = 0.0 if n_rows <= 1 else min(float(v_gap), 0.98 / (n_rows - 1))
+    horizontal_spacing = 0.0 if n_cols <= 1 else min(float(h_gap), 0.98 / (n_cols - 1))
 
-    if n_cols <= 1:
-        horizontal_spacing = 0.0
-    else:
-        horizontal_spacing = min(float(h_gap), 0.98 / (n_cols - 1))
-
-    # Titel je Subplot (Rest auffüllen)
+    # Titel je Subplot
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
@@ -869,28 +856,6 @@ def plot_operational_variables_over_time(
                         row=row, col=col,
                     )
 
-            # Konvexe Kombinationen (nur echte Jahresachsen)
-            if show_convex and st_convex is not None and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
-                try:
-                    convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{y}" for y in years_main]
-                    if all(c in filtered_convex_data.columns for c in convex_cols):
-                        for idx_conv in filtered_convex_data.index:
-                            v = filtered_convex_data.loc[idx_conv, convex_cols].values
-                            if not np.isnan(v).all():
-                                fig.add_trace(
-                                    go.Scatter(
-                                        x=list(map(str, years_main)),
-                                        y=v,
-                                        mode="lines",
-                                        line=dict(color="rgba(255,0,0,0.3)", width=1),
-                                        hoverinfo="skip",
-                                        showlegend=False,
-                                    ),
-                                    row=row, col=col,
-                                )
-                except Exception as e:
-                    st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
-
             # Gültiger Bereich (blau) – nur echte Jahresachsen
             if all_numeric_years and not full_values_main.empty:
                 try:
@@ -935,6 +900,38 @@ def plot_operational_variables_over_time(
                     )
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
+
+            # ==== NEU: Konvexe Kombinationen auch für VALUE_-Operational (Line Plot) ====
+            # Wir nutzen die exakt gleichen Spalten wie im Plot (cols_main).
+            # Es werden nur echte Jahreswerte (>= 1000) überlagert, "Static" (-1) wird ausgelassen.
+            if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
+                try:
+                    # Nur Jahres-Spalten, die in den konvexen Daten vorhanden sind
+                    numeric_pairs = [
+                        (y, c) for y, c in sorted(zip(years_main, cols_main), key=lambda t: t[0])
+                        if (isinstance(y, int) and y >= 1000) and (c in filtered_convex_data.columns)
+                    ]
+                    if numeric_pairs:
+                        x_conv = [str(y) for y, _ in numeric_pairs]
+                        conv_cols = [c for _, c in numeric_pairs]
+
+                        for idx_conv in filtered_convex_data.index:
+                            vals = filtered_convex_data.loc[idx_conv, conv_cols].values.astype(float)
+                            if np.isnan(vals).all():
+                                continue
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=x_conv,
+                                    y=vals,
+                                    mode="lines",
+                                    line=dict(color="rgba(255,0,0,0.30)", width=1),
+                                    hoverinfo="skip",
+                                    showlegend=False,
+                                ),
+                                row=row, col=col,
+                            )
+                except Exception as e:
+                    st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
 
             # Kategorie-X-Achse, KEIN Achsentitel
             fig.update_xaxes(type="category", row=row, col=col, title_text=None)
@@ -1014,9 +1011,32 @@ def plot_operational_variables_over_time(
                 except Exception:
                     pass
 
+            # ==== NEU: Konvexe Kombinationen für Cumulated ====
+            if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
+                try:
+                    if all(c in filtered_convex_data.columns for c in cols_cum):
+                        for idx_conv in filtered_convex_data.index:
+                            vals = filtered_convex_data.loc[idx_conv, cols_cum].values
+                            v = float(np.nanmean(vals)) if len(vals) > 0 else np.nan
+                            if np.isfinite(v):
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=["Cumulated"],
+                                        y=[v],
+                                        mode="markers",
+                                        marker=dict(symbol="x", size=8, line=dict(width=1),
+                                                    color="rgba(255,0,0,0.60)"),
+                                        hoverinfo="skip",
+                                        showlegend=False,
+                                    ),
+                                    row=row, col=col,
+                                )
+                except Exception as e:
+                    st.warning(f"⚠️ Error adding convex overlays (cumulated) for {tech}: {e}")
+
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout – enge Außenränder; volle Containerbreite via Streamlit
+    # 4) Layout
     base_h = 340
     height = max(520, n_rows * base_h)
 
@@ -1029,14 +1049,10 @@ def plot_operational_variables_over_time(
         margin=dict(l=10, r=10, t=80, b=40),
         showlegend=False,
         height=height,
-        # width nicht setzen -> use_container_width übernimmt
     )
 
-    # Achsen: volle Domain + Automargen
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
-
-    # Einheitliche Titeltypografie
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
 
     st.plotly_chart(fig, use_container_width=True)
