@@ -459,8 +459,20 @@ def plot_violin_values(
     plot_indices_val,
     current_indices,
     filtered_convex_data,
-    MAA_PREFIX="VALUE_"  # <<< für operational VALUE_ standardmäßig
+    MAA_PREFIX="MAA_"
 ):
+    """
+    Violinplots mit separatem Subplot für 'Cumulated':
+      - Für jede Technologie bis zu ZWEI Einzelplots:
+        1) Yearly/Static (y > 0 bzw. -1 => 'Static')   -> Titel: <Technologie>
+        2) Cumulated (y == 0)                           -> Titel: <Technologie>_Cumulated
+
+    Features:
+      - 'Selected Vertex' (schwarze Punkte)
+      - optional Originalbereich (rot), gesteuert über st.session_state['show_original_ranges']
+      - optionale konvexe Kombinationen werden (falls Spalten passen) an die Verteilungen angehängt
+      - robuste Achsenbehandlung (immer 2D-Achsenarray, dann flatten)
+    """
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -468,205 +480,220 @@ def plot_violin_values(
     from math import ceil
     import streamlit as st
 
-    # kleine Hilfsfunktion
-    def _tech_title(t: str) -> str:
+    def _nice(t: str) -> str:
         return t.replace("_", " ").title()
 
-    n_panels = len(valid_techs_value)
-    if n_panels == 0:
-        st.info("ℹ️ No technologies selected for violin plot.")
+    def _xlab(y: int) -> str:
+        return "Static" if y == -1 else str(y)
+
+    # ---------- 1) Plot-Spezifikationen sammeln (jeder Eintrag = EIN Subplot) ----------
+    plot_specs = []  # [{'tech':..., 'kind':'main'|'cum', 'years':[...], 'cols':[...]}]
+
+    for tech in valid_techs_value:
+        pairs = sorted(value_time_map.get(tech, []), key=lambda x: x[0])
+        if not pairs:
+            continue
+
+        # Yearly/Static
+        yearly = [(y, c) for (y, c) in pairs if y != 0 and c in vertex_df.columns]
+        if yearly:
+            years_main = [y for y, _ in yearly]
+            cols_main  = [c for _, c in yearly]
+            plot_specs.append({"tech": tech, "kind": "main", "years": years_main, "cols": cols_main})
+
+        # Cumulated
+        cum = [(y, c) for (y, c) in pairs if y == 0 and c in vertex_df.columns]
+        if cum:
+            cols_cum = [c for _, c in cum]
+            plot_specs.append({"tech": tech, "kind": "cum", "cols": cols_cum})
+
+    if not plot_specs:
+        st.info("ℹ️ No data to plot.")
         return
 
+    # ---------- 2) Grid bestimmen ----------
     n_cols_val = st.session_state.get("n_cols_plots", 3)
-    n_rows_val = max(1, ceil(n_panels / max(1, n_cols_val)))
+    n_plots = len(plot_specs)
+    n_cols = max(1, int(n_cols_val))
+    n_rows = max(1, ceil(n_plots / n_cols))
 
-    # Figur
+    # Figurgröße
     plot_width_per_col = 6
     plot_height_per_row = 3.5
-    fig_width_val = plot_width_per_col * n_cols_val
-    fig_height_val = plot_height_per_row * n_rows_val
+    fig_width_val = plot_width_per_col * n_cols
+    fig_height_val = plot_height_per_row * n_rows
 
     fig_val, axes_val = plt.subplots(
-        n_rows_val, n_cols_val,
+        n_rows, n_cols,
         figsize=(fig_width_val, fig_height_val),
         squeeze=False
     )
     fig_val.patch.set_facecolor('#f4f4f4')
     axes_list = axes_val.flatten().tolist()
 
-    plot_idx_val = 0
-
-    for tech in valid_techs_value:
-        if plot_idx_val >= len(axes_list):
-            break
-
-        ax = axes_list[plot_idx_val]
+    # ---------- 3) Zeichnen ----------
+    for i, spec in enumerate(plot_specs):
+        ax = axes_list[i]
         ax.set_facecolor('#f0f0f0')
+        tech = spec["tech"]
 
-        # --- Mapping für diese Technologie
-        year_cols = value_time_map.get(tech, [])
-        if not year_cols:
-            ax.set_visible(False)
-            plot_idx_val += 1
-            continue
+        if spec["kind"] == "main":
+            years = spec["years"]
+            cols  = spec["cols"]
 
-        years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
+            # Datenbasis (nur aktuelle Indizes)
+            values_matrix = vertex_df.loc[current_indices, cols].copy()
 
-        # Split: yearly (>0) und cumulated (==0)
-        yearly_pairs = [(y, c) for y, c in years_cols_sorted if y > 0]
-        cum_pairs    = [(y, c) for y, c in years_cols_sorted if y == 0]
+            # Konvexe Daten ggf. anhängen (nur wenn alle Spalten vorhanden)
+            if (
+                st.session_state.get('show_convex', False)
+                and filtered_convex_data is not None
+                and not filtered_convex_data.empty
+                and all(c in filtered_convex_data.columns for c in cols)
+            ):
+                values_matrix = pd.concat([values_matrix, filtered_convex_data[cols]], axis=0)
 
-        # Nur existierende Spalten berücksichtigen
-        yearly_pairs = [(y, c) if c in vertex_df.columns else None for y, c in yearly_pairs]
-        yearly_pairs = [p for p in yearly_pairs if p is not None]
-        cum_pairs    = [(y, c) if c in vertex_df.columns else None for y, c in cum_pairs]
-        cum_pairs    = [p for p in cum_pairs if p is not None]
-
-        # Wenn gar nichts da ist → skip
-        if not yearly_pairs and not cum_pairs:
-            ax.set_visible(False)
-            plot_idx_val += 1
-            continue
-
-        # Datenmatrix aus verbleibenden Spalten (nur current_indices!)
-        cols_yearly = [c for _, c in yearly_pairs]
-        cols_cum    = [c for _, c in cum_pairs]
-
-        values_yearly = vertex_df.loc[current_indices, cols_yearly] if cols_yearly else pd.DataFrame(index=current_indices)
-        values_cum    = vertex_df.loc[current_indices, cols_cum]    if cols_cum    else pd.DataFrame(index=current_indices)
-
-        # Konvexe Daten (optional anhängen, sofern Spalten exakt passen)
-        if st.session_state.get('show_convex', False) and filtered_convex_data is not None and not filtered_convex_data.empty:
-            if cols_yearly and all(c in filtered_convex_data.columns for c in cols_yearly):
-                values_yearly = pd.concat([values_yearly, filtered_convex_data[cols_yearly]], axis=0)
-            if cols_cum and all(c in filtered_convex_data.columns for c in cols_cum):
-                values_cum = pd.concat([values_cum, filtered_convex_data[cols_cum]], axis=0)
-
-        # --- Violin-Input aufbauen: Reihenfolge = Jahre (aufsteigend) + optional "Cumulated"
-        x_positions = []   # numerische Positionen 1..K
-        x_labels    = []   # Tick-Labels (Jahre als str, dann "Cumulated")
-        data_series = []   # Liste von np.arrays je Violine
-
-        # yearly
-        if cols_yearly:
-            years_sorted = sorted([y for y, _ in yearly_pairs])
-            # Mapping: Jahr -> Spaltenname (nach sort)
-            yearly_cols_sorted = [c for _, c in sorted(yearly_pairs, key=lambda x: x[0])]
-            for j, (y, col) in enumerate(zip(years_sorted, yearly_cols_sorted), start=1):
-                vals = values_yearly[col].dropna().values
+            # Violin-Daten je Jahr
+            x_positions, x_labels, data_series = [], [], []
+            for j, (y, c) in enumerate(sorted(zip(years, cols), key=lambda t: t[0]), start=1):
+                vals = values_matrix[c].dropna().values
                 if len(vals) > 0:
-                    x_positions.append(len(x_positions) + 1)
-                    x_labels.append(str(y))
+                    x_positions.append(j)
+                    x_labels.append(_xlab(y))
                     data_series.append(vals)
 
-        # cumulated (ein einzelner „Bucket“)
-        if cols_cum:
-            # Falls mehrere „Cumulated“-Spalten existieren, mitteln wir pro Zeile,
-            # um eine einzige Verteilung zu erhalten:
-            cum_vals = values_cum.mean(axis=1).dropna().values if values_cum.shape[1] > 1 else values_cum.iloc[:, 0].dropna().values
-            if len(cum_vals) > 0:
-                x_positions.append(len(x_positions) + 1)
-                x_labels.append("Cumulated")
-                data_series.append(cum_vals)
+            # Nichts übrig → Achse ausblenden
+            if not data_series:
+                ax.set_visible(False)
+                continue
 
-        # Wenn nach Filterung nichts übrig → Achse ausblenden
-        if not data_series:
-            ax.set_visible(False)
-            plot_idx_val += 1
-            continue
+            vp = ax.violinplot(
+                data_series,
+                positions=x_positions,
+                showmeans=False,
+                showmedians=True,
+                showextrema=True,
+                widths=0.9
+            )
+            for pc in vp['bodies']:
+                pc.set_alpha(0.7)
+            if 'cmedians' in vp:
+                vp['cmedians'].set_color('black')
 
-        # --- Violinplot
-        vp = ax.violinplot(
-            data_series,
-            positions=x_positions,
-            showmeans=False,
-            showmedians=True,
-            showextrema=True,
-            widths=0.9
-        )
-        for pc in vp['bodies']:
-            pc.set_alpha(0.7)
-        if 'cmedians' in vp:
-            vp['cmedians'].set_color('black')
+            # Selected Vertex
+            sel = st.session_state.get("selected_vertex")
+            if sel is not None and sel in vertex_df.index:
+                try:
+                    sel_vals = vertex_df.loc[sel, cols]
+                    # positions folgen der sortierten Reihenfolge (years/cols sortiert)
+                    sorted_cols = [c for _, c in sorted(zip(years, cols), key=lambda t: t[0])]
+                    for x_pos, c in zip(x_positions, sorted_cols):
+                        v = sel_vals.get(c, np.nan)
+                        if pd.notnull(v):
+                            ax.scatter(x_pos, float(v), color="black", s=60, zorder=3,
+                                       label="Selected Vertex")
+                except Exception as e:
+                    st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
 
-        # --- Selected Vertex (schwarz) als Punkte eintragen
-        selected_vertex = st.session_state.get("selected_vertex")
-        if selected_vertex is not None and selected_vertex in vertex_df.index:
-            try:
-                # Werte für yearly
-                if cols_yearly:
-                    sel_year_vals = vertex_df.loc[selected_vertex, cols_yearly]
-                    # Wir müssen die Position für jeden Jahreswert finden:
-                    # Positionen für yearly sind am Anfang von x_positions.
-                    pos_offset = 0
-                    for k, col in enumerate(cols_yearly):
-                        if pd.notnull(sel_year_vals.get(col, np.nan)):
-                            xv = x_positions[pos_offset + k] if pos_offset + k < len(x_positions) else None
-                            if xv is not None:
-                                ax.scatter(
-                                    xv,
-                                    float(sel_year_vals[col]),
-                                    color="black",
-                                    s=60,
-                                    zorder=3,
-                                    label="Selected Vertex" if plot_idx_val == 0 else None
-                                )
-                # Wert für cumulated
-                if cols_cum:
-                    sel_cum_vals = vertex_df.loc[selected_vertex, cols_cum]
-                    v = float(np.nanmean(sel_cum_vals.values)) if sel_cum_vals.size > 0 else np.nan
-                    if np.isfinite(v):
-                        # Cumulated liegt am Ende (letzte Position)
-                        ax.scatter(
-                            x_positions[-1],
-                            v,
-                            color="black",
-                            s=60,
-                            zorder=3,
-                            label=None
-                        )
-            except Exception as e:
-                st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
-
-        # --- Optional: Originalbereich (rot) pro „Kategorie“
-        if st.session_state.get('show_original_ranges', False):
-            # yearly
-            if cols_yearly:
-                orig_year = vertex_df.loc[current_indices, cols_yearly]
-                years_sorted = sorted([y for y, _ in yearly_pairs])
-                for idx_cat, (y, col) in enumerate(zip(years_sorted, cols_yearly), start=1):
-                    if col in orig_year.columns:
-                        col_vals = orig_year[col].dropna()
+            # Originalbereich (rot) pro Jahr
+            if st.session_state.get('show_original_ranges', False):
+                try:
+                    orig = vertex_df.loc[current_indices, cols]
+                    sorted_cols = [c for _, c in sorted(zip(years, cols), key=lambda t: t[0])]
+                    for x_pos, c in zip(x_positions, sorted_cols):
+                        col_vals = orig[c].dropna()
                         if not col_vals.empty:
                             omin, omax = col_vals.min(), col_vals.max()
-                            xp = x_positions[idx_cat - 1]  # gleiche Reihenfolge
-                            ax.fill_between([xp - 0.25, xp + 0.25], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
-            # cumulated
-            if cols_cum:
-                orig_cum = vertex_df.loc[current_indices, cols_cum]
-                if not orig_cum.empty:
-                    omin, omax = np.nanmin(orig_cum.values), np.nanmax(orig_cum.values)
+                            ax.fill_between([x_pos - 0.25, x_pos + 0.25], omin, omax,
+                                            color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                except Exception:
+                    pass
+
+            # Achsen / Titel
+            ax.set_title(_nice(tech))
+            ax.set_xticks(x_positions)
+            ax.set_xticklabels(x_labels)
+            # linke Spalte bekommt Y-Label
+            col_index = i % n_cols
+            if col_index == 0:
+                ax.set_ylabel("VALUE_")
+            ax.grid(True, linestyle="--", alpha=0.4)
+
+        else:  # spec["kind"] == "cum"
+            cols_cum = spec["cols"]
+            # Datenbasis (nur aktuelle Indizes)
+            values_cum = vertex_df.loc[current_indices, cols_cum].copy()
+
+            # Konvexe Daten ggf. anhängen
+            if (
+                st.session_state.get('show_convex', False)
+                and filtered_convex_data is not None
+                and not filtered_convex_data.empty
+                and all(c in filtered_convex_data.columns for c in cols_cum)
+            ):
+                values_cum = pd.concat([values_cum, filtered_convex_data[cols_cum]], axis=0)
+
+            # Eine einzige Verteilung: Mittelwert je Zeile (falls mehrere cum-Spalten)
+            if values_cum.shape[1] > 1:
+                cum_vals = values_cum.mean(axis=1).dropna().values
+            elif values_cum.shape[1] == 1:
+                cum_vals = values_cum.iloc[:, 0].dropna().values
+            else:
+                cum_vals = np.array([])
+
+            if cum_vals.size == 0:
+                ax.set_visible(False)
+                continue
+
+            vp = ax.violinplot(
+                [cum_vals],
+                positions=[1],
+                showmeans=False,
+                showmedians=True,
+                showextrema=True,
+                widths=0.9
+            )
+            for pc in vp['bodies']:
+                pc.set_alpha(0.7)
+            if 'cmedians' in vp:
+                vp['cmedians'].set_color('black')
+
+            # Selected Vertex (als Punkt auf der Cumulated-Kategorie)
+            sel = st.session_state.get("selected_vertex")
+            if sel is not None and sel in vertex_df.index:
+                try:
+                    sel_vals = vertex_df.loc[sel, cols_cum]
+                    v = float(np.nanmean(sel_vals.values)) if sel_vals.size > 0 else np.nan
+                    if np.isfinite(v):
+                        ax.scatter(1, v, color="black", s=60, zorder=3)
+                except Exception as e:
+                    st.warning(f"⚠️ Error highlighting selected vertex (cumulated) for {tech}: {e}")
+
+            # Originalbereich (rot) für Cumulated
+            if st.session_state.get('show_original_ranges', False):
+                try:
+                    orig = vertex_df.loc[current_indices, cols_cum]
+                    omin, omax = float(np.nanmin(orig.values)), float(np.nanmax(orig.values))
                     if np.isfinite(omin) and np.isfinite(omax):
-                        xp = x_positions[-1]  # cumulated am Ende
-                        ax.fill_between([xp - 0.25, xp + 0.25], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                        ax.fill_between([1 - 0.25, 1 + 0.25], omin, omax,
+                                        color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                except Exception:
+                    pass
 
-        # --- Achsen / Titel
-        ax.set_title(_tech_title(tech))
-        ax.set_xticks(x_positions)
-        ax.set_xticklabels(x_labels, rotation=0)
-        if plot_idx_val % n_cols_val == 0:
-            ax.set_ylabel("VALUE_")
-        ax.grid(True, linestyle="--", alpha=0.4)
+            ax.set_title(f"{_nice(tech)}_Cumulated")
+            ax.set_xticks([1])
+            ax.set_xticklabels(["Cumulated"])
+            col_index = i % n_cols
+            if col_index == 0:
+                ax.set_ylabel("VALUE_")
+            ax.grid(True, linestyle="--", alpha=0.4)
 
-        plot_idx_val += 1
+    # ---------- 4) Überzählige Subplots ausblenden ----------
+    for j in range(len(plot_specs), len(axes_list)):
+        axes_list[j].set_visible(False)
 
-    # Überzählige Achsen entfernen
-    for i in range(plot_idx_val, len(axes_list)):
-        if axes_list[i] in fig_val.axes:
-            fig_val.delaxes(axes_list[i])
-
-    # Legende für ausgewählten Vertex (falls vorhanden)
-    if plot_idx_val > 0 and st.session_state.get("selected_vertex") is not None:
+    # (Optionale) Legende für 'Selected Vertex'
+    if any(hasattr(ax, 'has_data') and ax.has_data() for ax in axes_list) and st.session_state.get("selected_vertex") is not None:
         vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
                                    label="Selected Vertex")
         fig_val.legend(
