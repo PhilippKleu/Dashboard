@@ -461,6 +461,14 @@ def plot_violin_values(
     filtered_convex_data,
     MAA_PREFIX="MAA_"
 ):
+    def _label(y):
+        if y == 0:
+            return "Cumulated"
+        elif y == -1:
+            return "Static"
+        else:
+            return str(y)
+
     n_techs_value = len(valid_techs_value)
     n_cols_val = st.session_state.get("n_cols_plots", 3)
     n_rows_val = ceil(n_techs_value / n_cols_val)
@@ -473,23 +481,21 @@ def plot_violin_values(
     fig_val, axes_val = plt.subplots(n_rows_val, n_cols_val, figsize=(fig_width_val, fig_height_val))
     fig_val.patch.set_facecolor('#f4f4f4')
     axes_val = axes_val.flatten() if n_techs_value > 1 else [axes_val]
-    
     plot_idx_val = 0
 
-    
-    
-    for tech,year_cols in sorted(value_time_map.items()):
+    for tech, year_cols in sorted(value_time_map.items()):
+        if tech not in valid_techs_value:
+            continue
+
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-        
-        years = [y for y, _ in years_cols_sorted]
-        cols = [col for _, col in years_cols_sorted]
-        
+        years_raw = [y for y, _ in years_cols_sorted]
+        cols = [c for _, c in years_cols_sorted]
         if not cols:
             continue
-        
+
         values_matrix = vertex_df.loc[current_indices, cols]
-        
-        # === Konvexe Kombinationen ===
+
+        # Konvexe Kombinationen anfügen (falls vorhanden)
         if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
             if all(col in filtered_convex_data.columns for col in cols):
                 convex_matrix = filtered_convex_data[cols]
@@ -501,65 +507,75 @@ def plot_violin_values(
         ax = axes_val[plot_idx_val]
         ax.set_facecolor('#f0f0f0')
 
+        # Daten pro "x-Position" sammeln
+        # -> Kategorial: wir mappen jede Kategorie auf eine numerische Position 1..N
+        labels = [_label(y) for y in years_raw]
+        positions = np.arange(1, len(labels) + 1)
         data = [values_matrix[col].dropna().values for col in cols]
 
         if all(len(d) > 0 for d in data):
-            ax.violinplot(data, positions=years, showmeans=False, showmedians=True, widths=2.0)
+            vp = ax.violinplot(data, positions=positions, showmeans=False, showmedians=True, widths=0.9)
+            for pc in vp['bodies']:
+                pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
+                pc.set_edgecolor('black')
+                pc.set_alpha(0.7)
+            if 'cmedians' in vp:
+                vp['cmedians'].set_color('black')
 
-            # === Vertex Highlight ===
+            # === Vertex Highlight (falls ausgewählt) ===
             selected_vertex = st.session_state.get("selected_vertex")
             if selected_vertex is not None and selected_vertex in vertex_df.index:
                 try:
                     highlight_vals = vertex_df.loc[selected_vertex, cols]
-                    for y, val in zip(years, highlight_vals):
+                    for pos, val in zip(positions, highlight_vals):
                         if pd.notnull(val):
-                            ax.scatter(y, val, color="black", s=60, zorder=3,
+                            ax.scatter(pos, val, color="black", s=60, zorder=3,
                                        label="Selected Vertex" if plot_idx_val == 0 else None)
                 except Exception as e:
                     st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
 
-        # === Originalbereich ===
+        # === Originalbereich (rot) – mit Positionskoordinaten arbeiten ===
         if st.session_state.get('show_original_ranges', False):
             try:
                 original_matrix = vertex_df[cols]
+                original_min = original_matrix.min()
+                original_max = original_matrix.max()
+                for pos, omin, omax in zip(positions, original_min, original_max):
+                    if pd.notnull(omin) and pd.notnull(omax):
+                        ax.fill_between([pos - 0.4, pos + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
             except Exception:
-                original_matrix = vertex_df[cols]
-
-            original_min = original_matrix.min()
-            original_max = original_matrix.max()
-
-            for y, omin, omax in zip(years, original_min, original_max):
-                if not np.isnan(omin) and not np.isnan(omax):
-                    ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08))
+                pass
 
         ax.set_title(tech.replace('_', ' ').title())
-        ax.set_xticks(years)
-        ax.set_xticklabels([str(y) for y in years])
+        ax.set_xticks(positions)
+        ax.set_xticklabels(labels)
 
+        # Achsentitel etwas sparsamer setzen
         if plot_idx_val >= (n_rows_val - 1) * n_cols_val:
-            ax.set_xlabel("Year")
+            ax.set_xlabel("Year / Category")
         if plot_idx_val % n_cols_val == 0:
             ax.set_ylabel("VALUE_")
 
         ax.grid(True, linestyle="--", alpha=0.4)
+        force_montserrat(ax)
         plot_idx_val += 1
 
-    # Entferne leere Subplots
+    # Leere Subplots entfernen
     for i in range(plot_idx_val, len(axes_val)):
         if axes_val[i] in fig_val.axes:
             fig_val.delaxes(axes_val[i])
 
-    # === Legende ===
-    if plot_idx_val > 0:
-        legend_items = []
+    # Legende
+    legend_items = []
+    if st.session_state.get("selected_vertex") is not None:
+        vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
+                                   label="Selected Vertex")
+        legend_items.append(vertex_dot)
+    if st.session_state.get('show_convex', False):
         convex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
         legend_items.append(convex_line)
 
-        if st.session_state.get("selected_vertex") is not None:
-            vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
-                                       label="Selected Vertex")
-            legend_items.append(vertex_dot)
-
+    if legend_items:
         fig_val.legend(
             legend_items,
             [item.get_label() for item in legend_items],
@@ -571,11 +587,11 @@ def plot_violin_values(
             fontsize=14
         )
 
-        fig_val.subplots_adjust(
-            top=1.14 - 0.02 * max(n_cols_val - 2, 0),
-            hspace=0.3,
-            wspace=0.18
-        )
+    fig_val.subplots_adjust(
+        top=1.14 - 0.02 * max(n_cols_val - 2, 0),
+        hspace=0.3,
+        wspace=0.18
+    )
 
     st.pyplot(fig_val)
 
@@ -595,6 +611,15 @@ def plot_operational_variables_over_time(
     apply_prefix=True,
     plot_title="Operational Variables Over Time"
 ):
+    # Hilfsfunktion: Jahr -> Label
+    def _label(y):
+        if y == 0:
+            return "Cumulated"
+        elif y == -1:
+            return "Static"
+        else:
+            return str(y)
+
     valid_techs_value = sorted([tech for tech, v in time_column_map.items() if len(v) >= 1])
     n_techs_value = len(valid_techs_value)
     n_rows_val = ceil(n_techs_value / n_cols_val)
@@ -617,13 +642,18 @@ def plot_operational_variables_over_time(
             continue
 
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-        years = [y for y, c in years_cols_sorted if (not apply_prefix or c.startswith(maa_prefix + tech))]
-        cols = [c for y, c in years_cols_sorted if (not apply_prefix or c.startswith(maa_prefix + tech))]
-        plot_mode = 'markers' if len(years) == 1 else 'lines'
+
+        # rohe "Jahre" (können -1/0 für Static/Cumulated sein)
+        years_raw = [y for y, c in years_cols_sorted if (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        cols      = [c for y, c in years_cols_sorted if (not apply_prefix or str(c).startswith(maa_prefix + tech))]
 
         if not cols:
             st.write(f"🚫 Skipping technology {tech} – no matching columns found.")
             continue
+
+        years_labels = [_label(y) for y in years_raw]
+        plot_mode = 'markers' if len(years_labels) == 1 else 'lines'
+        all_numeric_years = all(isinstance(y, int) and y >= 1000 for y in years_raw)
 
         row, col = divmod(idx, n_cols_val)
         row += 1
@@ -636,20 +666,21 @@ def plot_operational_variables_over_time(
             st.write(f"⚠️ Empty values for {tech}, skipping.")
             continue
 
+        # Linien/Marker pro Vertex
         for i in values_matrix.index:
             values = values_matrix.loc[i].values
-            if len(values) != len(years):
-                st.write(f"⚠️ Row {i}: Mismatch between number of years and values ({len(years)} vs {len(values)})")
+            if len(values) != len(years_labels):
+                st.write(f"⚠️ Row {i}: Mismatch between number of x-labels and values ({len(years_labels)} vs {len(values)})")
                 continue
 
             is_sel = selected_vertex is not None and i == selected_vertex
-
             hover_text = f"<b>Vertex {i}</b><br>" + "<br>".join(
-                [f"{year}: {val:.2f}" if not np.isnan(val) else f"{year}: n/a" for year, val in zip(years, values)]
+                [f"{lab}: {val:.2f}" if pd.notnull(val) else f"{lab}: n/a"
+                 for lab, val in zip(years_labels, values)]
             )
 
             fig_val.add_trace(go.Scatter(
-                x=years,
+                x=years_labels,  # kategorial (Strings)
                 y=values,
                 mode=plot_mode,
                 line=dict(
@@ -660,93 +691,57 @@ def plot_operational_variables_over_time(
                     color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
                     size=10
                 ) if plot_mode == "markers" else None,
-                text=[hover_text] * len(years),
+                text=[hover_text] * len(years_labels),
                 hoverinfo='text',
                 showlegend=False
             ), row=row, col=col)
 
-        # ✅ Konvexe Kombinationen (korrekter Spaltenabgleich)
-        
-        if show_convex and not st_convex.empty:
-            if len(years) == 1:
-                
-                convex_col = f"{INSTALLED_CAPACITY_PREFIX}{tech}_{years[0]}"
-                
-                if convex_col in filtered_convex_data.columns:
-                    convex_vals = filtered_convex_data[convex_col].dropna()
-                    fig_val.add_trace(go.Scatter(
-                        x=[years[0]] * len(convex_vals),
-                        y=convex_vals,
-                        mode='markers',
-                        marker=dict(color="rgba(255,0,0,0.4)", size=10),
-                        hoverinfo="skip",
-                        showlegend=False
-                    ), row=row, col=col)
-            else:
-               
-                convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{year}" for year in years]
-                
-                if all(col in filtered_convex_data.columns for col in convex_cols):
-                    for idx in filtered_convex_data.index:
-                        values = filtered_convex_data.loc[idx, convex_cols].values
-                        if not np.isnan(values).all():
+        # Convex-Overlays NUR bei echten Jahren
+        if show_convex and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
+            try:
+                convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{y}" for y in years_raw]
+                if all(c in filtered_convex_data.columns for c in convex_cols):
+                    for idx_conv in filtered_convex_data.index:
+                        vals = filtered_convex_data.loc[idx_conv, convex_cols].values
+                        if not np.isnan(vals).all():
                             fig_val.add_trace(go.Scatter(
-                                x=years,
-                                y=values,
+                                x=list(map(str, years_raw)),
+                                y=vals,
                                 mode='lines',
                                 line=dict(color="rgba(255,0,0,0.3)", width=1),
                                 hoverinfo="skip",
                                 showlegend=False
                             ), row=row, col=col)
+            except Exception as e:
+                st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
 
-        # Min/Max Bereich für aktuelle Vertices
-        try:
-            min_vals = full_values_matrix.min()
-            max_vals = full_values_matrix.max()
-
-            if len(years) == 1:
-                year = years[0]
-                x_vals = [year - 0.25, year + 0.25, year + 0.25, year - 0.25]
-                y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-            else:
-                x_vals = list(years) + list(reversed(years))
+        # Min/Max-Füllflächen NUR bei echten Jahren
+        if all_numeric_years:
+            try:
+                min_vals = full_values_matrix.min()
+                max_vals = full_values_matrix.max()
+                x_vals = list(map(str, years_raw)) + list(map(str, years_raw[::-1]))
                 y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
+                fig_val.add_trace(go.Scatter(
+                    x=x_vals,
+                    y=y_vals,
+                    fill='toself',
+                    fillcolor="rgba(26, 102, 204, 0.15)",
+                    line=dict(color='rgba(255,255,255,0)'),
+                    hoverinfo='skip',
+                    showlegend=False
+                ), row=row, col=col)
+            except Exception as e:
+                st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-            fig_val.add_trace(go.Scatter(
-                x=x_vals,
-                y=y_vals,
-                fill='toself',
-                fillcolor="rgba(26, 102, 204, 0.15)",
-                line=dict(color='rgba(255,255,255,0)'),
-                hoverinfo='skip',
-                showlegend=False
-            ), row=row, col=col)
-        except Exception as e:
-            st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
-
-        # X-Achse bei Ein-Jahres-Daten
-        if len(years) == 1:
-            fig_val.update_xaxes(
-                tickvals=[years[0]],
-                ticktext=[str(years[0])],
-                row=row,
-                col=col
-            )
-
-        # Originalbereiche (rot)
-        if show_original_ranges:
+        # Originalbereiche (rot) NUR bei echten Jahren
+        if show_original_ranges and all_numeric_years:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
                 min_vals = original_matrix.min()
                 max_vals = original_matrix.max()
-
-                if len(years) == 1:
-                    x_vals = [years[0] - 0.25, years[0] + 0.25, years[0] + 0.25, years[0] - 0.25]
-                    y_vals = [min_vals.iloc[0], min_vals.iloc[0], max_vals.iloc[0], max_vals.iloc[0]]
-                else:
-                    x_vals = list(years) + list(reversed(years))
-                    y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-
+                x_vals = list(map(str, years_raw)) + list(map(str, years_raw[::-1]))
+                y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
                 fig_val.add_trace(go.Scatter(
                     x=x_vals,
                     y=y_vals,
@@ -759,49 +754,24 @@ def plot_operational_variables_over_time(
             except Exception as e:
                 st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-    # Layout
+        # X-Achse auf Kategorie stellen (wichtig für "Static"/"Cumulated")
+        fig_val.update_xaxes(type='category', row=row, col=col)
+
+    # Layout & typografische Verbesserungen (Platz für lange Titel/Labels)
     fig_val.update_layout(
+        title=dict(text=plot_title, x=0, xanchor="left"),
         height=fig_height_val * 100,
         width=fig_width_val * 100,
-        
         font=dict(size=12, family="Montserrat", color="#333"),
         paper_bgcolor='#f4f4f4',
         plot_bgcolor='#f4f4f4',
         hovermode="closest",
-        margin=dict(l=40, r=40, t=80, b=50),
+        margin=dict(l=60, r=120, t=110, b=50),  # mehr Platz für Titel/Labels
         showlegend=False
     )
 
-    # Achsenstyling
-    for i in range(1, len(valid_techs_value) + 1):
-        suffix = "" if i == 1 else str(i)
-        xaxis = getattr(fig_val.layout, f"xaxis{suffix}", None)
-        yaxis = getattr(fig_val.layout, f"yaxis{suffix}", None)
-
-        if isinstance(xaxis, XAxis):
-            xaxis.update(
-                showgrid=True,
-                gridcolor="rgba(0,0,0,0.1)",
-                mirror=True,
-                showline=True,
-                linecolor="rgba(0,0,0,0.3)",
-                linewidth=1,
-                ticks="outside"
-            )
-        if isinstance(yaxis, YAxis):
-            yaxis.update(
-                showgrid=True,
-                gridcolor="rgba(0,0,0,0.1)",
-                mirror=True,
-                showline=True,
-                linecolor="rgba(0,0,0,0.3)",
-                linewidth=1,
-                ticks="outside"
-            )
-
-    for ann in fig_val['layout']['annotations']:
-        ann['y'] += 0.01
-        ann['font'] = dict(size=12, color='#222', family="Montserrat")
+    # Subplot-Titel typografisch, aber NICHT nach oben verschieben
+    fig_val.update_annotations(font=dict(size=12, color='#222', family="Montserrat"), x=0, xanchor="left", align="left")
 
     st.plotly_chart(fig_val, use_container_width=True)
 
@@ -935,18 +905,21 @@ def extract_technologies(df):
 # === Extrahiere Zeitreihe pro Technologie ===
 def extract_time_series_map(df, maa_prefix, mode="installed"):
     """
-    Extrahiert eine Zeitreihen-Mapping-Technologie → [(Jahr, Spaltenname)].
+    Baut ein Mapping: Technologie -> Liste[(Jahr, Spaltenname)].
 
-    :param df: Pandas DataFrame
-    :param maa_prefix: "VALUE_" oder "MAA_"
-    :param mode: "installed" oder "operational"
-    :return: Dictionary {tech: [(year, column)]}
+    Für VALUE_ (mode="operational"):
+      - Jahreswerte: VALUE_Tech[(2025,)]
+      - Kumulierte Werte ohne Jahr: VALUE_Tech_Cumulated  -> Pseudo-Jahr 0 ("Cumulated")
+      - Nicht-jahresspezifisch: VALUE_Tech               -> Pseudo-Jahr -1 ("Static")
+
+    Für MAA_ (installed):
+      - MAA_INSTALLED_CAPACITY_Tech_2025
     """
     tech_time_map = defaultdict(list)
     seen_keys = set()
 
     for col in df.columns:
-        # === Für MAA-Daten: alle INSTALLED_CAPACITY_* Spalten zulassen ===
+        # === MAA_-Modus (Installed Capacities) ===
         if maa_prefix == "MAA_":
             match = re.match(r"^MAA_INSTALLED_CAPACITY_(.+)_(\d{4})$", col)
             if match:
@@ -956,35 +929,46 @@ def extract_time_series_map(df, maa_prefix, mode="installed"):
                     tech_time_map[tech].append((int(year), col))
                     seen_keys.add(key)
 
-        # === Für VALUE-Daten: abhängig vom Modus ===
+        # === VALUE_-Modus ===
         elif maa_prefix == "VALUE_":
             if mode == "operational":
-                # 1) Normale Jahreswerte: VALUE_Tech[(2025,)]
-                match = re.match(r"^(VALUE_)([^[]+)\[\((\d{4}),?\)\]$", col)
-                if match:
-                    _, tech, year = match.groups()
+                # 1) Jahreswerte: VALUE_Tech[(2025,)]
+                m_year = re.match(r"^(VALUE_)([^[]+)\[\((\d{4}),?\)\]$", col)
+                if m_year:
+                    _, tech, year = m_year.groups()
                     key = (tech, int(year))
                     if key not in seen_keys:
                         tech_time_map[tech].append((int(year), col))
                         seen_keys.add(key)
                     continue
 
-                # 2) Kumulierte Werte ohne Jahr: VALUE_Tech_Cumulated
-                match = re.match(r"^VALUE_(.+)_Cumulated$", col)
-                if match:
-                    tech = match.group(1)
-                    pseudo_year = 0  # Default-Jahr für kumulierte Werte
-                    key = (tech, pseudo_year)
+                # 2) Kumuliert (ohne Jahr): VALUE_Tech_Cumulated -> Pseudo-Jahr 0
+                m_cum = re.match(r"^VALUE_(.+)_Cumulated$", col)
+                if m_cum:
+                    tech = m_cum.group(1)
+                    key = (tech, 0)  # 0 == "Cumulated"
                     if key not in seen_keys:
-                        tech_time_map[tech].append((pseudo_year, col))
+                        tech_time_map[tech].append((0, col))
                         seen_keys.add(key)
                     continue
 
+                # 3) Nicht-jahresspezifisch (ohne Suffix): VALUE_Tech -> Pseudo-Jahr -1
+                m_static = re.match(r"^VALUE_([A-Za-z0-9_]+)$", col)
+                if m_static:
+                    tech = m_static.group(1)
+                    # Schutz, damit keine install/new capacity hier reingerät
+                    if not tech.startswith("INSTALLED_CAPACITY_") and not tech.startswith("NEW_CAPACITY_"):
+                        key = (tech, -1)  # -1 == "Static"
+                        if key not in seen_keys:
+                            tech_time_map[tech].append((-1, col))
+                            seen_keys.add(key)
+                    continue
+
             elif mode == "installed":
-                # INSTALLED_CAPACITY_Tech_2025
-                match = re.match(r"^(INSTALLED_CAPACITY_)(.+)_(\d{4})$", col)
-                if match:
-                    _, tech, year = match.groups()
+                # Für Installed Capacities im VALUE_-Modus: INSTALLED_CAPACITY_Tech_2025
+                m_inst = re.match(r"^(INSTALLED_CAPACITY_)(.+)_(\d{4})$", col)
+                if m_inst:
+                    _, tech, year = m_inst.groups()
                     key = (tech, int(year))
                     if key not in seen_keys:
                         tech_time_map[tech].append((int(year), col))
