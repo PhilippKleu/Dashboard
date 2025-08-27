@@ -125,6 +125,21 @@ textarea, select,
 [role="option"]:not(.material-icons):not(.material-symbols-outlined),
 [role="option"] *:not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
+}}
+
+/* 6c) Dropdown-/Multiselect-Optionsliste: Höhe & Scrollbar */
+[data-baseweb="layer"] [role="listbox"],
+[data-baseweb="menu"] {{
+  max-height: 320px !important;   /* << hier Höhe anpassen */
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}}
+/* Optional: etwas mehr Innenabstand je Option */
+[data-baseweb="layer"] [role="option"] {{
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }}
 
 /* 7) Tabs/Expander/Metrics */
@@ -196,6 +211,7 @@ div[data-testid^="stSlider"]:hover {{
 }}
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # ==== Row-based sizing (Plotly & Matplotlib) ====
