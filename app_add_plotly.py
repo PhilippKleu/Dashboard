@@ -601,7 +601,7 @@ def plot_operational_variables_over_time(
     plot_indices_val,
     time_column_map,
     selected_vertex,
-    n_cols_val=2,  # zwei Subplots nebeneinander pro Technologie
+    n_cols_val=3,              # steuert die Breite wie gewohnt
     show_convex=False,
     st_convex=None,
     filtered_convex_data=None,
@@ -610,19 +610,28 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
+    pair_orientation="horizontal",   # <<< NEU: "horizontal" | "vertical"
 ):
     """
-    Für jede Technologie werden 2 Subplots nebeneinander erzeugt:
-      - Links: Technologie (Yearly/Static; y != 0)
-      - Rechts: Technologie_Cumulated (y == 0)
-    - Kein X-Achsentitel
-    - Gültiger Bereich (Min/Max über aktuelle Vertices) blau schattiert
-    - Optional Originalbereich rot
-    - Konvexe Kombinationen (falls vorhanden) werden links überlagert (bei echten Jahresachsen)
+    Zeichnet pro Technologie zwei Subplots:
+      - Yearly/Static (links bzw. oben)
+      - Cumulated (rechts bzw. unten)
+
+    Anordnung:
+      - pair_orientation="horizontal": pro Technologie 2 Spalten nebeneinander; n_cols_val = #Tech-Blöcke pro Zeile
+      - pair_orientation="vertical":   pro Technologie 2 Zeilen übereinander; n_cols_val = #Spalten (Tech-Blöcke pro Zeile)
+
+    Weitere Eigenschaften:
+      - Keine X-Achsentitel
+      - Gültiger Bereich (Min/Max über aktuelle Vertices) als blaues Band
+      - Optional Originalbereich als rotes Band
+      - Konvexe Kombinationen (falls vorhanden) bei Yearly-Plot (nur echte Jahresachsen)
     """
+    import numpy as np
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
 
     def _x_label(y: int) -> str:
-        # -1 => "Static", >=1000 => Jahr als String
         return "Static" if y == -1 else str(y)
 
     valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
@@ -630,31 +639,63 @@ def plot_operational_variables_over_time(
         st.info("ℹ️ No technologies to display.")
         return
 
-    total_rows = len(valid_techs)
-    total_cols = 2  # links (Yearly/Static), rechts (Cumulated)
+    # ---------- Grid berechnen ----------
+    n_blocks = len(valid_techs)
+    n_cols_val = max(1, int(n_cols_val))
 
-    # Subplot-Titel: "Technologie" und "Technologie_Cumulated"
-    subplot_titles = []
-    for tech in valid_techs:
-        nice = tech.replace("_", " ").title()
-        subplot_titles.append(f"{nice}")
-        subplot_titles.append(f"{nice}_Cumulated")
+    if pair_orientation == "horizontal":
+        # Jede Technologie belegt 2 Spalten in einer Grid-Zeile
+        blocks_per_row = n_cols_val
+        n_rows = int(np.ceil(n_blocks / blocks_per_row))
+        n_cols = blocks_per_row * 2
+        # Subplot-Titel (2 pro Technologie, nebeneinander)
+        subplot_titles = []
+        for tech in valid_techs:
+            nice = tech.replace("_", " ").title()
+            subplot_titles.append(nice)
+            subplot_titles.append(f"{nice}_Cumulated")
+
+        def _loc(idx):
+            br = idx // blocks_per_row  # block row
+            bc = idx % blocks_per_row   # block col
+            return (br + 1, bc * 2 + 1, br + 1, bc * 2 + 2)  # (main_row, main_col, cum_row, cum_col)
+
+    else:  # "vertical"
+        # Jede Technologie belegt 2 Zeilen in einer Grid-Spalte
+        blocks_per_row = n_cols_val
+        block_rows = int(np.ceil(n_blocks / blocks_per_row))
+        n_rows = block_rows * 2
+        n_cols = blocks_per_row
+        # Subplot-Titel (2 pro Technologie, untereinander)
+        subplot_titles = []
+        for tech in valid_techs:
+            nice = tech.replace("_", " ").title()
+            subplot_titles.append(nice)
+            subplot_titles.append(f"{nice}_Cumulated")
+
+        def _loc(idx):
+            br = idx // blocks_per_row   # block row
+            bc = idx % blocks_per_row    # block col
+            return (br * 2 + 1, bc + 1, br * 2 + 2, bc + 1)  # (main_row, main_col, cum_row, cum_col)
 
     fig = make_subplots(
-        rows=total_rows,
-        cols=total_cols,
+        rows=n_rows,
+        cols=n_cols,
         subplot_titles=subplot_titles,
-        horizontal_spacing=0.12,
-        vertical_spacing=0.12,
-        specs=[[{"type": "xy"}, {"type": "xy"}] for _ in range(total_rows)],
+        horizontal_spacing=0.12 if pair_orientation == "horizontal" else 0.08,
+        vertical_spacing=0.12 if pair_orientation == "vertical" else 0.12,
+        specs=[[{"type": "xy"} for _ in range(n_cols)] for _ in range(n_rows)],
     )
 
-    for row_idx, tech in enumerate(valid_techs, start=1):
+    # ---------- Zeichnen ----------
+    for idx, tech in enumerate(valid_techs):
+        main_row, main_col, cum_row, cum_col = _loc(idx)
+
         year_cols = sorted(time_column_map.get(tech, []), key=lambda x: x[0])
         if not year_cols:
             continue
 
-        # -------------------- LINKS: YEARLY / STATIC --------------------
+        # LINKS/OBEN: Yearly/Static (y != 0)
         filt_main = [
             (y, c) for (y, c) in year_cols
             if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))
@@ -690,7 +731,7 @@ def plot_operational_variables_over_time(
                             hoverinfo="x+y",
                             showlegend=False,
                         ),
-                        row=row_idx, col=1,
+                        row=main_row, col=main_col,
                     )
 
             # Konvexe Kombinationen (nur bei echten Jahresachsen)
@@ -710,7 +751,7 @@ def plot_operational_variables_over_time(
                                         hoverinfo="skip",
                                         showlegend=False,
                                     ),
-                                    row=row_idx, col=1,
+                                    row=main_row, col=main_col,
                                 )
                 except Exception as e:
                     st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
@@ -727,17 +768,17 @@ def plot_operational_variables_over_time(
                             x=x_vals,
                             y=y_vals,
                             fill="toself",
-                            fillcolor="rgba(26,102,204,0.15)",  # blau
+                            fillcolor="rgba(26,102,204,0.15)",
                             line=dict(color="rgba(255,255,255,0)"),
                             hoverinfo="skip",
                             showlegend=False,
                         ),
-                        row=row_idx, col=1,
+                        row=main_row, col=main_col,
                     )
                 except Exception as e:
                     st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-            # Originalbereich (rot) – optional, nur bei echten Jahren
+            # Originalbereich (rot) – optional
             if show_original_ranges and all_numeric_years:
                 try:
                     orig = vertex_df.loc[current_indices, cols_main]
@@ -755,15 +796,15 @@ def plot_operational_variables_over_time(
                             hoverinfo="skip",
                             showlegend=False,
                         ),
-                        row=row_idx, col=1,
+                        row=main_row, col=main_col,
                     )
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # X-Achse als Kategorie (zeigt "Static" korrekt), KEIN Achsentitel
-            fig.update_xaxes(type="category", row=row_idx, col=1, title_text=None)
+            # Kategorie-X-Achse, KEIN Achsentitel
+            fig.update_xaxes(type="category", row=main_row, col=main_col, title_text=None)
 
-        # -------------------- RECHTS: CUMULATED --------------------
+        # RECHTS/UNTEN: Cumulated (y == 0)
         filt_cum = [
             (y, c) for (y, c) in year_cols
             if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))
@@ -792,7 +833,7 @@ def plot_operational_variables_over_time(
                                 hoverinfo="x+y",
                                 showlegend=False,
                             ),
-                            row=row_idx, col=2,
+                            row=cum_row, col=cum_col,
                         )
 
             # Gültiger Bereich (blau) als vertikales Band bei x="Cumulated"
@@ -808,11 +849,11 @@ def plot_operational_variables_over_time(
                                 mode="lines",
                                 line=dict(width=0),
                                 fill="toself",
-                                fillcolor="rgba(26,102,204,0.15)",  # blau
+                                fillcolor="rgba(26,102,204,0.15)",
                                 hoverinfo="skip",
                                 showlegend=False,
                             ),
-                            row=row_idx, col=2,
+                            row=cum_row, col=cum_col,
                         )
                 except Exception:
                     pass
@@ -830,19 +871,26 @@ def plot_operational_variables_over_time(
                                 mode="lines",
                                 line=dict(width=0),
                                 fill="toself",
-                                fillcolor="rgba(255,0,0,0.08)",  # rot
+                                fillcolor="rgba(255,0,0,0.08)",
                                 hoverinfo="skip",
                                 showlegend=False,
                             ),
-                            row=row_idx, col=2,
+                            row=cum_row, col=cum_col,
                         )
                 except Exception:
                     pass
 
-            # X-Achse als Kategorie, KEIN Achsentitel
-            fig.update_xaxes(type="category", row=row_idx, col=2, tickvals=["Cumulated"], title_text=None)
+            fig.update_xaxes(type="category", row=cum_row, col=cum_col, tickvals=["Cumulated"], title_text=None)
 
-    # --------- Layout / Typografie ---------
+    # ---------- Layout ----------
+    # Höhe heuristisch: pro Tech-Zeile 360 px (horizontal) oder pro Blockreihe ~ 360 px * 2 Zeilen (vertical)
+    if pair_orientation == "horizontal":
+        height = max(520, int(np.ceil(n_blocks / max(1, n_cols_val)) * 360))
+        width  = max(800, 280 * n_cols)  # etwas breiter, da 2 Spalten pro Tech
+    else:
+        height = max(600, int(np.ceil(n_blocks / max(1, n_cols_val)) * 360 * 2))
+        width  = max(800, 280 * n_cols)
+
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
         font=dict(size=12, family="Montserrat", color="#333"),
@@ -851,13 +899,11 @@ def plot_operational_variables_over_time(
         hovermode="closest",
         margin=dict(l=60, r=120, t=110, b=60),
         showlegend=False,
-        height=max(600, total_rows * 360),
-        width=1000,
+        height=height,
+        width=width,
     )
 
-    # Einheitliche Titeltypografie; keine y-Offsets (kein Überlappen)
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
-
     st.plotly_chart(fig, use_container_width=True)
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
