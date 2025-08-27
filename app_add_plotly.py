@@ -622,11 +622,13 @@ def plot_operational_variables_over_time(
       - Gültiger Bereich (Min/Max über aktuelle Vertices) blau
       - Optional Originalbereich rot
       - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
+      - Spacings sind dynamisch (verhindert ValueError bei vielen Reihen/Spalten)
     """
     import numpy as np
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import math
+    import pandas as pd
 
     def _x_label(y: int) -> str:
         # -1 => "Static", >=1000 => Jahr als String
@@ -672,6 +674,17 @@ def plot_operational_variables_over_time(
     n_cols  = max(1, int(n_cols_val))
     n_rows  = int(math.ceil(n_plots / n_cols))
 
+    # Dynamische Spacings (wichtig: (rows-1)*vertical_spacing < 1, (cols-1)*horizontal_spacing < 1)
+    if n_rows <= 1:
+        vertical_spacing = 0.0
+    else:
+        vertical_spacing = min(0.10, 0.9 / (n_rows - 1))  # sicher und hübsch
+
+    if n_cols <= 1:
+        horizontal_spacing = 0.0
+    else:
+        horizontal_spacing = min(0.12, 0.9 / (n_cols - 1))
+
     # Titel je Subplot erzeugen (Rest mit "" auffüllen)
     subplot_titles = []
     for spec in plot_specs:
@@ -683,8 +696,8 @@ def plot_operational_variables_over_time(
         rows=n_rows,
         cols=n_cols,
         subplot_titles=subplot_titles,
-        horizontal_spacing=0.12,
-        vertical_spacing=0.12,
+        horizontal_spacing=horizontal_spacing,
+        vertical_spacing=vertical_spacing,
         specs=[[{"type": "xy"} for _ in range(n_cols)] for _ in range(n_rows)],
     )
 
@@ -732,7 +745,7 @@ def plot_operational_variables_over_time(
                     )
 
             # Konvexe Kombinationen (nur echte Jahresachsen)
-            if show_convex and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
+            if show_convex and st_convex is not None and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
                 try:
                     convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{y}" for y in years_main]
                     if all(c in filtered_convex_data.columns for c in convex_cols):
@@ -878,8 +891,7 @@ def plot_operational_variables_over_time(
 
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout
-    # Höhe/Weite heuristisch nach Grid-Größe skalieren
+    # 4) Layout – skaliert mit Grid-Größe
     base_h = 340
     height = max(520, n_rows * base_h)
     base_w = 300
