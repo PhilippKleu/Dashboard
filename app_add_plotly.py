@@ -244,17 +244,11 @@ div[data-testid^="stSlider"]:hover {{
 
 st.markdown("""
 <style>
-/* === Knöpfe (einfach hier Werte ändern) === */
 :root{
-  --ms-box-h: 64px;        /* Gesamthöhe der sichtbaren MultiSelect-Box */
-  --ms-chips-h: 28px;      /* Sichtbare Höhe für die ausgewählten Chips (mit Scroll) */
-  --ms-input-h: 18px;      /* Höhe des Text-Inputs innerhalb der Box */
-  --ms-icon: 14px;         /* Größe der Caret/Clear-Icons */
-  --ms-tag-scale: 0.90;    /* Skalierung der einzelnen Chips */
-  --ms-dropdown-max: 320px;/* Höhe der geöffneten Dropdown-Liste */
+  --ms-box-h: 64px;   /* <— HIER die gewünschte Box-Höhe einstellen (z.B. 28px, 32px, 40px) */
 }
 
-/* Box-Höhe festlegen */
+/* Nur die Höhe des sichtbaren MultiSelect-Eingabefelds fixen */
 [data-testid="stMultiSelect"] [data-baseweb="select"],
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
 [data-testid="stMultiSelect"] div[aria-haspopup="listbox"]{
@@ -262,45 +256,11 @@ st.markdown("""
   height: var(--ms-box-h) !important;
 }
 
-/* Sichtbarer Bereich für Chips */
+/* Inhalt innerhalb der Box an die Höhe anpassen – keine weitere Optik ändern */
 [data-testid="stMultiSelect"] div[data-baseweb="value-container"]{
-  max-height: var(--ms-chips-h) !important;
-  overflow-y: auto !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}
-
-/* Textinput in der Box */
-[data-testid="stMultiSelect"] input{
-  min-height: var(--ms-input-h) !important;
-  height: var(--ms-input-h) !important;
-  line-height: var(--ms-input-h) !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-/* Icons kleiner */
-[data-testid="stMultiSelect"] svg{
-  width: var(--ms-icon) !important;
-  height: var(--ms-icon) !important;
-}
-
-/* Chips kompakter */
-[data-testid="stMultiSelect"] [data-baseweb="tag"]{
-  transform: scale(var(--ms-tag-scale));
-  margin: 1px 2px !important;
-}
-[data-testid="stMultiSelect"] [data-baseweb="tag"] span{
-  font-size: 12px !important;
-}
-
-/* Dropdown-Liste (geöffnetes Menü) Höhe begrenzen */
-[data-baseweb="layer"] ul[role="listbox"],
-[data-baseweb="layer"] ul[role="menu"],
-[data-baseweb="layer"] [data-baseweb="menu"]{
-  max-height: var(--ms-dropdown-max) !important;
-  height: auto !important;
-  overflow-y: auto !important;
+  max-height: calc(var(--ms-box-h) - 6px) !important;
+  overflow: hidden !important;   /* schneidet Chips ab, damit die Box nicht wächst */
+  /* Wenn du Chips innerhalb der Box scrollen willst, nimm stattdessen: overflow: auto !important; */
 }
 </style>
 """, unsafe_allow_html=True)
