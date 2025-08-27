@@ -373,6 +373,66 @@ def add_subplot_borders(fig, color="#C0C6D2", width=1.5, dash=None, pad=0.0, abo
     fig.update_layout(shapes=shapes)
     return fig
 
+# Export-Flag + Bin
+st.session_state.setdefault("capture_exports", False)
+st.session_state.setdefault("export_bin", {})  # path -> (bytes, mime)
+
+def _export_put(path: str, data: bytes, mime: str):
+    st.session_state["export_bin"][path] = (data, mime)
+
+def emit_plotly(fig, tag: str):
+    """Rendern ODER Capturen – abhängig von st.session_state['capture_exports']."""
+    if fig is None:
+        return
+    if st.session_state.get("capture_exports"):
+        try:
+            data = fig.to_image(format="png", scale=2)  # Kaleido benötigt
+            _export_put(f"plots/{tag}.png", data, "image/png")
+        except Exception:
+            html = fig.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
+            _export_put(f"plots/{tag}.html", html, "text/html")
+        # Kein Rendern, nur speichern
+    else:
+        st.plotly_chart(fig, use_container_width=True)
+
+def emit_mpl(fig, tag: str, dpi=200):
+    if fig is None:
+        return
+    if st.session_state.get("capture_exports"):
+        b = BytesIO()
+        fig.savefig(b, format="png", dpi=dpi, bbox_inches="tight")
+        _export_put(f"plots/{tag}.png", b.getvalue(), "image/png")
+        plt.close(fig); del fig; gc.collect()
+    else:
+        st.pyplot(fig, use_container_width=True)
+
+def make_current_excel_bytes():
+    excel_buf = BytesIO()
+    base_idx = current_indices if 'current_indices' in locals() else tech_data.index
+    with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
+        frames = [tech_data.loc[base_idx]]
+        if MAA_PREFIX == "VALUE_":
+            inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
+            if inst_cols:
+                frames.append(vertex_df.loc[base_idx, inst_cols])
+        if additional_cols:
+            frames.append(vertex_df.loc[base_idx, additional_cols])
+        pd.concat(frames, axis=1).to_excel(writer, index=False, sheet_name="Original_Vertices")
+        try:
+            if (st.session_state.get('show_convex')
+                and 'filtered_convex_data' in locals()
+                and not filtered_convex_data.empty):
+                conv_frames = [filtered_convex_data.reset_index(drop=True)]
+                if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
+                    conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
+                convex_all = pd.concat(conv_frames, axis=1)
+                convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
+                convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
+        except Exception:
+            pass
+    excel_buf.seek(0)
+    return excel_buf.getvalue()
+
 # === Montserrat für Matplotlib registrieren ===
 from matplotlib import font_manager as fm
 import tempfile, base64, os, matplotlib as mpl
@@ -594,10 +654,25 @@ def plot_density_contours(
     grid_density=50,
     color_levels=10,
     max_vertices_for_density=250,
-    render="ui"
+    tag="density",   # << NEU
 ):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from scipy.stats import gaussian_kde
+
+    # Anzahl Plots = Anzahl Techs mit mindestens einer Spalte
+    techs_for_plot = []
+    for tech, year_cols in sorted(tech_time_map.items()):
+        if any(c in vertex_df.columns for _, c in year_cols):
+            techs_for_plot.append(tech)
+
+    if not techs_for_plot:
+        if not st.session_state.get("capture_exports"):
+            st.info("ℹ️ No data to plot.")
+        return None
+
     (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
-        n_plots=n_techs,
+        n_plots=len(techs_for_plot),
         n_cols=st.session_state.get("n_cols_plots", 3),
         col_w_in=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
         row_h_in=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
@@ -612,15 +687,19 @@ def plot_density_contours(
         df_base = df_base.sample(n=max_vertices_for_density, random_state=42)
 
     i = 0
-    for tech, year_cols in sorted(tech_time_map.items()):
-        if len(year_cols) < 1:
+    drew_anything = False
+    for tech in techs_for_plot:
+        year_cols = tech_time_map.get(tech, [])
+        if not year_cols:
+            axs[i].set_visible(False)
+            i += 1
             continue
 
         year_cols = sorted(year_cols, key=lambda x: x[0])
         years = [y for y, _ in year_cols]
-        cols = [col for _, col in year_cols]
+        cols  = [c for _, c in year_cols if c in df_base.columns]
 
-        if not all(c in df_base.columns for c in cols):
+        if not cols:
             axs[i].set_visible(False)
             i += 1
             continue
@@ -633,12 +712,13 @@ def plot_density_contours(
 
         axs[i].set_facecolor('#f0f0f0')
 
-        x_vals = np.array(years)
+        x_vals = np.array(years[:len(cols)])  # robust falls columns < years
         all_points = []
         for row in df.itertuples(index=False):
             y_vals = np.array(row)
             if np.isnan(y_vals).any():
                 continue
+            # lin. Interpolation zwischen aufeinanderfolgenden Jahren
             for j in range(len(x_vals) - 1):
                 x_interp = np.linspace(x_vals[j], x_vals[j + 1], num_interpolated_points)
                 y_interp = np.linspace(y_vals[j], y_vals[j + 1], num_interpolated_points)
@@ -650,7 +730,7 @@ def plot_density_contours(
             continue
 
         X, Y = np.meshgrid(
-            np.linspace(min(years), max(years), grid_density),
+            np.linspace(min(x_vals), max(x_vals), grid_density),
             np.linspace(-0.5, df.max().max() + 0.5, grid_density)
         )
 
@@ -670,29 +750,30 @@ def plot_density_contours(
 
         min_vals = df.min()
         max_vals = df.max()
-        axs[i].fill_between(years, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
-        axs[i].fill_between(years, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
+        axs[i].fill_between(x_vals, max_vals + 0.5, max_vals.max() + 0.5, facecolor='#f4f4f4', alpha=1)
+        axs[i].fill_between(x_vals, min_vals - 0.5, -0.5, facecolor='#f4f4f4', alpha=1)
 
         cbar = plt.colorbar(contour, ax=axs[i], label="Density")
         cbar.set_ticks(np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4))
         cbar.set_ticklabels([f"{val:.3f}" for val in np.linspace(np.nanmin(Z_masked), np.nanmax(Z_masked), 4)])
 
+        drew_anything = True
         i += 1
 
     for j in range(i, len(axs)):
         fig_dichte.delaxes(axs[j])
 
-    fig_dichte.subplots_adjust(
-        top=0.95,
-        bottom=0.07,
-        hspace=0.44,
-        wspace=0.3
-    )
-    if render == "ui":
-        st.pyplot(fig_dichte, use_container_width=True)
+    if not drew_anything:
+        plt.close(fig_dichte)
+        if not st.session_state.get("capture_exports"):
+            st.info("ℹ️ No data to plot.")
         return None
-    else:
-        return fig_dichte
+
+    fig_dichte.subplots_adjust(top=0.95, bottom=0.07, hspace=0.44, wspace=0.3)
+
+    # << NEU: zentral entscheiden
+    emit_mpl(fig_dichte, tag)
+    return None
     
 
 def plot_violin_values(
@@ -703,26 +784,17 @@ def plot_violin_values(
     current_indices,
     filtered_convex_data,
     MAA_PREFIX="MAA_",
-    render="ui"
+    tag="operational_violin",   # << NEU
 ):
     """
-    Violinplots mit separatem Subplot für 'Cumulated':
-      - Für jede Technologie bis zu ZWEI Einzelplots:
-        1) Yearly/Static (y > 0 bzw. -1 => 'Static')   -> Titel: <Technologie>
-        2) Cumulated (y == 0)                           -> Titel: <Technologie>_Cumulated
-
-    Features:
-      - 'Selected Vertex' (schwarze Punkte)
-      - optional Originalbereich (rot), gesteuert über st.session_state['show_original_ranges']
-      - optionale konvexe Kombinationen werden (falls Spalten passen) an die Verteilungen angehängt
-      - robuste Achsenbehandlung (immer 2D-Achsenarray, dann flatten)
+    Violinplots mit separatem Subplot für 'Cumulated'.
+    - Bei 'capture_exports' werden die Figuren nicht gerendert, sondern per emit_mpl() exportiert.
     """
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.lines as mlines
     from math import ceil
-    import streamlit as st
 
     def _nice(t: str) -> str:
         return t.replace("_", " ").title()
@@ -730,32 +802,30 @@ def plot_violin_values(
     def _xlab(y: int) -> str:
         return "Static" if y == -1 else str(y)
 
-    # ---------- 1) Plot-Spezifikationen sammeln (jeder Eintrag = EIN Subplot) ----------
-    plot_specs = []  # [{'tech':..., 'kind':'main'|'cum', 'years':[...], 'cols':[...]}]
-
+    # ---------- 1) Plot-Spezifikationen ----------
+    plot_specs = []
     for tech in valid_techs_value:
         pairs = sorted(value_time_map.get(tech, []), key=lambda x: x[0])
         if not pairs:
             continue
 
-        # Yearly/Static
         yearly = [(y, c) for (y, c) in pairs if y != 0 and c in vertex_df.columns]
         if yearly:
             years_main = [y for y, _ in yearly]
             cols_main  = [c for _, c in yearly]
             plot_specs.append({"tech": tech, "kind": "main", "years": years_main, "cols": cols_main})
 
-        # Cumulated
         cum = [(y, c) for (y, c) in pairs if y == 0 and c in vertex_df.columns]
         if cum:
             cols_cum = [c for _, c in cum]
             plot_specs.append({"tech": tech, "kind": "cum", "cols": cols_cum})
 
     if not plot_specs:
-        st.info("ℹ️ No data to plot.")
-        return
+        if not st.session_state.get("capture_exports"):
+            st.info("ℹ️ No data to plot.")
+        return None
 
-    # ---------- 2) Grid bestimmen ----------
+    # ---------- 2) Grid ----------
     (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
         n_plots=len(plot_specs),
         n_cols=st.session_state.get("n_cols_plots", 3),
@@ -775,11 +845,8 @@ def plot_violin_values(
         if spec["kind"] == "main":
             years = spec["years"]
             cols  = spec["cols"]
-
-            # Datenbasis (nur aktuelle Indizes)
             values_matrix = vertex_df.loc[current_indices, cols].copy()
 
-            # Konvexe Daten ggf. anhängen (nur wenn alle Spalten vorhanden)
             if (
                 st.session_state.get('show_convex', False)
                 and filtered_convex_data is not None
@@ -788,7 +855,6 @@ def plot_violin_values(
             ):
                 values_matrix = pd.concat([values_matrix, filtered_convex_data[cols]], axis=0)
 
-            # Violin-Daten je Jahr
             x_positions, x_labels, data_series = [], [], []
             for j, (y, c) in enumerate(sorted(zip(years, cols), key=lambda t: t[0]), start=1):
                 vals = values_matrix[c].dropna().values
@@ -797,7 +863,6 @@ def plot_violin_values(
                     x_labels.append(_xlab(y))
                     data_series.append(vals)
 
-            # Nichts übrig → Achse ausblenden
             if not data_series:
                 ax.set_visible(False)
                 continue
@@ -815,12 +880,10 @@ def plot_violin_values(
             if 'cmedians' in vp:
                 vp['cmedians'].set_color('black')
 
-            # Selected Vertex
             sel = st.session_state.get("selected_vertex")
             if sel is not None and sel in vertex_df.index:
                 try:
                     sel_vals = vertex_df.loc[sel, cols]
-                    # positions folgen der sortierten Reihenfolge (years/cols sortiert)
                     sorted_cols = [c for _, c in sorted(zip(years, cols), key=lambda t: t[0])]
                     for x_pos, c in zip(x_positions, sorted_cols):
                         v = sel_vals.get(c, np.nan)
@@ -830,7 +893,6 @@ def plot_violin_values(
                 except Exception as e:
                     st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
 
-            # Originalbereich (rot) pro Jahr
             if st.session_state.get('show_original_ranges', False):
                 try:
                     orig = vertex_df.loc[current_indices, cols]
@@ -844,22 +906,17 @@ def plot_violin_values(
                 except Exception:
                     pass
 
-            # Achsen / Titel
             ax.set_title(_nice(tech))
             ax.set_xticks(x_positions)
             ax.set_xticklabels(x_labels)
-            # linke Spalte bekommt Y-Label
-            col_index = i % n_cols
-            if col_index == 0:
+            if (i % n_cols) == 0:
                 ax.set_ylabel("VALUE_")
             ax.grid(True, linestyle="--", alpha=0.4)
 
-        else:  # spec["kind"] == "cum"
+        else:  # cumulated
             cols_cum = spec["cols"]
-            # Datenbasis (nur aktuelle Indizes)
             values_cum = vertex_df.loc[current_indices, cols_cum].copy()
 
-            # Konvexe Daten ggf. anhängen
             if (
                 st.session_state.get('show_convex', False)
                 and filtered_convex_data is not None
@@ -868,7 +925,6 @@ def plot_violin_values(
             ):
                 values_cum = pd.concat([values_cum, filtered_convex_data[cols_cum]], axis=0)
 
-            # Eine einzige Verteilung: Mittelwert je Zeile (falls mehrere cum-Spalten)
             if values_cum.shape[1] > 1:
                 cum_vals = values_cum.mean(axis=1).dropna().values
             elif values_cum.shape[1] == 1:
@@ -893,7 +949,6 @@ def plot_violin_values(
             if 'cmedians' in vp:
                 vp['cmedians'].set_color('black')
 
-            # Selected Vertex (als Punkt auf der Cumulated-Kategorie)
             sel = st.session_state.get("selected_vertex")
             if sel is not None and sel in vertex_df.index:
                 try:
@@ -904,7 +959,6 @@ def plot_violin_values(
                 except Exception as e:
                     st.warning(f"⚠️ Error highlighting selected vertex (cumulated) for {tech}: {e}")
 
-            # Originalbereich (rot) für Cumulated
             if st.session_state.get('show_original_ranges', False):
                 try:
                     orig = vertex_df.loc[current_indices, cols_cum]
@@ -916,10 +970,8 @@ def plot_violin_values(
                     pass
 
             ax.set_title(f"{_nice(tech)}_Cumulated")
-            ax.set_xticks([1])
-            ax.set_xticklabels(["Cumulated"])
-            col_index = i % n_cols
-            if col_index == 0:
+            ax.set_xticks([1]); ax.set_xticklabels(["Cumulated"])
+            if (i % n_cols) == 0:
                 ax.set_ylabel("VALUE_")
             ax.grid(True, linestyle="--", alpha=0.4)
 
@@ -927,33 +979,21 @@ def plot_violin_values(
     for j in range(len(plot_specs), len(axes_list)):
         axes_list[j].set_visible(False)
 
-    # (Optionale) Legende für 'Selected Vertex'
+    # Optional: Legende für Selected Vertex
     if any(hasattr(ax, 'has_data') and ax.has_data() for ax in axes_list) and st.session_state.get("selected_vertex") is not None:
         vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
                                    label="Selected Vertex")
         fig_val.legend(
-            [vertex_dot],
-            ["Selected Vertex"],
-            loc='upper center',
-            bbox_to_anchor=(0.5, 1.02),
-            ncol=1,
-            frameon=True,
-            fancybox=True,
-            fontsize=12
+            [vertex_dot], ["Selected Vertex"],
+            loc='upper center', bbox_to_anchor=(0.5, 1.02),
+            ncol=1, frameon=True, fancybox=True, fontsize=12
         )
 
-    fig_val.subplots_adjust(
-        top=0.90,
-        bottom=0.08,
-        hspace=0.35,
-        wspace=0.25
-    )
+    fig_val.subplots_adjust(top=0.90, bottom=0.08, hspace=0.35, wspace=0.25)
 
-    if render == "ui":
-        st.pyplot(fig_val, use_container_width=True)
-        return None
-    else:
-        return fig_val
+    # << NEU: zentral entscheiden
+    emit_mpl(fig_val, tag)
+    return None
 
 def plot_operational_variables_over_time(
     vertex_df,
@@ -970,14 +1010,13 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
-    h_gap=0.09,          # ungenutzt, bleibt als Fallback-API
-    v_gap=0.08,          # ungenutzt, bleibt als Fallback-API
+    h_gap=0.09,          # ungenutzt (Backward-compat)
+    v_gap=0.08,          # ungenutzt (Backward-compat)
     convex_cluster_indices=None,
-    render="ui"
+    tag="operational_line",   # << NEU: Export-Tag/Dateiname
 ):
     import numpy as np
     import pandas as pd
-    import math
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
@@ -986,7 +1025,7 @@ def plot_operational_variables_over_time(
 
     sel_type, sel_id = _parse_selected_vertex(selected_vertex)
 
-    # 1) Plot-Spezifikationen
+    # 1) Plot-Spezifikationen aufbauen
     plot_specs = []
     valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
     for tech in valid_techs:
@@ -994,47 +1033,47 @@ def plot_operational_variables_over_time(
         if not year_cols:
             continue
 
-        filt_main = [(y, c) for (y, c) in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        # "main" = alle Jahre != 0
+        filt_main = [(y, c) for y, c in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_main:
             years_main = [y for y, _ in filt_main]
             cols_main  = [c for _, c in filt_main]
             plot_specs.append({"tech": tech, "kind": "main", "years": years_main, "cols": cols_main})
 
-        filt_cum = [(y, c) for (y, c) in year_cols if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        # "cum" = Pseudo-Jahr 0
+        filt_cum = [(y, c) for y, c in year_cols if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
         if filt_cum:
             cols_cum = [c for _, c in filt_cum]
             plot_specs.append({"tech": tech, "kind": "cum", "cols": cols_cum})
 
     n_plots = len(plot_specs)
     if n_plots == 0:
-        st.info("ℹ️ No data to plot.")
-        return
+        if not st.session_state.get("capture_exports"):
+            st.info("ℹ️ No data to plot.")
+        return None
 
-    # 2) Grid & Abstände aus Sidebar (row-based sizing)
-    # Sidebar-Parameter lesen
+    # 2) Grid/Höhe anhand Session-Settings
     row_h_px = int(st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX))
     hgap     = float(st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC))
-    vgap_px  = int(st.session_state.get("row_gap_px", 12))  # px-Abstand zwischen Zeilen
-    
-    # Grid und echte Höhe/Spacing berechnen
-    
+    vgap_px  = int(st.session_state.get("row_gap_px", 12))
+
     n_rows, n_cols, horizontal_spacing, vertical_spacing, height, top_m, bottom_m = compute_plotly_grid(
         n_plots=n_plots,
         n_cols=n_cols_val,
         row_height_px=row_h_px,
         hspace_frac=hgap,
         vspace_px=vgap_px,
-        top_margin_px=DEFAULT_TOP_MARGIN,     # oder eigene Werte
+        top_margin_px=DEFAULT_TOP_MARGIN,
         bottom_margin_px=DEFAULT_BOTTOM_MARGIN
     )
 
-    # Subplot-Titel auffüllen
+    # Subplot-Titel
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
         subplot_titles.append(nice if spec["kind"] == "main" else f"{nice}_Cumulated")
     subplot_titles += [""] * max(0, n_rows * n_cols - n_plots)
-    
+
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
         subplot_titles=subplot_titles,
@@ -1060,7 +1099,7 @@ def plot_operational_variables_over_time(
             full_values_main = vertex_df.loc[current_indices, cols_main]
             values_main      = vertex_df.loc[plot_indices_val, cols_main]
 
-            # Originale Vertices
+            # Original-Vertices (Linien oder Marker)
             if not values_main.dropna(how="all").empty:
                 plot_mode = "lines" if (len(years_labels) > 1 and all_numeric_years) else "markers"
                 for idx_v in values_main.index:
@@ -1084,7 +1123,7 @@ def plot_operational_variables_over_time(
                         row=row, col=col,
                     )
 
-            # Gültiger Bereich
+            # Gültiger Bereich über alle gültigen Vertices (blau)
             if all_numeric_years and not full_values_main.empty:
                 try:
                     vmin = full_values_main.min(); vmax = full_values_main.max()
@@ -1102,7 +1141,7 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-            # Original-Bereich (optional)
+            # Original-Bereich (rot), wenn gewünscht
             if show_original_ranges and all_numeric_years:
                 try:
                     orig = vertex_df.loc[current_indices, cols_main]
@@ -1121,7 +1160,7 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # Konvex: 5 Repräsentanten
+            # Konvex-Overlays (repräsentative Linien)
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
                     numeric_pairs = [
@@ -1164,7 +1203,7 @@ def plot_operational_variables_over_time(
             values_cum      = vertex_df.loc[plot_indices_val, cols_cum]
             full_values_cum = vertex_df.loc[current_indices, cols_cum]
 
-            # Original
+            # Original-Punkte (Mittelwert je Zeile)
             if not values_cum.dropna(how="all").empty:
                 for idx_v in values_cum.index:
                     vals = values_cum.loc[idx_v].values
@@ -1221,7 +1260,7 @@ def plot_operational_variables_over_time(
                 except Exception:
                     pass
 
-            # Konvex (Punkte)
+            # Konvex-Punkte (x-Marker)
             if show_convex and filtered_convex_data is not None and not filtered_convex_data.empty:
                 try:
                     needed = [c for c in cols_cum if c in filtered_convex_data.columns]
@@ -1250,36 +1289,33 @@ def plot_operational_variables_over_time(
 
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout – WICHTIG: Höhe aus compute_plotly_grid nutzen (NICHT überschreiben!)
+    # 4) Layout & Rahmen
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
         font=dict(size=12, family="Montserrat", color="#333"),
         paper_bgcolor="#f4f4f4", plot_bgcolor="#f4f4f4",
         hovermode="closest",
-        margin=dict(l=10, r=10, t=DEFAULT_TOP_MARGIN, b=DEFAULT_BOTTOM_MARGIN),  # konsistent!
+        margin=dict(l=10, r=10, t=DEFAULT_TOP_MARGIN, b=DEFAULT_BOTTOM_MARGIN),
         showlegend=False,
-        height=height,   # <- von compute_plotly_grid
+        height=height,
     )
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
 
-    # zarter Rahmen um alle Subplots – leicht innenliegend
     fig = add_subplot_borders(
         fig,
-        color="#C0C6D2",   # passend zu deinem UI
+        color="#C0C6D2",
         width=1.2,
-        dash=None,         # oder "dash"/"dot"
-        pad=0.01,          # 1% Innenabstand, damit die Linie nicht am Rand klebt
-        above=True,        # über den Traces; False => unterhalb
-        only_used=False    # True = nur Zellen mit Daten umranden
+        dash=None,
+        pad=0.01,
+        above=True,
+        only_used=False
     )
-    
-    if render == "ui":
-        st.plotly_chart(fig, use_container_width=True)
-        return None
-    else:
-        return fig
+
+    # << NEU: zentral entscheiden, ob rendern oder capturen
+    emit_plotly(fig, tag)
+    return None
 
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
@@ -3105,178 +3141,43 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     
     
 with tab3:
-    
-    # ==== Utilities für on-demand Bytes ====
-    from io import BytesIO
-    from zipfile import ZipFile, ZIP_DEFLATED
-    from datetime import datetime
-    import gc
-    import matplotlib.pyplot as plt
-    
-    def make_current_excel_bytes():
-        excel_buf = BytesIO()
-        base_idx = current_indices if 'current_indices' in locals() else tech_data.index
-    
-        with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
-            frames = [tech_data.loc[base_idx]]
-    
-            if MAA_PREFIX == "VALUE_":
-                inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
-                if inst_cols:
-                    frames.append(vertex_df.loc[base_idx, inst_cols])
-    
-            if additional_cols:
-                frames.append(vertex_df.loc[base_idx, additional_cols])
-    
-            original_all = pd.concat(frames, axis=1)
-            original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
-    
-            # Konvexe Tabelle (falls vorhanden)
-            try:
-                if (st.session_state.get('show_convex')
-                    and 'filtered_convex_data' in locals()
-                    and not filtered_convex_data.empty):
-                    conv_frames = [filtered_convex_data.reset_index(drop=True)]
-                    if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
-                        conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
-                    convex_all = pd.concat(conv_frames, axis=1)
-                    convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
-                    convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
-            except Exception:
-                pass
-    
-        excel_buf.seek(0)
-        return excel_buf.getvalue()
-    
-    def make_current_zip_bytes():
+    st.subheader("📦 Export per Rerun/Capture")
+
+    if st.button("🚀 Export vorbereiten (Rerun & Capturen)"):
+        st.session_state["export_bin"] = {}   # leeren
+        st.session_state["capture_exports"] = True
+        st.rerun()
+
+    # Nach dem Rerun: Flag sofort wieder abschalten (ab jetzt wird wieder normal gerendert)
+    if st.session_state.get("capture_exports"):
+        st.session_state["capture_exports"] = False
+
+    # Downloads, wenn etwas gesammelt wurde
+    if st.session_state["export_bin"]:
         ts = datetime.now().strftime("%Y%m%d_%H%M")
         zip_buf = BytesIO()
-    
         with ZipFile(zip_buf, "w", compression=ZIP_DEFLATED, compresslevel=9) as z:
-            # 1) Excel hinein
             z.writestr(f"tables/decision_tool_tables_{ts}.xlsx", make_current_excel_bytes())
-    
-            # 2) Operational Plot (je nach Modus)
-            value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-            plot_kind = st.session_state.get("plot_type_selector2", "Line Plot")
-    
-            if plot_kind == "Line Plot":
-                fig_op = plot_operational_variables_over_time(
-                    vertex_df=vertex_df,
-                    current_indices=current_indices,
-                    plot_indices_val=(plot_indices_val if 'plot_indices_val' in locals() else current_indices),
-                    time_column_map=value_time_map,
-                    selected_vertex=st.session_state.get("selected_vertex"),
-                    n_cols_val=st.session_state.get("n_cols_plots", 3),
-                    show_convex=st.session_state.get("show_convex", True),
-                    st_convex=st.session_state.get("convex_combinations"),
-                    filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
-                    show_original_ranges=st.session_state.get("show_original_ranges", False),
-                    apply_prefix=True,
-                    plot_title="Operational Variables Over Time",
-                    convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
-                    render="return"   # <— wichtig: nur zurückgeben
-                )
-                try:
-                    png = fig_op.to_image(format="png", scale=2)
-                    z.writestr("plots/operational_plotly.png", png)
-                except Exception:
-                    html = fig_op.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
-                    z.writestr("plots/operational_plotly.html", html)
-                del fig_op
-            else:
-                fig_op_v = plot_violin_values(
-                    vertex_df,
-                    sorted([t for t, v in value_time_map.items() if v]),
-                    value_time_map,
-                    (plot_indices_val if 'plot_indices_val' in locals() else current_indices),
-                    current_indices,
-                    (filtered_convex_data if 'filtered_convex_data' in locals() else None),
-                    MAA_PREFIX="MAA_",
-                    render="return"
-                )
-                b = BytesIO()
-                fig_op_v.savefig(b, format="png", dpi=200, bbox_inches="tight")
-                b.seek(0)
-                z.writestr("plots/operational_violin.png", b.getvalue())
-                plt.close(fig_op_v); del fig_op_v; gc.collect()
-    
-            # 3) Installed Capacities
-            source_map_selected = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
-            fig_inst = plot_operational_variables_over_time(
-                vertex_df=vertex_df,
-                current_indices=current_indices,
-                plot_indices_val=(plot_indices if 'plot_indices' in locals() else current_indices),
-                time_column_map=source_map_selected,
-                selected_vertex=st.session_state.get("selected_vertex"),
-                n_cols_val=st.session_state.get("n_cols_plots", 3),
-                show_convex=st.session_state.get("show_convex", True),
-                st_convex=st.session_state.get("convex_combinations"),
-                filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
-                show_original_ranges=st.session_state.get("show_original_ranges", False),
-                apply_prefix=False,
-                plot_title="Installed Capacities Over Time",
-                convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
-                render="return"
-            )
-            try:
-                png2 = fig_inst.to_image(format="png", scale=2)
-                z.writestr("plots/installed_plotly.png", png2)
-            except Exception:
-                html2 = fig_inst.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
-                z.writestr("plots/installed_plotly.html", html2)
-            del fig_inst
-    
-            # 4) Density (optional)
-            if st.session_state.get("show_density"):
-                fig_den = plot_density_contours(
-                    tech_time_map=tech_time_map,
-                    vertex_df=vertex_df,
-                    current_indices=current_indices,
-                    render="return"
-                )
-                b2 = BytesIO()
-                fig_den.savefig(b2, format="png", dpi=200, bbox_inches="tight")
-                b2.seek(0)
-                z.writestr("plots/density.png", b2.getvalue())
-                plt.close(fig_den); del fig_den; gc.collect()
-    
+            for path, (data, _mime) in st.session_state["export_bin"].items():
+                z.writestr(path, data)
         zip_buf.seek(0)
-        return zip_buf.getvalue()
-    st.subheader("📥 Download (Low-Memory, ohne Form)")
 
-    # --- Excel erzeugen (on-demand) ---
-    if st.button("🧾 Excel jetzt erzeugen", key="make_excel"):
-        st.session_state["export_excel_bytes"] = make_current_excel_bytes()
-        st.session_state["export_excel_name"]  = f"decision_tool_tables_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
-
-    if "export_excel_bytes" in st.session_state:
         st.download_button(
-            "⬇️ Excel herunterladen",
-            data=st.session_state["export_excel_bytes"],
-            file_name=st.session_state.get("export_excel_name", "decision_tool_tables.xlsx"),
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="dl_excel"
+            "⬇️ Alles als ZIP herunterladen",
+            data=zip_buf.getvalue(),
+            file_name=f"decision_tool_export_{ts}.zip",
+            mime="application/zip"
         )
-        if st.button("🧹 Excel export verwerfen", key="clear_excel"):
-            del st.session_state["export_excel_bytes"]
-            st.session_state.pop("export_excel_name", None)
 
-    st.markdown("---")
+        with st.expander("Einzel-Downloads"):
+            for path, (data, mime) in st.session_state["export_bin"].items():
+                st.download_button(
+                    f"⬇️ {path}",
+                    data=data,
+                    file_name=path.split("/")[-1],
+                    mime=mime,
+                    key=f"dl_{path}"
+                )
 
-    # --- ZIP erzeugen (on-demand) ---
-    if st.button("📦 ZIP jetzt erzeugen", key="make_zip"):
-        st.session_state["export_zip_bytes"] = make_current_zip_bytes()
-        st.session_state["export_zip_name"]  = f"decision_tool_export_{datetime.now().strftime('%Y%m%d_%H%M')}.zip"
-
-    if "export_zip_bytes" in st.session_state:
-        st.download_button(
-            "⬇️ ZIP herunterladen",
-            data=st.session_state["export_zip_bytes"],
-            file_name=st.session_state.get("export_zip_name", "decision_tool_export.zip"),
-            mime="application/zip",
-            key="dl_zip"
-        )
-        if st.button("🧹 ZIP export verwerfen", key="clear_zip"):
-            del st.session_state["export_zip_bytes"]
-            st.session_state.pop("export_zip_name", None)
+        if st.button("🧹 Export-Cache leeren"):
+            st.session_state["export_bin"] = {}
