@@ -1577,41 +1577,29 @@ with st.sidebar.expander("Layout Options", expanded=True):
         "Row height per subplot row (Plotly, px)",
         min_value=200, max_value=1200,
         value=st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX),
-        step=10, key="row_h_px"
+        step=20, key="row_h_px"
     )
-    colA, colB = st.columns(2)
-    with colA:
-        st.number_input(
-            "h-gap (Plotly, 0…1)",
-            min_value=0.0, max_value=0.2,
-            value=st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC),
-            step=0.005, key="hspace_frac"
-        )
-    with colB:
-        st.number_input(
-            "v-gap (Plotly, 0…1)",
-            min_value=0.0, max_value=0.2,
-            value=st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC),
-            step=0.005, key="vspace_frac"
-        )
+    st.number_input(
+        "Row gap between subplot rows (Plotly, px)",
+        min_value=0, max_value=200,
+        value=70, step=10, key="row_gap_px"
+    )
+    
+    st.number_input(
+        "h-gap (Plotly, 0…1)",
+        min_value=0.0, max_value=0.2,
+        value=st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC),
+        step=0.01, key="hspace_frac"
+    )
 
     st.number_input(
         "Row height per subplot row (Matplotlib, inches)",
         min_value=2.0, max_value=10.0,
         value=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
-        step=0.1, key="row_h_in"
+        step=1, key="row_h_in"
     )
-    st.number_input(
-        "Column width (Matplotlib, inches)",
-        min_value=3.0, max_value=12.0,
-        value=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
-        step=0.1, key="col_w_in"
-    )
-    st.number_input(
-        "Row gap between subplot rows (Plotly, px)",
-        min_value=0, max_value=200,
-        value=12, step=1, key="row_gap_px"
-    )
+    
+    
 
 with st.sidebar.expander("Plot Options"):
     st.radio(
