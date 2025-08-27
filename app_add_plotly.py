@@ -858,6 +858,7 @@ def plot_operational_variables_over_time(
     vgap     = st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC)
     
     # n_plots ist bereits berechnet (len(plot_specs))
+    n_plots = len(plot_specs)
     n_rows, n_cols, horizontal_spacing, vertical_spacing, height = compute_plotly_grid(
         n_plots=len(plot_specs),
         n_cols=n_cols_val,              # <- Spalten kommen aus deiner Sidebar
