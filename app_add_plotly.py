@@ -1596,7 +1596,7 @@ with st.sidebar.expander("Layout Options", expanded=True):
         "Row height per subplot row (Matplotlib, inches)",
         min_value=2.0, max_value=10.0,
         value=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
-        step=1, key="row_h_in"
+        step=1.0, key="row_h_in"
     )
     
     
