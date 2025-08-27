@@ -609,9 +609,10 @@ def plot_operational_variables_over_time(
     max_plot_vertices=20,
     maa_prefix="MAA_",
     apply_prefix=True,
-    plot_title="Operational Variables Over Time"
+    plot_title="Operational Variables Over Time",
+    separate_cumulated=True  # <<< NEU: Cumulated in separatem Plot
 ):
-    # Hilfsfunktion: Jahr -> Label
+    # Hilfslabels
     def _label(y):
         if y == 0:
             return "Cumulated"
@@ -620,40 +621,51 @@ def plot_operational_variables_over_time(
         else:
             return str(y)
 
+    # —————————————————————————————————————————————
+    # 1) HAUPT-PLOT: Jahreswerte (>=1000) + optional "Static" (-1), aber KEIN Cumulated (0)
+    # —————————————————————————————————————————————
     valid_techs_value = sorted([tech for tech, v in time_column_map.items() if len(v) >= 1])
-    n_techs_value = len(valid_techs_value)
-    n_rows_val = ceil(n_techs_value / n_cols_val)
+    n_techs_main = len(valid_techs_value)
+    n_rows_main = ceil(n_techs_main / n_cols_val)
 
     fig_width_val = 9 * (1 / n_cols_val) * n_cols_val
     fig_height_val = fig_width_val
 
-    fig_val = make_subplots(
-        rows=n_rows_val,
+    fig_main = make_subplots(
+        rows=n_rows_main,
         cols=n_cols_val,
         subplot_titles=[tech.replace("_", " ").title() for tech in valid_techs_value],
         horizontal_spacing=0.08,
         vertical_spacing=0.09
     )
 
+    any_main_trace = False  # um später zu entscheiden, ob wir fig_main zeigen
+
     for idx, tech in enumerate(valid_techs_value):
         year_cols = time_column_map[tech]
         if not year_cols:
-            st.write(f"⚠️ No columns found for technology: {tech}")
             continue
 
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
 
-        # rohe "Jahre" (können -1/0 für Static/Cumulated sein)
-        years_raw = [y for y, c in years_cols_sorted if (not apply_prefix or str(c).startswith(maa_prefix + tech))]
-        cols      = [c for y, c in years_cols_sorted if (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        # Filtern: KEIN Cumulated (0). Erlaubt sind Jahre >=1000 und evtl. Static (-1).
+        filt = [(y, c) for (y, c) in years_cols_sorted
+                if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
 
+        if not filt:
+            continue
+
+        years_raw = [y for y, _ in filt]
+        cols = [c for _, c in filt]
+
+        # Wenn nach Filter keine Cols, weiter
         if not cols:
-            st.write(f"🚫 Skipping technology {tech} – no matching columns found.")
             continue
 
         years_labels = [_label(y) for y in years_raw]
-        plot_mode = 'markers' if len(years_labels) == 1 else 'lines'
+        # Linien nur, wenn mind. zwei X-Punkte UND alle X echte Jahre (>=1000)
         all_numeric_years = all(isinstance(y, int) and y >= 1000 for y in years_raw)
+        plot_mode = 'lines' if (len(years_labels) > 1 and all_numeric_years) else 'markers'
 
         row, col = divmod(idx, n_cols_val)
         row += 1
@@ -663,14 +675,12 @@ def plot_operational_variables_over_time(
         values_matrix = vertex_df.loc[plot_indices_val, cols]
 
         if values_matrix.dropna(how='all').empty:
-            st.write(f"⚠️ Empty values for {tech}, skipping.")
             continue
 
-        # Linien/Marker pro Vertex
+        # Traces pro Vertex
         for i in values_matrix.index:
             values = values_matrix.loc[i].values
             if len(values) != len(years_labels):
-                st.write(f"⚠️ Row {i}: Mismatch between number of x-labels and values ({len(years_labels)} vs {len(values)})")
                 continue
 
             is_sel = selected_vertex is not None and i == selected_vertex
@@ -679,8 +689,8 @@ def plot_operational_variables_over_time(
                  for lab, val in zip(years_labels, values)]
             )
 
-            fig_val.add_trace(go.Scatter(
-                x=years_labels,  # kategorial (Strings)
+            fig_main.add_trace(go.Scatter(
+                x=years_labels,
                 y=values,
                 mode=plot_mode,
                 line=dict(
@@ -695,8 +705,9 @@ def plot_operational_variables_over_time(
                 hoverinfo='text',
                 showlegend=False
             ), row=row, col=col)
+            any_main_trace = True
 
-        # Convex-Overlays NUR bei echten Jahren
+        # Convex-Overlays: nur wenn echte Jahre (>=1000) vorhanden
         if show_convex and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
             try:
                 convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{y}" for y in years_raw]
@@ -704,7 +715,7 @@ def plot_operational_variables_over_time(
                     for idx_conv in filtered_convex_data.index:
                         vals = filtered_convex_data.loc[idx_conv, convex_cols].values
                         if not np.isnan(vals).all():
-                            fig_val.add_trace(go.Scatter(
+                            fig_main.add_trace(go.Scatter(
                                 x=list(map(str, years_raw)),
                                 y=vals,
                                 mode='lines',
@@ -715,14 +726,14 @@ def plot_operational_variables_over_time(
             except Exception as e:
                 st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
 
-        # Min/Max-Füllflächen NUR bei echten Jahren
+        # Min/Max-Füllflächen: nur bei echten Jahren
         if all_numeric_years:
             try:
                 min_vals = full_values_matrix.min()
                 max_vals = full_values_matrix.max()
                 x_vals = list(map(str, years_raw)) + list(map(str, years_raw[::-1]))
                 y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-                fig_val.add_trace(go.Scatter(
+                fig_main.add_trace(go.Scatter(
                     x=x_vals,
                     y=y_vals,
                     fill='toself',
@@ -734,7 +745,7 @@ def plot_operational_variables_over_time(
             except Exception as e:
                 st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
 
-        # Originalbereiche (rot) NUR bei echten Jahren
+        # Originalbereiche (rot): nur bei echten Jahren
         if show_original_ranges and all_numeric_years:
             try:
                 original_matrix = vertex_df.loc[current_indices, cols]
@@ -742,7 +753,7 @@ def plot_operational_variables_over_time(
                 max_vals = original_matrix.max()
                 x_vals = list(map(str, years_raw)) + list(map(str, years_raw[::-1]))
                 y_vals = min_vals.tolist() + max_vals.tolist()[::-1]
-                fig_val.add_trace(go.Scatter(
+                fig_main.add_trace(go.Scatter(
                     x=x_vals,
                     y=y_vals,
                     fill='toself',
@@ -754,26 +765,120 @@ def plot_operational_variables_over_time(
             except Exception as e:
                 st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-        # X-Achse auf Kategorie stellen (wichtig für "Static"/"Cumulated")
-        fig_val.update_xaxes(type='category', row=row, col=col)
+        # X-Achse: Kategorie (damit "Static" als Label funktioniert)
+        fig_main.update_xaxes(type='category', row=row, col=col)
 
-    # Layout & typografische Verbesserungen (Platz für lange Titel/Labels)
-    fig_val.update_layout(
-        title=dict(text=plot_title, x=0, xanchor="left"),
-        height=fig_height_val * 100,
-        width=fig_width_val * 100,
-        font=dict(size=12, family="Montserrat", color="#333"),
-        paper_bgcolor='#f4f4f4',
-        plot_bgcolor='#f4f4f4',
-        hovermode="closest",
-        margin=dict(l=60, r=120, t=110, b=50),  # mehr Platz für Titel/Labels
-        showlegend=False
-    )
+    # Layout Haupt-Plot
+    if any_main_trace:
+        fig_main.update_layout(
+            title=dict(text=plot_title, x=0, xanchor="left"),
+            height=fig_height_val * 100,
+            width=fig_width_val * 100,
+            font=dict(size=12, family="Montserrat", color="#333"),
+            paper_bgcolor='#f4f4f4',
+            plot_bgcolor='#f4f4f4',
+            hovermode="closest",
+            margin=dict(l=60, r=120, t=110, b=50),
+            showlegend=False
+        )
+        fig_main.update_annotations(font=dict(size=12, color='#222', family="Montserrat"), x=0, xanchor="left", align="left")
+        st.plotly_chart(fig_main, use_container_width=True)
+    else:
+        st.info("ℹ️ No yearly/static data to display in the main plot.")
 
-    # Subplot-Titel typografisch, aber NICHT nach oben verschieben
-    fig_val.update_annotations(font=dict(size=12, color='#222', family="Montserrat"), x=0, xanchor="left", align="left")
+    # —————————————————————————————————————————————
+    # 2) CUMULATED-PLOT (nur Einträge mit Jahr==0) — gesondert
+    # —————————————————————————————————————————————
+    if separate_cumulated:
+        # Liste der Techs, die überhaupt Cumulated haben
+        cum_techs = [tech for tech in valid_techs_value
+                     if any((y == 0) and (not apply_prefix or str(c).startswith(maa_prefix + tech))
+                            for (y, c) in time_column_map[tech])]
 
-    st.plotly_chart(fig_val, use_container_width=True)
+        if cum_techs:
+            n_rows_cum = ceil(len(cum_techs) / n_cols_val)
+            fig_cum = make_subplots(
+                rows=n_rows_cum,
+                cols=n_cols_val,
+                subplot_titles=[f"{t.replace('_',' ').title()} – Cumulated" for t in cum_techs],
+                horizontal_spacing=0.08,
+                vertical_spacing=0.12
+            )
+
+            for idx, tech in enumerate(cum_techs):
+                # Cumulated-Spalten für diese Tech
+                cum_cols = [c for (y, c) in time_column_map[tech]
+                            if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+                if not cum_cols:
+                    continue
+
+                row, col = divmod(idx, n_cols_val)
+                row += 1
+                col += 1
+
+                # Datenmatrix: nur die Cumulated-Spalten (meist 1 Spalte)
+                values_matrix = vertex_df.loc[plot_indices_val, cum_cols]
+                full_values_matrix = vertex_df.loc[current_indices, cum_cols]
+
+                if values_matrix.dropna(how='all').empty:
+                    continue
+
+                # Wir plotten Cumulated als "Strip" bei x="Cumulated"
+                x_label = ["Cumulated"] * len(values_matrix)
+                for i in values_matrix.index:
+                    vals = values_matrix.loc[i].values
+                    # Falls mehrere cumulated-spezifische Spalten auftauchen, mitteln wir sie (oder nimm vals[0])
+                    v = np.nanmean(vals) if len(vals) > 1 else (vals[0] if len(vals) == 1 else np.nan)
+                    if pd.notnull(v):
+                        is_sel = selected_vertex is not None and i == selected_vertex
+                        fig_cum.add_trace(go.Scatter(
+                            x=["Cumulated"],
+                            y=[v],
+                            mode='markers',
+                            marker=dict(
+                                color="rgba(26, 102, 204, 0.8)" if is_sel else "rgba(26, 102, 204, 0.3)",
+                                size=10
+                            ),
+                            hovertemplate=f"<b>Vertex {i}</b><br> Cumulated: {v:.2f}<extra></extra>",
+                            showlegend=False
+                        ), row=row, col=col)
+
+                # (Optional) Band aus Min/Max über alle verbleibenden Vertices
+                try:
+                    vmin = np.nanmin(full_values_matrix.values)
+                    vmax = np.nanmax(full_values_matrix.values)
+                    if np.isfinite(vmin) and np.isfinite(vmax):
+                        fig_cum.add_trace(go.Scatter(
+                            x=["Cumulated", "Cumulated"],
+                            y=[vmin, vmax],
+                            mode='lines',
+                            line=dict(width=0),
+                            showlegend=False,
+                            hoverinfo='skip',
+                            fill='toself',
+                            fillcolor="rgba(26, 102, 204, 0.12)"
+                        ), row=row, col=col)
+                except Exception:
+                    pass
+
+                # Achse kategorial
+                fig_cum.update_xaxes(type='category', row=row, col=col)
+
+            fig_cum.update_layout(
+                title=dict(text="Operational Variables – Cumulated (separate)", x=0, xanchor="left"),
+                height=max(400, n_rows_cum * 350),
+                width=fig_width_val * 100,
+                font=dict(size=12, family="Montserrat", color="#333"),
+                paper_bgcolor='#f4f4f4',
+                plot_bgcolor='#f4f4f4',
+                hovermode="closest",
+                margin=dict(l=60, r=120, t=90, b=50),
+                showlegend=False
+            )
+            fig_cum.update_annotations(font=dict(size=12, color='#222', family="Montserrat"), x=0, xanchor="left", align="left")
+            st.plotly_chart(fig_cum, use_container_width=True)
+        else:
+            st.info("ℹ️ No cumulated data found.")
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
     """
