@@ -1575,7 +1575,7 @@ with st.sidebar.expander("Layout Options", expanded=True):
     st.caption("Row-based sizing")
     st.number_input(
         "Row height per subplot row (Plotly, px)",
-        min_value=200, max_value=1200,
+        min_value=50, max_value=1200,
         value=st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX),
         step=20, key="row_h_px"
     )
