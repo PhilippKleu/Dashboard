@@ -610,6 +610,9 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
+    # >>> NEU: feste Abstände zwischen Subplots
+    h_gap=0.04,                # horizontaler Abstand (0..1), fix (wird nur gekappt wenn nötig)
+    v_gap=0.06,                # vertikaler Abstand (0..1), fix (wird nur gekappt wenn nötig)
 ):
     """
     Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
@@ -622,7 +625,7 @@ def plot_operational_variables_over_time(
       - Gültiger Bereich (Min/Max über aktuelle Vertices) blau
       - Optional Originalbereich rot
       - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
-      - Subplots nutzen volle Zellbreite (horizontal_spacing=0, enge Außenränder, constrain='domain')
+      - Subplots nutzen volle Zellbreite (enge Außenränder), fester horizontaler/vertikaler Abstand
     """
     import numpy as np
     import pandas as pd
@@ -674,12 +677,16 @@ def plot_operational_variables_over_time(
     n_cols  = max(1, int(n_cols_val))
     n_rows  = int(math.ceil(n_plots / n_cols))
 
-    # Volle Breite: 0 horizontaler Abstand, vertikal minimal (und gültig)
-    horizontal_spacing = 0.0
+    # Feste Abstände: h_gap / v_gap (nur minimal kappen, falls Plotly-Grenzen überschritten würden)
     if n_rows <= 1:
         vertical_spacing = 0.0
     else:
-        vertical_spacing = min(0.04, 0.98 / (n_rows - 1))  # klein + sicher
+        vertical_spacing = min(float(v_gap), 0.98 / (n_rows - 1))
+
+    if n_cols <= 1:
+        horizontal_spacing = 0.0
+    else:
+        horizontal_spacing = min(float(h_gap), 0.98 / (n_cols - 1))
 
     # Titel je Subplot (Rest auffüllen)
     subplot_titles = []
@@ -807,7 +814,7 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # Kategorie-X-Achse, KEIN Achsentitel; volle Zellbreite
+            # Kategorie-X-Achse, KEIN Achsentitel
             fig.update_xaxes(type="category", row=row, col=col, title_text=None)
 
         else:  # spec["kind"] == "cum"
@@ -887,7 +894,7 @@ def plot_operational_variables_over_time(
 
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout – volle Breite, enge Ränder
+    # 4) Layout – enge Außenränder; volle Containerbreite via Streamlit
     base_h = 340
     height = max(520, n_rows * base_h)
 
@@ -897,13 +904,13 @@ def plot_operational_variables_over_time(
         paper_bgcolor="#f4f4f4",
         plot_bgcolor="#f4f4f4",
         hovermode="closest",
-        margin=dict(l=10, r=10, t=80, b=40),  # enge Außenränder
+        margin=dict(l=10, r=10, t=80, b=40),
         showlegend=False,
         height=height,
-        # width NICHT setzen -> Streamlit kann die volle Containerbreite nutzen
+        # width nicht setzen -> use_container_width übernimmt
     )
 
-    # Alle Achsen: volle Domain nutzen + Automargen
+    # Achsen: volle Domain + Automargen
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
 
@@ -911,6 +918,7 @@ def plot_operational_variables_over_time(
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
 
     st.plotly_chart(fig, use_container_width=True)
+
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
     """
