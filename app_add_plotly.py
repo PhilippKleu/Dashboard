@@ -594,6 +594,7 @@ def plot_density_contours(
     grid_density=50,
     color_levels=10,
     max_vertices_for_density=250,
+    render="ui"
 ):
     (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
         n_plots=n_techs,
@@ -687,8 +688,12 @@ def plot_density_contours(
         hspace=0.44,
         wspace=0.3
     )
-
-    st.pyplot(fig_dichte, use_container_width=True)
+    if render == "ui":
+        st.pyplot(fig_dichte, use_container_width=True)
+        return None
+    else:
+        return fig_dichte
+    
 
 def plot_violin_values(
     vertex_df,
@@ -697,7 +702,8 @@ def plot_violin_values(
     plot_indices_val,
     current_indices,
     filtered_convex_data,
-    MAA_PREFIX="MAA_"
+    MAA_PREFIX="MAA_",
+    render="ui"
 ):
     """
     Violinplots mit separatem Subplot für 'Cumulated':
@@ -943,7 +949,11 @@ def plot_violin_values(
         wspace=0.25
     )
 
-    st.pyplot(fig_val, use_container_width=True)
+    if render == "ui":
+        st.pyplot(fig_val, use_container_width=True)
+        return None
+    else:
+        return fig_val
 
 def plot_operational_variables_over_time(
     vertex_df,
@@ -963,6 +973,7 @@ def plot_operational_variables_over_time(
     h_gap=0.09,          # ungenutzt, bleibt als Fallback-API
     v_gap=0.08,          # ungenutzt, bleibt als Fallback-API
     convex_cluster_indices=None,
+    render="ui"
 ):
     import numpy as np
     import pandas as pd
@@ -1264,7 +1275,11 @@ def plot_operational_variables_over_time(
         only_used=False    # True = nur Zellen mit Daten umranden
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    if render == "ui":
+        st.plotly_chart(fig, use_container_width=True)
+        return None
+    else:
+        return fig
 
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
@@ -3090,64 +3105,194 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     
     
 with tab3:
-    # === Export Everything in One ZIP (Plots + Tables) ===
-    st.subheader("📦 Export All Results (Plots + Tables) as ZIP")
-    
-    if st.button("🗜️ Generate Full ZIP Export"):
-        has_plots = "stored_figures" in st.session_state and st.session_state["stored_figures"]
-        has_data = not filtered_data.empty or (
-            st.session_state.get("show_convex") and not st.session_state["convex_combinations"].empty
-        )
-    
-        if not has_plots and not has_data:
-            st.info("⚠️ No plots or tables available for export.")
-        else:
-            zip_buffer = BytesIO()
-            with ZipFile(zip_buffer, "w") as zip_file:
-                # === Add plots as PDFs ===
-                if has_plots:
-                    for name, fig in st.session_state["stored_figures"]:
-                        pdf_bytes = BytesIO()
-                        fig.savefig(pdf_bytes, format="pdf", bbox_inches="tight")
-                        pdf_bytes.seek(0)
-                        filename = f"plots/{name.replace(' ', '_')}.pdf"
-                        zip_file.writestr(filename, pdf_bytes.read())
-    
-                # === Add Excel with tables ===
-                if has_data:
-                    excel_buffer = BytesIO()
-                    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                        if not filtered_data.empty:
-                            frames_to_concat = [tech_data.loc[current_indices].reset_index(drop=True)]
-                            if MAA_PREFIX == "VALUE_":
-                                installed_cols = [col for col in vertex_df.columns if col.startswith(INSTALLED_CAPACITY_PREFIX)]
-                                installed_part = vertex_df.loc[current_indices, installed_cols].reset_index(drop=True)
-                                frames_to_concat.append(installed_part)
-                            if additional_cols:
-                                additional_part = vertex_df.loc[current_indices, additional_cols].reset_index(drop=True)
-                                frames_to_concat.append(additional_part)
-                            full_original_table = pd.concat(frames_to_concat, axis=1)
-                            full_original_table.to_excel(writer, index=False, sheet_name="Filtered Vertices")
-    
-                        if (
-                            st.session_state.get("show_convex") and 
-                            not st.session_state["convex_combinations"].empty
-                        ):
-                            convex_data = st.session_state["convex_combinations"].reset_index(drop=True)
-                            frames_convex = [convex_data]
-                            if additional_cols and not st.session_state.get("convex_additional", pd.DataFrame()).empty:
-                                convex_add = st.session_state["convex_additional"].loc[convex_data.index, additional_cols].reset_index(drop=True)
-                                frames_convex.append(convex_add)
-                            full_convex_table = pd.concat(frames_convex, axis=1)
-                            full_convex_table.to_excel(writer, index=False, sheet_name="Convex Combinations")
-    
-                    excel_buffer.seek(0)
-                    zip_file.writestr("tables/filtered_results.xlsx", excel_buffer.read())
-    
-            zip_buffer.seek(0)
+    from io import BytesIO
+from zipfile import ZipFile, ZIP_DEFLATED
+from datetime import datetime
+import gc
+import matplotlib.pyplot as plt
+
+with tab3:
+    st.subheader("📥 Download")
+
+    # --- Excel (on-demand, keine Kopien im session_state) ---
+    with st.form("make_excel_now"):
+        st.caption("Erzeuge Excel aus dem aktuellen Stand – ohne etwas zu speichern.")
+        btn_excel = st.form_submit_button("🧾 Excel jetzt erzeugen")
+        if btn_excel:
+            excel_buf = BytesIO()
+            with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
+                # Original-Vertices Tabelle (wie in Tab 1, aber ohne Kopien)
+                base_idx = current_indices if 'current_indices' in locals() else tech_data.index
+                frames = [tech_data.loc[base_idx]]
+
+                if MAA_PREFIX == "VALUE_":
+                    inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
+                    if inst_cols:
+                        frames.append(vertex_df.loc[base_idx, inst_cols])
+
+                if additional_cols:
+                    frames.append(vertex_df.loc[base_idx, additional_cols])
+
+                original_all = pd.concat(frames, axis=1)
+                original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
+
+                # Konvexe Tabelle (falls vorhanden)
+                try:
+                    if (st.session_state.get('show_convex') 
+                        and 'filtered_convex_data' in locals() 
+                        and not filtered_convex_data.empty):
+                        conv_frames = [filtered_convex_data.reset_index(drop=True)]
+                        if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
+                            conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
+                        convex_all = pd.concat(conv_frames, axis=1)
+                        convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
+                        convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
+                except Exception:
+                    pass
+
+            excel_buf.seek(0)
+            ts = datetime.now().strftime("%Y%m%d_%H%M")
             st.download_button(
-                label="⬇️ Download ZIP (Plots + Tables)",
-                data=zip_buffer,
-                file_name="all_results_export.zip",
-                mime="application/zip"
+                "⬇️ Excel herunterladen",
+                data=excel_buf.getvalue(),
+                file_name=f"decision_tool_tables_{ts}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+    st.markdown("---")
+
+    # --- ZIP (Excel + on-demand gerenderte Plots, Figuren sofort schließen) ---
+    with st.form("make_zip_now"):
+        st.caption("Erzeuge ZIP (Excel + Plots) on-the-fly. Figuren werden sofort freigegeben.")
+        btn_zip = st.form_submit_button("📦 ZIP jetzt erzeugen")
+        if btn_zip:
+            ts = datetime.now().strftime("%Y%m%d_%H%M")
+
+            # 1) Excel sofort bauen (wie oben, ohne Duplikate zu halten)
+            excel_buf = BytesIO()
+            with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
+                base_idx = current_indices if 'current_indices' in locals() else tech_data.index
+                frames = [tech_data.loc[base_idx]]
+
+                if MAA_PREFIX == "VALUE_":
+                    inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
+                    if inst_cols:
+                        frames.append(vertex_df.loc[base_idx, inst_cols])
+
+                if additional_cols:
+                    frames.append(vertex_df.loc[base_idx, additional_cols])
+
+                original_all = pd.concat(frames, axis=1)
+                original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
+
+                try:
+                    if (st.session_state.get('show_convex') 
+                        and 'filtered_convex_data' in locals() 
+                        and not filtered_convex_data.empty):
+                        conv_frames = [filtered_convex_data.reset_index(drop=True)]
+                        if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
+                            conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
+                        convex_all = pd.concat(conv_frames, axis=1)
+                        convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
+                        convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
+                except Exception:
+                    pass
+
+            excel_buf.seek(0)
+
+            # 2) ZIP mit maximaler Kompression
+            zip_buf = BytesIO()
+            with ZipFile(zip_buf, "w", compression=ZIP_DEFLATED, compresslevel=9) as z:
+                z.writestr(f"tables/decision_tool_tables_{ts}.xlsx", excel_buf.getvalue())
+
+                # (a) Operational (je nach Plot-Typ)
+                value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+                plot_kind = st.session_state.get("plot_type_selector2", "Line Plot")
+                if plot_kind == "Line Plot":
+                    fig_op = plot_operational_variables_over_time(
+                        vertex_df=vertex_df,
+                        current_indices=current_indices,
+                        plot_indices_val=(plot_indices_val if 'plot_indices_val' in locals() else current_indices),
+                        time_column_map=value_time_map,
+                        selected_vertex=st.session_state.get("selected_vertex"),
+                        n_cols_val=st.session_state.get("n_cols_plots", 3),
+                        show_convex=st.session_state.get("show_convex", True),
+                        st_convex=st.session_state.get("convex_combinations"),
+                        filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
+                        show_original_ranges=st.session_state.get("show_original_ranges", False),
+                        apply_prefix=True,
+                        plot_title="Operational Variables Over Time",
+                        convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
+                        render="return"
+                    )
+                    try:
+                        png = fig_op.to_image(format="png", scale=2)
+                        z.writestr("plots/operational_plotly.png", png)
+                    except Exception:
+                        html = fig_op.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
+                        z.writestr("plots/operational_plotly.html", html)
+                    del fig_op
+                else:
+                    fig_op_v = plot_violin_values(
+                        vertex_df,
+                        sorted([t for t, v in value_time_map.items() if v]),
+                        value_time_map,
+                        (plot_indices_val if 'plot_indices_val' in locals() else current_indices),
+                        current_indices,
+                        (filtered_convex_data if 'filtered_convex_data' in locals() else None),
+                        MAA_PREFIX="MAA_",
+                        render="return"
+                    )
+                    b = BytesIO()
+                    fig_op_v.savefig(b, format="png", dpi=200, bbox_inches="tight")
+                    b.seek(0)
+                    z.writestr("plots/operational_violin.png", b.getvalue())
+                    plt.close(fig_op_v); del fig_op_v; gc.collect()
+
+                # (b) Installed Capacities (gleiche Logik, nur anderes Mapping)
+                source_map_selected = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
+                fig_inst = plot_operational_variables_over_time(
+                    vertex_df=vertex_df,
+                    current_indices=current_indices,
+                    plot_indices_val=(plot_indices if 'plot_indices' in locals() else current_indices),
+                    time_column_map=source_map_selected,
+                    selected_vertex=st.session_state.get("selected_vertex"),
+                    n_cols_val=st.session_state.get("n_cols_plots", 3),
+                    show_convex=st.session_state.get("show_convex", True),
+                    st_convex=st.session_state.get("convex_combinations"),
+                    filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
+                    show_original_ranges=st.session_state.get("show_original_ranges", False),
+                    apply_prefix=False,
+                    plot_title="Installed Capacities Over Time",
+                    convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
+                    render="return"
+                )
+                try:
+                    png2 = fig_inst.to_image(format="png", scale=2)
+                    z.writestr("plots/installed_plotly.png", png2)
+                except Exception:
+                    html2 = fig_inst.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
+                    z.writestr("plots/installed_plotly.html", html2)
+                del fig_inst
+
+                # (c) Dichteplots optional
+                if st.session_state.get("show_density"):
+                    fig_den = plot_density_contours(
+                        tech_time_map=tech_time_map,
+                        vertex_df=vertex_df,
+                        current_indices=current_indices,
+                        render="return"
+                    )
+                    b2 = BytesIO()
+                    fig_den.savefig(b2, format="png", dpi=200, bbox_inches="tight")
+                    b2.seek(0)
+                    z.writestr("plots/density.png", b2.getvalue())
+                    plt.close(fig_den); del fig_den; gc.collect()
+
+            zip_buf.seek(0)
+            st.download_button(
+                "⬇️ ZIP herunterladen",
+                data=zip_buf.getvalue(),
+                file_name=f"decision_tool_export_{ts}.zip",
+                mime="application/zip",
             )
