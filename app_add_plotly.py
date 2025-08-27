@@ -131,7 +131,7 @@ textarea, select,
 /* 6c) Dropdown-/Multiselect-Optionsliste: Höhe & Scrollbar */
 [data-baseweb="layer"] [role="listbox"],
 [data-baseweb="menu"] {{
-  max-height: 320px !important;   /* << hier Höhe anpassen */
+  max-height: 200px !important;   /* << hier Höhe anpassen */
   overflow-y: auto !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
