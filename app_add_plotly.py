@@ -622,13 +622,13 @@ def plot_operational_variables_over_time(
       - Gültiger Bereich (Min/Max über aktuelle Vertices) blau
       - Optional Originalbereich rot
       - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
-      - Spacings sind dynamisch (verhindert ValueError bei vielen Reihen/Spalten)
+      - Subplots nutzen volle Zellbreite (horizontal_spacing=0, enge Außenränder, constrain='domain')
     """
     import numpy as np
+    import pandas as pd
+    import math
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-    import math
-    import pandas as pd
 
     def _x_label(y: int) -> str:
         # -1 => "Static", >=1000 => Jahr als String
@@ -674,18 +674,14 @@ def plot_operational_variables_over_time(
     n_cols  = max(1, int(n_cols_val))
     n_rows  = int(math.ceil(n_plots / n_cols))
 
-    # Dynamische Spacings (wichtig: (rows-1)*vertical_spacing < 1, (cols-1)*horizontal_spacing < 1)
+    # Volle Breite: 0 horizontaler Abstand, vertikal minimal (und gültig)
+    horizontal_spacing = 0.0
     if n_rows <= 1:
         vertical_spacing = 0.0
     else:
-        vertical_spacing = min(0.10, 0.9 / (n_rows - 1))  # sicher und hübsch
+        vertical_spacing = min(0.04, 0.98 / (n_rows - 1))  # klein + sicher
 
-    if n_cols <= 1:
-        horizontal_spacing = 0.0
-    else:
-        horizontal_spacing = min(0.12, 0.9 / (n_cols - 1))
-
-    # Titel je Subplot erzeugen (Rest mit "" auffüllen)
+    # Titel je Subplot (Rest auffüllen)
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
@@ -811,7 +807,7 @@ def plot_operational_variables_over_time(
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
-            # Kategorie-X-Achse, KEIN Achsentitel
+            # Kategorie-X-Achse, KEIN Achsentitel; volle Zellbreite
             fig.update_xaxes(type="category", row=row, col=col, title_text=None)
 
         else:  # spec["kind"] == "cum"
@@ -891,11 +887,9 @@ def plot_operational_variables_over_time(
 
             fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # 4) Layout – skaliert mit Grid-Größe
+    # 4) Layout – volle Breite, enge Ränder
     base_h = 340
     height = max(520, n_rows * base_h)
-    base_w = 300
-    width  = max(800, n_cols * base_w)
 
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
@@ -903,13 +897,19 @@ def plot_operational_variables_over_time(
         paper_bgcolor="#f4f4f4",
         plot_bgcolor="#f4f4f4",
         hovermode="closest",
-        margin=dict(l=60, r=120, t=110, b=60),
+        margin=dict(l=10, r=10, t=80, b=40),  # enge Außenränder
         showlegend=False,
         height=height,
-        width=width,
+        # width NICHT setzen -> Streamlit kann die volle Containerbreite nutzen
     )
 
+    # Alle Achsen: volle Domain nutzen + Automargen
+    fig.update_xaxes(constrain="domain", automargin=True)
+    fig.update_yaxes(automargin=True)
+
+    # Einheitliche Titeltypografie
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
+
     st.plotly_chart(fig, use_container_width=True)
 
 def build_cols_from_time_map(time_map, techs, MAA_PREFIX,mode=None):
