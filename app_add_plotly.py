@@ -461,136 +461,150 @@ def plot_violin_values(
     filtered_convex_data,
     MAA_PREFIX="MAA_"
 ):
-    def _label(y):
-        if y == 0:
-            return "Cumulated"
-        elif y == -1:
-            return "Static"
-        else:
-            return str(y)
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.lines as mlines
+    from math import ceil
+    import pandas as pd
+    import streamlit as st
 
-    n_techs_value = len(valid_techs_value)
+    n_panels = len(valid_techs_value)
+    if n_panels == 0:
+        st.info("ℹ️ No technologies selected for violin plot.")
+        return
+
     n_cols_val = st.session_state.get("n_cols_plots", 3)
-    n_rows_val = ceil(n_techs_value / n_cols_val)
+    n_rows_val = max(1, ceil(n_panels / max(1, n_cols_val)))
 
+    # Figurgröße
     plot_width_per_col = 6
     plot_height_per_row = 3.5
     fig_width_val = plot_width_per_col * n_cols_val
     fig_height_val = plot_height_per_row * n_rows_val
 
-    fig_val, axes_val = plt.subplots(n_rows_val, n_cols_val, figsize=(fig_width_val, fig_height_val))
+    # WICHTIG: squeeze=False => immer 2D-Array, danach flatten()
+    fig_val, axes_val = plt.subplots(
+        n_rows_val, n_cols_val, figsize=(fig_width_val, fig_height_val), squeeze=False
+    )
     fig_val.patch.set_facecolor('#f4f4f4')
-    axes_val = axes_val.flatten() if n_techs_value > 1 else [axes_val]
+    axes_list = axes_val.flatten().tolist()
+
     plot_idx_val = 0
 
-    for tech, year_cols in sorted(value_time_map.items()):
-        if tech not in valid_techs_value:
-            continue
+    # Nur über die gewünschten/validen Techs iterieren
+    for tech in valid_techs_value:
+        if plot_idx_val >= len(axes_list):
+            break  # Sicherheitsnetz bei Diskrepanzen
 
+        year_cols = value_time_map.get(tech, [])
         years_cols_sorted = sorted(year_cols, key=lambda x: x[0])
-        years_raw = [y for y, _ in years_cols_sorted]
-        cols = [c for _, c in years_cols_sorted]
+
+        years = [y for y, _ in years_cols_sorted]
+        cols  = [c for _, c in years_cols_sorted]
         if not cols:
+            # Kein Plot, Achse ausblenden
+            axes_list[plot_idx_val].set_visible(False)
+            plot_idx_val += 1
             continue
 
+        # Datenbasis für die Violin-Plots
         values_matrix = vertex_df.loc[current_indices, cols]
 
-        # Konvexe Kombinationen anfügen (falls vorhanden)
-        if st.session_state.get('show_convex', False) and not st.session_state['convex_combinations'].empty:
-            if all(col in filtered_convex_data.columns for col in cols):
+        # Konvexe Kombinationen optional ergänzen
+        if st.session_state.get('show_convex', False) and filtered_convex_data is not None and not st.session_state['convex_combinations'].empty:
+            # Nur Spalten übernehmen, die existieren
+            available_cols = [c for c in cols if c in filtered_convex_data.columns]
+            if len(available_cols) == len(cols):
                 convex_matrix = filtered_convex_data[cols]
                 values_matrix = pd.concat([values_matrix, convex_matrix], axis=0)
 
+        # Wenn alles leer, Achse ausblenden
         if values_matrix.dropna(how='all').empty:
+            axes_list[plot_idx_val].set_visible(False)
+            plot_idx_val += 1
             continue
 
-        ax = axes_val[plot_idx_val]
+        ax = axes_list[plot_idx_val]
         ax.set_facecolor('#f0f0f0')
 
-        # Daten pro "x-Position" sammeln
-        # -> Kategorial: wir mappen jede Kategorie auf eine numerische Position 1..N
-        labels = [_label(y) for y in years_raw]
-        positions = np.arange(1, len(labels) + 1)
+        # Violin-Daten pro Jahr
         data = [values_matrix[col].dropna().values for col in cols]
+        has_all = all(len(d) > 0 for d in data)
 
-        if all(len(d) > 0 for d in data):
-            vp = ax.violinplot(data, positions=positions, showmeans=False, showmedians=True, widths=0.9)
+        if has_all:
+            vp = ax.violinplot(
+                data,
+                positions=years,
+                showmeans=False,
+                showmedians=True,
+                showextrema=True,
+                widths=2.0
+            )
+            # leichte Optik
             for pc in vp['bodies']:
-                pc.set_facecolor((0.1, 0.4, 0.8, 0.7))
-                pc.set_edgecolor('black')
                 pc.set_alpha(0.7)
             if 'cmedians' in vp:
                 vp['cmedians'].set_color('black')
 
-            # === Vertex Highlight (falls ausgewählt) ===
+            # === Highlight ausgewählten Vertex ===
             selected_vertex = st.session_state.get("selected_vertex")
             if selected_vertex is not None and selected_vertex in vertex_df.index:
                 try:
                     highlight_vals = vertex_df.loc[selected_vertex, cols]
-                    for pos, val in zip(positions, highlight_vals):
+                    for y, val in zip(years, highlight_vals):
                         if pd.notnull(val):
-                            ax.scatter(pos, val, color="black", s=60, zorder=3,
+                            ax.scatter(y, val, color="black", s=60, zorder=3,
                                        label="Selected Vertex" if plot_idx_val == 0 else None)
                 except Exception as e:
                     st.warning(f"⚠️ Error highlighting selected vertex for {tech}: {e}")
 
-        # === Originalbereich (rot) – mit Positionskoordinaten arbeiten ===
+        # === Originalbereich (rot) optional ===
         if st.session_state.get('show_original_ranges', False):
             try:
-                original_matrix = vertex_df[cols]
+                original_matrix = vertex_df.loc[current_indices, cols]
                 original_min = original_matrix.min()
                 original_max = original_matrix.max()
-                for pos, omin, omax in zip(positions, original_min, original_max):
-                    if pd.notnull(omin) and pd.notnull(omax):
-                        ax.fill_between([pos - 0.4, pos + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
+                for y, omin, omax in zip(years, original_min, original_max):
+                    if pd.notna(omin) and pd.notna(omax):
+                        ax.fill_between([y - 0.4, y + 0.4], omin, omax, color=(1.0, 0.0, 0.0, 0.08), zorder=1)
             except Exception:
                 pass
 
+        # Achsen/Titel
         ax.set_title(tech.replace('_', ' ').title())
-        ax.set_xticks(positions)
-        ax.set_xticklabels(labels)
-
-        # Achsentitel etwas sparsamer setzen
-        if plot_idx_val >= (n_rows_val - 1) * n_cols_val:
-            ax.set_xlabel("Year / Category")
+        ax.set_xticks(years)
+        ax.set_xticklabels([str(y) for y in years])
         if plot_idx_val % n_cols_val == 0:
             ax.set_ylabel("VALUE_")
-
         ax.grid(True, linestyle="--", alpha=0.4)
-        force_montserrat(ax)
+
         plot_idx_val += 1
 
-    # Leere Subplots entfernen
-    for i in range(plot_idx_val, len(axes_val)):
-        if axes_val[i] in fig_val.axes:
-            fig_val.delaxes(axes_val[i])
+    # Überzählige Subplots entfernen
+    for i in range(plot_idx_val, len(axes_list)):
+        if axes_list[i] in fig_val.axes:
+            fig_val.delaxes(axes_list[i])
 
-    # Legende
-    legend_items = []
-    if st.session_state.get("selected_vertex") is not None:
+    # (Optionale) Legende für den markierten Vertex
+    if plot_idx_val > 0 and st.session_state.get("selected_vertex") is not None:
         vertex_dot = mlines.Line2D([], [], color="black", marker='o', linestyle='None', markersize=8,
                                    label="Selected Vertex")
-        legend_items.append(vertex_dot)
-    if st.session_state.get('show_convex', False):
-        convex_line = mlines.Line2D([], [], color=(0.1, 0.4, 0.8), alpha=0.8, label='Values incl. Convex')
-        legend_items.append(convex_line)
-
-    if legend_items:
         fig_val.legend(
-            legend_items,
-            [item.get_label() for item in legend_items],
+            [vertex_dot],
+            ["Selected Vertex"],
             loc='upper center',
-            bbox_to_anchor=(0.5, 1.2 - 0.02 * max(n_cols_val - 2, 0)),
+            bbox_to_anchor=(0.5, 1.02),
             ncol=1,
             frameon=True,
             fancybox=True,
-            fontsize=14
+            fontsize=12
         )
 
     fig_val.subplots_adjust(
-        top=1.14 - 0.02 * max(n_cols_val - 2, 0),
-        hspace=0.3,
-        wspace=0.18
+        top=0.90,
+        bottom=0.08,
+        hspace=0.35,
+        wspace=0.25
     )
 
     st.pyplot(fig_val)
