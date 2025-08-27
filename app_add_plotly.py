@@ -200,11 +200,13 @@ div[data-testid^="stSlider"]:hover {{
 
 # ==== Row-based sizing (Plotly & Matplotlib) ====
 DEFAULT_ROW_HEIGHT_PX = 320   # feste Pixelhöhe je Plot-Zeile in Plotly
-DEFAULT_HSPACE_FRAC   = 0.07  # 0..1
-DEFAULT_VSPACE_FRAC   = 0.08  # 0..1
+DEFAULT_HSPACE_FRAC   = 0.1  # 0..1
+DEFAULT_VSPACE_FRAC   = 0.1  # 0..1
 
 DEFAULT_ROW_HEIGHT_IN = 3.2   # feste Zollhöhe je Plot-Zeile in Matplotlib
 DEFAULT_COL_WIDTH_IN  = 5.5   # feste Zollbreite je Plot-Spalte in Matplotlib
+
+
 
 def compute_plotly_grid(n_plots:int, n_cols:int,
                         row_height_px:int=DEFAULT_ROW_HEIGHT_PX,
@@ -213,8 +215,23 @@ def compute_plotly_grid(n_plots:int, n_cols:int,
     import math
     n_cols = max(1, int(n_cols))
     n_rows = int(math.ceil(n_plots / n_cols))
-    height = n_rows * row_height_px  # Breite füllt Streamlit-Container
-    return n_rows, n_cols, hspace_frac, vspace_frac, height
+
+    # Plotly-Anforderungen clampen:
+    # - Bei 1 Zeile/Spalte muss der jeweilige spacing = 0.0 sein
+    # - Sonst < 1/n_rows bzw. < 1/n_cols
+    if n_cols <= 1:
+        hspace = 0.0
+    else:
+        hspace = max(0.0, min(float(hspace_frac), (1.0 / n_cols) - 1e-6))
+
+    if n_rows <= 1:
+        vspace = 0.0
+    else:
+        vspace = max(0.0, min(float(vspace_frac), (1.0 / n_rows) - 1e-6))
+
+    # Höhe: feste Zeilenhöhe * Anzahl Zeilen (Breite füllt der Container)
+    height = max(200, int(n_rows * row_height_px))
+    return n_rows, n_cols, hspace, vspace, height
 
 def compute_mpl_figsize(n_plots:int, n_cols:int,
                         col_w_in:float=DEFAULT_COL_WIDTH_IN,
