@@ -244,42 +244,63 @@ div[data-testid^="stSlider"]:hover {{
 
 st.markdown("""
 <style>
-/* === Ultra-compact height for the MultiSelect input box === */
-/* reduziert die Gesamthöhe des sichtbaren Eingabefelds auf ~32px */
+/* === Knöpfe (einfach hier Werte ändern) === */
+:root{
+  --ms-box-h: 32px;        /* Gesamthöhe der sichtbaren MultiSelect-Box */
+  --ms-chips-h: 28px;      /* Sichtbare Höhe für die ausgewählten Chips (mit Scroll) */
+  --ms-input-h: 18px;      /* Höhe des Text-Inputs innerhalb der Box */
+  --ms-icon: 14px;         /* Größe der Caret/Clear-Icons */
+  --ms-tag-scale: 0.90;    /* Skalierung der einzelnen Chips */
+  --ms-dropdown-max: 320px;/* Höhe der geöffneten Dropdown-Liste */
+}
 
+/* Box-Höhe festlegen */
 [data-testid="stMultiSelect"] [data-baseweb="select"],
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
-[data-testid="stMultiSelect"] div[aria-haspopup="listbox"] {
-  min-height: 32px !important;
-  height: 32px !important;
+[data-testid="stMultiSelect"] div[aria-haspopup="listbox"]{
+  min-height: var(--ms-box-h) !important;
+  height: var(--ms-box-h) !important;
 }
 
-/* sichtbarer Bereich für Chips/Text im Input */
-[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {
-  max-height: 28px !important;   /* kleiner = flacher */
+/* Sichtbarer Bereich für Chips */
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"]{
+  max-height: var(--ms-chips-h) !important;
+  overflow-y: auto !important;
   padding-top: 2px !important;
   padding-bottom: 2px !important;
-  overflow-y: auto !important;    /* wenn viele Chips */
 }
 
-/* tatsächliches Text-Input im Control */
-[data-testid="stMultiSelect"] input {
-  min-height: 18px !important;
-  height: 18px !important;
-  line-height: 18px !important;
+/* Textinput in der Box */
+[data-testid="stMultiSelect"] input{
+  min-height: var(--ms-input-h) !important;
+  height: var(--ms-input-h) !important;
+  line-height: var(--ms-input-h) !important;
   padding: 0 !important;
   margin: 0 !important;
 }
 
-/* Caret/Clear Icons etwas kleiner, damit sie vertikal passen */
-[data-testid="stMultiSelect"] svg {
-  width: 14px !important;
-  height: 14px !important;
+/* Icons kleiner */
+[data-testid="stMultiSelect"] svg{
+  width: var(--ms-icon) !important;
+  height: var(--ms-icon) !important;
 }
 
-/* Optional: Außenabstände des Widgets minimal halten */
-div[data-testid="stMultiSelect"] {
-  margin-bottom: 0.25rem !important;
+/* Chips kompakter */
+[data-testid="stMultiSelect"] [data-baseweb="tag"]{
+  transform: scale(var(--ms-tag-scale));
+  margin: 1px 2px !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span{
+  font-size: 12px !important;
+}
+
+/* Dropdown-Liste (geöffnetes Menü) Höhe begrenzen */
+[data-baseweb="layer"] ul[role="listbox"],
+[data-baseweb="layer"] ul[role="menu"],
+[data-baseweb="layer"] [data-baseweb="menu"]{
+  max-height: var(--ms-dropdown-max) !important;
+  height: auto !important;
+  overflow-y: auto !important;
 }
 </style>
 """, unsafe_allow_html=True)
