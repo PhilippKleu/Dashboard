@@ -128,29 +128,49 @@ textarea, select,
   font-variant-ligatures: normal !important;
 }}
 
+/* 6c) Dropdown-/Multiselect-Optionsliste: Höhe & Scrollbar (robust) */
+[data-baseweb="layer"] ul[role="listbox"],
+[data-baseweb="layer"] ul[role="menu"] {{
+  max-height: 320px !important;   /* gewünschte Höchst-Höhe */
+  height: auto !important;         /* erzwingt: nicht fix, sondern max-height */
+  overflow-y: auto !important;     /* Scroll, wenn zu lang */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}}
+[data-baseweb="layer"] [data-baseweb="menu"] {{
+  max-height: 320px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+}}
+[data-baseweb="layer"] [data-baseweb="popover"] {{
+  max-height: 320px !important;
+  height: auto !important;
+  overflow: visible !important;  /* Menü übernimmt das Scrollen */
+}}
+
 /* Compact MultiSelect input (fixe Höhe + interner Scroll für Chips) */
-[data-testid="stMultiSelect"] > div {
+[data-testid="stMultiSelect"] > div {{
   min-height: 38px !important;            /* Grundhöhe des Eingabefelds */
-}
-[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {
+}}
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {{
   max-height: 48px !important;            /* Sichtbare Chip-Höhe begrenzen */
   overflow-y: auto !important;            /* Scrollbar für viele Chips */
-}
+}}
 
 /* Chips kleiner machen */
-[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {{
   transform: scale(0.9);                  /* kompaktere Chips */
   margin: 1px 2px !important;
-}
-[data-testid="stMultiSelect"] [data-baseweb="tag"] span {
+}}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span {{
   font-size: 12px !important;
-}
+}}
 
 /* Weniger vertikales Padding im Control */
-[data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {{
   padding-top: 2px !important;
   padding-bottom: 2px !important;
-}
+}}
 
 /* 7) Tabs/Expander/Metrics */
 [data-testid="stSubheader"] *,
