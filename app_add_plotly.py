@@ -247,7 +247,64 @@ def compute_mpl_figsize(n_plots:int, n_cols:int,
     width_in  = n_cols * col_w_in
     height_in = n_rows * row_h_in
     return (width_in, height_in), n_rows, n_cols
+def add_subplot_borders(fig, color="#C0C6D2", width=1.5, dash=None, pad=0.0, above=True, only_used=False):
+    """
+    Zeichnet für jeden Subplot (jede Achskombination) einen Rahmen.
+    - color: Linienfarbe
+    - width: Linienstärke
+    - dash: 'dash', 'dot', 'dashdot' oder None
+    - pad: in Domain-Einheiten (0..0.5); z.B. 0.01 = kleiner Innenabstand
+    - above: True => Rahmen über Traces; False => darunter
+    - only_used: nur Subplots mit Daten (Traces) umranden
+    """
+    # vorhandene Shapes übernehmen
+    shapes = list(fig.layout.shapes) if fig.layout.shapes else []
 
+    # vorhandene Achs-IDs finden (xaxis, xaxis2, ...)
+    layout_dict = fig.to_dict().get("layout", {})
+    x_ids = set()
+    y_ids = set()
+    for k in layout_dict.keys():
+        if k.startswith("xaxis"):
+            suffix = k[5:]
+            x_ids.add(1 if suffix == "" else int(suffix))
+        if k.startswith("yaxis"):
+            suffix = k[5:]
+            y_ids.add(1 if suffix == "" else int(suffix))
+
+    # optional: nur Achsen verwenden, die auch Traces haben
+    used_ids = set()
+    if only_used:
+        for tr in fig.data:
+            # 'xaxis'/'yaxis' sind z.B. 'x', 'x2', ...
+            xa = getattr(tr, "xaxis", None) or "x"
+            ya = getattr(tr, "yaxis", None) or "y"
+            xi = 1 if xa == "x" else int(xa[1:])
+            yi = 1 if ya == "y" else int(ya[1:])
+            used_ids.add((xi, yi))
+
+    # Rahmen je Achspaar erzeugen
+    for xi in sorted(x_ids):
+        for yi in sorted(y_ids):
+            # wenn only_used aktiv ist: nur tatsächliche genutzte Paare umranden
+            if only_used and (xi, yi) not in used_ids:
+                continue
+
+            xref = "x domain" if xi == 1 else f"x{xi} domain"
+            yref = "y domain" if yi == 1 else f"y{yi} domain"
+
+            shapes.append(dict(
+                type="rect",
+                xref=xref, yref=yref,
+                x0=0.0 + pad, x1=1.0 - pad,
+                y0=0.0 + pad, y1=1.0 - pad,
+                line=dict(color=color, width=width, dash=dash) if dash else dict(color=color, width=width),
+                fillcolor="rgba(0,0,0,0)",
+                layer="above" if above else "below"
+            ))
+
+    fig.update_layout(shapes=shapes)
+    return fig
 
 # === Montserrat für Matplotlib registrieren ===
 from matplotlib import font_manager as fm
@@ -1128,6 +1185,18 @@ def plot_operational_variables_over_time(
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
     fig.update_annotations(font=dict(size=12, color="#222", family="Montserrat"))
+
+    # zarter Rahmen um alle Subplots – leicht innenliegend
+    fig = add_subplot_borders(
+        fig,
+        color="#C0C6D2",   # passend zu deinem UI
+        width=1.2,
+        dash=None,         # oder "dash"/"dot"
+        pad=0.01,          # 1% Innenabstand, damit die Linie nicht am Rand klebt
+        above=True,        # über den Traces; False => unterhalb
+        only_used=False    # True = nur Zellen mit Daten umranden
+    )
+    
     st.plotly_chart(fig, use_container_width=True)
 
 
