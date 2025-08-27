@@ -197,6 +197,36 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+
+# ==== Row-based sizing (Plotly & Matplotlib) ====
+DEFAULT_ROW_HEIGHT_PX = 320   # feste Pixelhöhe je Plot-Zeile in Plotly
+DEFAULT_HSPACE_FRAC   = 0.07  # 0..1
+DEFAULT_VSPACE_FRAC   = 0.08  # 0..1
+
+DEFAULT_ROW_HEIGHT_IN = 3.2   # feste Zollhöhe je Plot-Zeile in Matplotlib
+DEFAULT_COL_WIDTH_IN  = 5.5   # feste Zollbreite je Plot-Spalte in Matplotlib
+
+def compute_plotly_grid(n_plots:int, n_cols:int,
+                        row_height_px:int=DEFAULT_ROW_HEIGHT_PX,
+                        hspace_frac:float=DEFAULT_HSPACE_FRAC,
+                        vspace_frac:float=DEFAULT_VSPACE_FRAC):
+    import math
+    n_cols = max(1, int(n_cols))
+    n_rows = int(math.ceil(n_plots / n_cols))
+    height = n_rows * row_height_px  # Breite füllt Streamlit-Container
+    return n_rows, n_cols, hspace_frac, vspace_frac, height
+
+def compute_mpl_figsize(n_plots:int, n_cols:int,
+                        col_w_in:float=DEFAULT_COL_WIDTH_IN,
+                        row_h_in:float=DEFAULT_ROW_HEIGHT_IN):
+    import math
+    n_cols = max(1, int(n_cols))
+    n_rows = int(math.ceil(n_plots / n_cols))
+    width_in  = n_cols * col_w_in
+    height_in = n_rows * row_h_in
+    return (width_in, height_in), n_rows, n_cols
+
+
 # === Montserrat für Matplotlib registrieren ===
 from matplotlib import font_manager as fm
 import tempfile, base64, os, matplotlib as mpl
@@ -419,15 +449,13 @@ def plot_density_contours(
     color_levels=10,
     max_vertices_for_density=250,
 ):
-    n_cols = st.session_state.get("n_cols_plots", 3)
-    n_techs = sum(1 for v in tech_time_map.values() if len(v) >= 1)
-    n_rows = ceil(n_techs / n_cols)
-    plot_width_per_col = 6
-    plot_height_per_row = 3.5
-    fig_width = plot_width_per_col * n_cols
-    fig_height = plot_height_per_row * n_rows
-
-    fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(fig_width, fig_height))
+   (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
+        n_plots=n_techs,
+        n_cols=st.session_state.get("n_cols_plots", 3),
+        col_w_in=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
+        row_h_in=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
+    )
+    fig_dichte, axs = plt.subplots(n_rows, n_cols, figsize=(fig_w_in, fig_h_in))
     axs = axs.flatten()
     fig_dichte.patch.set_facecolor('#f4f4f4')
 
@@ -514,7 +542,7 @@ def plot_density_contours(
         wspace=0.3
     )
 
-    st.pyplot(fig_dichte)
+    st.pyplot(fig_dichte, use_container_width=True)
 
 def plot_violin_values(
     vertex_df,
@@ -576,22 +604,13 @@ def plot_violin_values(
         return
 
     # ---------- 2) Grid bestimmen ----------
-    n_cols_val = st.session_state.get("n_cols_plots", 3)
-    n_plots = len(plot_specs)
-    n_cols = max(1, int(n_cols_val))
-    n_rows = max(1, ceil(n_plots / n_cols))
-
-    # Figurgröße
-    plot_width_per_col = 6
-    plot_height_per_row = 3.5
-    fig_width_val = plot_width_per_col * n_cols
-    fig_height_val = plot_height_per_row * n_rows
-
-    fig_val, axes_val = plt.subplots(
-        n_rows, n_cols,
-        figsize=(fig_width_val, fig_height_val),
-        squeeze=False
+    (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
+        n_plots=len(plot_specs),
+        n_cols=st.session_state.get("n_cols_plots", 3),
+        col_w_in=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
+        row_h_in=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
     )
+    fig_val, axes_val = plt.subplots(n_rows, n_cols, figsize=(fig_w_in, fig_h_in), squeeze=False)
     fig_val.patch.set_facecolor('#f4f4f4')
     axes_list = axes_val.flatten().tolist()
 
@@ -778,7 +797,7 @@ def plot_violin_values(
         wspace=0.25
     )
 
-    st.pyplot(fig_val)
+    st.pyplot(fig_val, use_container_width=True)
 
 def plot_operational_variables_over_time(
     vertex_df,
@@ -833,11 +852,19 @@ def plot_operational_variables_over_time(
         return
 
     # 2) Grid
-    n_plots = len(plot_specs)
-    n_cols  = max(1, int(n_cols_val))
-    n_rows  = int(math.ceil(n_plots / n_cols))
-    vertical_spacing   = 0.0 if n_rows <= 1 else min(float(v_gap), 0.98 / (n_rows - 1))
-    horizontal_spacing = 0.0 if n_cols <= 1 else min(float(h_gap), 0.98 / (n_cols - 1))
+    # --- NEU: Row-based sizing aus Sidebar ---
+    row_h_px = st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX)
+    hgap     = st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC)
+    vgap     = st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC)
+    
+    # n_plots ist bereits berechnet (len(plot_specs))
+    n_rows, n_cols, horizontal_spacing, vertical_spacing, height = compute_plotly_grid(
+        n_plots=len(plot_specs),
+        n_cols=n_cols_val,              # <- Spalten kommen aus deiner Sidebar
+        row_height_px=row_h_px,
+        hspace_frac=hgap,
+        vspace_frac=vgap
+    )
 
     subplot_titles = []
     for spec in plot_specs:
@@ -1522,6 +1549,43 @@ with st.sidebar.expander("Layout Options", expanded=True):
         value=3,
         step=1,
         key="n_cols_plots"
+    )
+    # --- NEU: Row-based sizing (ganz unten) ---
+    st.markdown("---")
+    st.caption("Row-based sizing")
+    st.number_input(
+        "Row height per subplot row (Plotly, px)",
+        min_value=200, max_value=1200,
+        value=st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX),
+        step=10, key="row_h_px"
+    )
+    colA, colB = st.columns(2)
+    with colA:
+        st.number_input(
+            "h-gap (Plotly, 0…1)",
+            min_value=0.0, max_value=0.2,
+            value=st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC),
+            step=0.005, key="hspace_frac"
+        )
+    with colB:
+        st.number_input(
+            "v-gap (Plotly, 0…1)",
+            min_value=0.0, max_value=0.2,
+            value=st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC),
+            step=0.005, key="vspace_frac"
+        )
+
+    st.number_input(
+        "Row height per subplot row (Matplotlib, inches)",
+        min_value=2.0, max_value=10.0,
+        value=st.session_state.get("row_h_in", DEFAULT_ROW_HEIGHT_IN),
+        step=0.1, key="row_h_in"
+    )
+    st.number_input(
+        "Column width (Matplotlib, inches)",
+        min_value=3.0, max_value=12.0,
+        value=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
+        step=0.1, key="col_w_in"
     )
 
 with st.sidebar.expander("Plot Options"):
