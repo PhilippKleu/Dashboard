@@ -206,32 +206,37 @@ DEFAULT_VSPACE_FRAC   = 0.1  # 0..1
 DEFAULT_ROW_HEIGHT_IN = 3.2   # feste Zollhöhe je Plot-Zeile in Matplotlib
 DEFAULT_COL_WIDTH_IN  = 5.5   # feste Zollbreite je Plot-Spalte in Matplotlib
 
+DEFAULT_TOP_MARGIN    = 80
+DEFAULT_BOTTOM_MARGIN = 40
 
-
-def compute_plotly_grid(n_plots:int, n_cols:int,
-                        row_height_px:int=DEFAULT_ROW_HEIGHT_PX,
-                        hspace_frac:float=DEFAULT_HSPACE_FRAC,
-                        vspace_frac:float=DEFAULT_VSPACE_FRAC):
+def compute_plotly_grid(
+    n_plots:int,
+    n_cols:int,
+    row_height_px:int=DEFAULT_ROW_HEIGHT_PX,
+    hspace_frac:float=DEFAULT_HSPACE_FRAC,
+    vspace_px:int=12,                      # << NEU: vertikal in Pixel
+    top_margin_px:int=DEFAULT_TOP_MARGIN,  # konsistent zur Layout-Margin
+    bottom_margin_px:int=DEFAULT_BOTTOM_MARGIN
+):
     import math
     n_cols = max(1, int(n_cols))
     n_rows = int(math.ceil(n_plots / n_cols))
 
-    # Plotly-Anforderungen clampen:
-    # - Bei 1 Zeile/Spalte muss der jeweilige spacing = 0.0 sein
-    # - Sonst < 1/n_rows bzw. < 1/n_cols
-    if n_cols <= 1:
-        hspace = 0.0
-    else:
-        hspace = max(0.0, min(float(hspace_frac), (1.0 / n_cols) - 1e-6))
+    # Gesamt-Höhe in Pixel: Zeilen * Höhe + (Zeilen-1) * Lücke + äußere Margins
+    total_height = top_margin_px + bottom_margin_px + n_rows * row_height_px + max(0, n_rows-1) * vspace_px
 
-    if n_rows <= 1:
-        vspace = 0.0
-    else:
-        vspace = max(0.0, min(float(vspace_frac), (1.0 / n_rows) - 1e-6))
+    # Plotly: spacing ist Anteil der **Grid-Höhe** (ohne äußere Margins!)
+    grid_height = max(1, total_height - top_margin_px - bottom_margin_px)
+    vertical_spacing = 0.0 if n_rows <= 1 else (vspace_px / grid_height)
 
-    # Höhe: feste Zeilenhöhe * Anzahl Zeilen (Breite füllt der Container)
-    height = max(200, int(n_rows * row_height_px))
-    return n_rows, n_cols, hspace, vspace, height
+    # Plotly fordert: spacing < 1/n_rows (und bei 1 Zeile -> 0)
+    if n_rows > 1:
+        vertical_spacing = min(vertical_spacing, (1.0 / n_rows) - 1e-6)
+
+    # Horizontal als Anteil (Breite ist responsive, Pixel kennt Streamlit hier nicht)
+    horizontal_spacing = 0.0 if n_cols <= 1 else min(max(0.0, float(hspace_frac)), (1.0 / n_cols) - 1e-6)
+
+    return n_rows, n_cols, horizontal_spacing, vertical_spacing, int(total_height), int(top_margin_px), int(bottom_margin_px)
 
 def compute_mpl_figsize(n_plots:int, n_cols:int,
                         col_w_in:float=DEFAULT_COL_WIDTH_IN,
@@ -871,29 +876,30 @@ def plot_operational_variables_over_time(
         return
 
     # 2) Grid & Abstände aus Sidebar (row-based sizing)
-    # Diese Defaults MUSS du einmalig definieren (siehe vorheriger Schritt):
-    # DEFAULT_ROW_HEIGHT_PX, DEFAULT_HSPACE_FRAC, DEFAULT_VSPACE_FRAC
+    # Sidebar-Parameter lesen
     row_h_px = int(st.session_state.get("row_h_px", DEFAULT_ROW_HEIGHT_PX))
     hgap     = float(st.session_state.get("hspace_frac", DEFAULT_HSPACE_FRAC))
-    vgap     = float(st.session_state.get("vspace_frac", DEFAULT_VSPACE_FRAC))
-
-    # compute_plotly_grid MUSS vorher im File definiert sein (siehe vorheriger Schritt)
-    n_rows, n_cols, horizontal_spacing, vertical_spacing, height = compute_plotly_grid(
+    vgap_px  = int(st.session_state.get("row_gap_px", 12))  # px-Abstand zwischen Zeilen
+    
+    # Grid und echte Höhe/Spacing berechnen
+    
+    n_rows, n_cols, horizontal_spacing, vertical_spacing, height, top_m, bottom_m = compute_plotly_grid(
         n_plots=n_plots,
         n_cols=n_cols_val,
         row_height_px=row_h_px,
         hspace_frac=hgap,
-        vspace_frac=vgap
+        vspace_px=vgap_px,
+        top_margin_px=DEFAULT_TOP_MARGIN,     # oder eigene Werte
+        bottom_margin_px=DEFAULT_BOTTOM_MARGIN
     )
 
-    # Subplot-Titel
+    # Subplot-Titel auffüllen
     subplot_titles = []
     for spec in plot_specs:
         nice = spec["tech"].replace("_", " ").title()
         subplot_titles.append(nice if spec["kind"] == "main" else f"{nice}_Cumulated")
-    pad = max(0, n_rows * n_cols - n_plots)
-    subplot_titles += [""] * pad
-
+    subplot_titles += [""] * max(0, n_rows * n_cols - n_plots)
+    
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
         subplot_titles=subplot_titles,
@@ -1113,12 +1119,11 @@ def plot_operational_variables_over_time(
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
         font=dict(size=12, family="Montserrat", color="#333"),
-        paper_bgcolor="#f4f4f4",
-        plot_bgcolor="#f4f4f4",
+        paper_bgcolor="#f4f4f4", plot_bgcolor="#f4f4f4",
         hovermode="closest",
-        margin=dict(l=10, r=10, t=80, b=40),
+        margin=dict(l=10, r=10, t=DEFAULT_TOP_MARGIN, b=DEFAULT_BOTTOM_MARGIN),  # konsistent!
         showlegend=False,
-        height=height,  # <- Sidebar-Zeilenhöhe wirksam
+        height=height,   # <- von compute_plotly_grid
     )
     fig.update_xaxes(constrain="domain", automargin=True)
     fig.update_yaxes(automargin=True)
@@ -1601,6 +1606,11 @@ with st.sidebar.expander("Layout Options", expanded=True):
         min_value=3.0, max_value=12.0,
         value=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
         step=0.1, key="col_w_in"
+    )
+    st.number_input(
+        "Row gap between subplot rows (Plotly, px)",
+        min_value=0, max_value=200,
+        value=12, step=1, key="row_gap_px"
     )
 
 with st.sidebar.expander("Plot Options"):
