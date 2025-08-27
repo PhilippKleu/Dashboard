@@ -159,7 +159,7 @@ textarea, select,
 
 /* Chips kleiner machen */
 [data-testid="stMultiSelect"] [data-baseweb="tag"] {{
-  transform: scale(0.9);                  /* kompaktere Chips */
+  transform: scale(1);                  /* kompaktere Chips */
   margin: 1px 2px !important;
 }}
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span {{
@@ -246,7 +246,7 @@ st.markdown("""
 <style>
 /* === Knöpfe (einfach hier Werte ändern) === */
 :root{
-  --ms-box-h: 32px;        /* Gesamthöhe der sichtbaren MultiSelect-Box */
+  --ms-box-h: 64px;        /* Gesamthöhe der sichtbaren MultiSelect-Box */
   --ms-chips-h: 28px;      /* Sichtbare Höhe für die ausgewählten Chips (mit Scroll) */
   --ms-input-h: 18px;      /* Höhe des Text-Inputs innerhalb der Box */
   --ms-icon: 14px;         /* Größe der Caret/Clear-Icons */
