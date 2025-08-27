@@ -245,7 +245,7 @@ div[data-testid^="stSlider"]:hover {{
 st.markdown("""
 <style>
 :root{
-  --ms-box-h: 64px;   /* <— HIER die gewünschte Box-Höhe einstellen (z.B. 28px, 32px, 40px) */
+  --ms-box-h: 100px;   /* <— HIER die gewünschte Box-Höhe einstellen (z.B. 28px, 32px, 40px) */
 }
 
 /* Nur die Höhe des sichtbaren MultiSelect-Eingabefelds fixen */
