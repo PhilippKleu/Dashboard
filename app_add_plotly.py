@@ -601,7 +601,7 @@ def plot_operational_variables_over_time(
     plot_indices_val,
     time_column_map,
     selected_vertex,
-    n_cols_val=3,              # steuert die Breite wie gewohnt
+    n_cols_val=3,              # Anzahl Spalten im Grid: JEDER Plot zählt (Yearly + Cumulated)
     show_convex=False,
     st_convex=None,
     filtered_convex_data=None,
@@ -610,111 +610,108 @@ def plot_operational_variables_over_time(
     maa_prefix="MAA_",
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
-    pair_orientation="horizontal",   # <<< NEU: "horizontal" | "vertical"
 ):
     """
-    Zeichnet pro Technologie zwei Subplots:
-      - Yearly/Static (links bzw. oben)
-      - Cumulated (rechts bzw. unten)
+    Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
+    Für jede Technologie werden bis zu zwei Einzelplots erzeugt:
+      - Yearly/Static (y != 0)  => Titel: <Technologie>
+      - Cumulated (y == 0)      => Titel: <Technologie>_Cumulated
 
-    Anordnung:
-      - pair_orientation="horizontal": pro Technologie 2 Spalten nebeneinander; n_cols_val = #Tech-Blöcke pro Zeile
-      - pair_orientation="vertical":   pro Technologie 2 Zeilen übereinander; n_cols_val = #Spalten (Tech-Blöcke pro Zeile)
-
-    Weitere Eigenschaften:
+    Eigenschaften:
       - Keine X-Achsentitel
-      - Gültiger Bereich (Min/Max über aktuelle Vertices) als blaues Band
-      - Optional Originalbereich als rotes Band
-      - Konvexe Kombinationen (falls vorhanden) bei Yearly-Plot (nur echte Jahresachsen)
+      - Gültiger Bereich (Min/Max über aktuelle Vertices) blau
+      - Optional Originalbereich rot
+      - Konvexe Kombinationen nur bei Yearly (echte Jahresachse)
     """
     import numpy as np
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
+    import math
 
     def _x_label(y: int) -> str:
+        # -1 => "Static", >=1000 => Jahr als String
         return "Static" if y == -1 else str(y)
 
+    # 1) Plot-Spezifikationen sammeln (jede Spezifikation = EIN Plot)
+    plot_specs = []  # [{'tech':..., 'kind':'main'|'cum', 'years':[...], 'cols':[...]}]
     valid_techs = sorted([tech for tech, pairs in time_column_map.items() if pairs])
-    if not valid_techs:
-        st.info("ℹ️ No technologies to display.")
+
+    for tech in valid_techs:
+        year_cols = sorted(time_column_map.get(tech, []), key=lambda x: x[0])
+        if not year_cols:
+            continue
+
+        # Yearly/Static (y != 0)
+        filt_main = [(y, c) for (y, c) in year_cols if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        if filt_main:
+            years_main = [y for y, _ in filt_main]
+            cols_main  = [c for _, c in filt_main]
+            plot_specs.append({
+                "tech": tech,
+                "kind": "main",
+                "years": years_main,
+                "cols": cols_main,
+            })
+
+        # Cumulated (y == 0)
+        filt_cum = [(y, c) for (y, c) in year_cols if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))]
+        if filt_cum:
+            cols_cum = [c for _, c in filt_cum]
+            plot_specs.append({
+                "tech": tech,
+                "kind": "cum",
+                "cols": cols_cum,
+            })
+
+    if not plot_specs:
+        st.info("ℹ️ No data to plot.")
         return
 
-    # ---------- Grid berechnen ----------
-    n_blocks = len(valid_techs)
-    n_cols_val = max(1, int(n_cols_val))
+    # 2) Grid bestimmen: JEDER plot_specs-Eintrag zählt als EIN Plot
+    n_plots = len(plot_specs)
+    n_cols  = max(1, int(n_cols_val))
+    n_rows  = int(math.ceil(n_plots / n_cols))
 
-    if pair_orientation == "horizontal":
-        # Jede Technologie belegt 2 Spalten in einer Grid-Zeile
-        blocks_per_row = n_cols_val
-        n_rows = int(np.ceil(n_blocks / blocks_per_row))
-        n_cols = blocks_per_row * 2
-        # Subplot-Titel (2 pro Technologie, nebeneinander)
-        subplot_titles = []
-        for tech in valid_techs:
-            nice = tech.replace("_", " ").title()
-            subplot_titles.append(nice)
-            subplot_titles.append(f"{nice}_Cumulated")
-
-        def _loc(idx):
-            br = idx // blocks_per_row  # block row
-            bc = idx % blocks_per_row   # block col
-            return (br + 1, bc * 2 + 1, br + 1, bc * 2 + 2)  # (main_row, main_col, cum_row, cum_col)
-
-    else:  # "vertical"
-        # Jede Technologie belegt 2 Zeilen in einer Grid-Spalte
-        blocks_per_row = n_cols_val
-        block_rows = int(np.ceil(n_blocks / blocks_per_row))
-        n_rows = block_rows * 2
-        n_cols = blocks_per_row
-        # Subplot-Titel (2 pro Technologie, untereinander)
-        subplot_titles = []
-        for tech in valid_techs:
-            nice = tech.replace("_", " ").title()
-            subplot_titles.append(nice)
-            subplot_titles.append(f"{nice}_Cumulated")
-
-        def _loc(idx):
-            br = idx // blocks_per_row   # block row
-            bc = idx % blocks_per_row    # block col
-            return (br * 2 + 1, bc + 1, br * 2 + 2, bc + 1)  # (main_row, main_col, cum_row, cum_col)
+    # Titel je Subplot erzeugen (Rest mit "" auffüllen)
+    subplot_titles = []
+    for spec in plot_specs:
+        nice = spec["tech"].replace("_", " ").title()
+        subplot_titles.append(nice if spec["kind"] == "main" else f"{nice}_Cumulated")
+    subplot_titles += [""] * (n_rows * n_cols - n_plots)
 
     fig = make_subplots(
         rows=n_rows,
         cols=n_cols,
         subplot_titles=subplot_titles,
-        horizontal_spacing=0.12 if pair_orientation == "horizontal" else 0.08,
-        vertical_spacing=0.12 if pair_orientation == "vertical" else 0.12,
+        horizontal_spacing=0.12,
+        vertical_spacing=0.12,
         specs=[[{"type": "xy"} for _ in range(n_cols)] for _ in range(n_rows)],
     )
 
-    # ---------- Zeichnen ----------
-    for idx, tech in enumerate(valid_techs):
-        main_row, main_col, cum_row, cum_col = _loc(idx)
+    # 3) Plots zeichnen
+    for i, spec in enumerate(plot_specs):
+        row = i // n_cols + 1
+        col = i % n_cols + 1
+        tech = spec["tech"]
 
-        year_cols = sorted(time_column_map.get(tech, []), key=lambda x: x[0])
-        if not year_cols:
-            continue
+        if spec["kind"] == "main":
+            years_main = spec["years"]
+            cols_main  = spec["cols"]
+            if not cols_main:
+                continue
 
-        # LINKS/OBEN: Yearly/Static (y != 0)
-        filt_main = [
-            (y, c) for (y, c) in year_cols
-            if y != 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))
-        ]
-        years_main = [y for y, _ in filt_main]
-        cols_main  = [c for _, c in filt_main]
-
-        if cols_main:
             years_labels = [_x_label(y) for y in years_main]
             all_numeric_years = all(isinstance(y, int) and y >= 1000 for y in years_main)
-            plot_mode = "lines" if (len(years_labels) > 1 and all_numeric_years) else "markers"
 
             full_values_main = vertex_df.loc[current_indices, cols_main]
             values_main      = vertex_df.loc[plot_indices_val, cols_main]
 
+            # Linien/Marker
             if not values_main.dropna(how="all").empty:
-                for i in values_main.index:
-                    vals = values_main.loc[i].values
-                    is_sel = (selected_vertex is not None) and (i == selected_vertex)
+                plot_mode = "lines" if (len(years_labels) > 1 and all_numeric_years) else "markers"
+                for idx_v in values_main.index:
+                    vals = values_main.loc[idx_v].values
+                    is_sel = (selected_vertex is not None) and (idx_v == selected_vertex)
                     fig.add_trace(
                         go.Scatter(
                             x=years_labels,
@@ -731,10 +728,10 @@ def plot_operational_variables_over_time(
                             hoverinfo="x+y",
                             showlegend=False,
                         ),
-                        row=main_row, col=main_col,
+                        row=row, col=col,
                     )
 
-            # Konvexe Kombinationen (nur bei echten Jahresachsen)
+            # Konvexe Kombinationen (nur echte Jahresachsen)
             if show_convex and not st_convex.empty and all_numeric_years and filtered_convex_data is not None:
                 try:
                     convex_cols = [f"{INSTALLED_CAPACITY_PREFIX}{tech}_{y}" for y in years_main]
@@ -751,12 +748,12 @@ def plot_operational_variables_over_time(
                                         hoverinfo="skip",
                                         showlegend=False,
                                     ),
-                                    row=main_row, col=main_col,
+                                    row=row, col=col,
                                 )
                 except Exception as e:
                     st.warning(f"⚠️ Error adding convex overlays for {tech}: {e}")
 
-            # Gültiger Bereich (blau) – nur bei echten Jahren
+            # Gültiger Bereich (blau) – nur echte Jahresachsen
             if all_numeric_years and not full_values_main.empty:
                 try:
                     vmin = full_values_main.min()
@@ -773,7 +770,7 @@ def plot_operational_variables_over_time(
                             hoverinfo="skip",
                             showlegend=False,
                         ),
-                        row=main_row, col=main_col,
+                        row=row, col=col,
                     )
                 except Exception as e:
                     st.warning(f"⚠️ Error adding min/max fill for {tech}: {e}")
@@ -796,47 +793,46 @@ def plot_operational_variables_over_time(
                             hoverinfo="skip",
                             showlegend=False,
                         ),
-                        row=main_row, col=main_col,
+                        row=row, col=col,
                     )
                 except Exception as e:
                     st.write(f"❌ Error displaying original range for {tech}: {e}")
 
             # Kategorie-X-Achse, KEIN Achsentitel
-            fig.update_xaxes(type="category", row=main_row, col=main_col, title_text=None)
+            fig.update_xaxes(type="category", row=row, col=col, title_text=None)
 
-        # RECHTS/UNTEN: Cumulated (y == 0)
-        filt_cum = [
-            (y, c) for (y, c) in year_cols
-            if y == 0 and (not apply_prefix or str(c).startswith(maa_prefix + tech))
-        ]
-        cols_cum = [c for _, c in filt_cum]
+        else:  # spec["kind"] == "cum"
+            cols_cum = spec["cols"]
+            if not cols_cum:
+                continue
 
-        if cols_cum:
             values_cum      = vertex_df.loc[plot_indices_val, cols_cum]
             full_values_cum = vertex_df.loc[current_indices, cols_cum]
 
+            # Punkte bei x="Cumulated"
             if not values_cum.dropna(how="all").empty:
-                for i in values_cum.index:
-                    vals = values_cum.loc[i].values
+                for idx_v in values_cum.index:
+                    vals = values_cum.loc[idx_v].values
                     v = np.nanmean(vals) if len(vals) > 1 else (vals[0] if len(vals) == 1 else np.nan)
-                    if pd.notnull(v):
-                        is_sel = (selected_vertex is not None) and (i == selected_vertex)
-                        fig.add_trace(
-                            go.Scatter(
-                                x=["Cumulated"],
-                                y=[v],
-                                mode="markers",
-                                marker=dict(
-                                    color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
-                                    size=10,
-                                ),
-                                hoverinfo="x+y",
-                                showlegend=False,
+                    if np.isnan(v):
+                        continue
+                    is_sel = (selected_vertex is not None) and (idx_v == selected_vertex)
+                    fig.add_trace(
+                        go.Scatter(
+                            x=["Cumulated"],
+                            y=[v],
+                            mode="markers",
+                            marker=dict(
+                                color="rgba(26,102,204,0.8)" if is_sel else "rgba(26,102,204,0.3)",
+                                size=10,
                             ),
-                            row=cum_row, col=cum_col,
-                        )
+                            hoverinfo="x+y",
+                            showlegend=False,
+                        ),
+                        row=row, col=col,
+                    )
 
-            # Gültiger Bereich (blau) als vertikales Band bei x="Cumulated"
+            # Gültiger Bereich (blau) als vertikales Band
             if not full_values_cum.dropna(how="all").empty:
                 try:
                     vmin = float(np.nanmin(full_values_cum.values))
@@ -853,7 +849,7 @@ def plot_operational_variables_over_time(
                                 hoverinfo="skip",
                                 showlegend=False,
                             ),
-                            row=cum_row, col=cum_col,
+                            row=row, col=col,
                         )
                 except Exception:
                     pass
@@ -875,21 +871,19 @@ def plot_operational_variables_over_time(
                                 hoverinfo="skip",
                                 showlegend=False,
                             ),
-                            row=cum_row, col=cum_col,
+                            row=row, col=col,
                         )
                 except Exception:
                     pass
 
-            fig.update_xaxes(type="category", row=cum_row, col=cum_col, tickvals=["Cumulated"], title_text=None)
+            fig.update_xaxes(type="category", row=row, col=col, tickvals=["Cumulated"], title_text=None)
 
-    # ---------- Layout ----------
-    # Höhe heuristisch: pro Tech-Zeile 360 px (horizontal) oder pro Blockreihe ~ 360 px * 2 Zeilen (vertical)
-    if pair_orientation == "horizontal":
-        height = max(520, int(np.ceil(n_blocks / max(1, n_cols_val)) * 360))
-        width  = max(800, 280 * n_cols)  # etwas breiter, da 2 Spalten pro Tech
-    else:
-        height = max(600, int(np.ceil(n_blocks / max(1, n_cols_val)) * 360 * 2))
-        width  = max(800, 280 * n_cols)
+    # 4) Layout
+    # Höhe/Weite heuristisch nach Grid-Größe skalieren
+    base_h = 340
+    height = max(520, n_rows * base_h)
+    base_w = 300
+    width  = max(800, n_cols * base_w)
 
     fig.update_layout(
         title=dict(text=plot_title, x=0, xanchor="left"),
