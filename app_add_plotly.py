@@ -612,7 +612,7 @@ def plot_operational_variables_over_time(
     plot_title="Operational Variables Over Time",
     # Feste Abstände zwischen Subplots:
     h_gap=0.1,                # horizontal
-    v_gap=0.1,                # vertikal
+    v_gap=0.08,                # vertikal
 ):
     """
     Zeichnet ALLE gewünschten Plots als einzelne Subplots in ein Grid mit n_cols_val Spalten.
