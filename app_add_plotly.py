@@ -138,10 +138,19 @@ textarea, select,
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
 
-/* 8) Tabellen & DataFrames */
-.stTable, .stTable table, .stTable th, .stTable td,
-.stDataFrame, .stDataFrame div, .stDataFrame table, .stDataFrame th, .stDataFrame td {{
+/* ==== Tabellen & DataFrames in Montserrat ==== */
+[data-testid="stTable"] table,
+[data-testid="stTable"] th,
+[data-testid="stTable"] td {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+[data-testid="stDataFrame"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stDataFrame"] div[role="gridcell"],
+[data-testid="stDataFrame"] div[role="columnheader"],
+[data-testid="stDataFrame"] div[role="row"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
 }}
 
 /* 9) Hintergrund & Hover */
