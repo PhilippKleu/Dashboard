@@ -1925,15 +1925,16 @@ with tab1:
                     vertex_df=vertex_df,
                     current_indices=current_indices,
                     plot_indices_val=plot_indices,
-                    time_column_map=source_map_selected,  # << nur selektierte Techs
+                    time_column_map=source_map_selected,  # oder source_map
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=st.session_state["show_convex"],
-                    st_convex =st.session_state["convex_combinations"],
+                    st_convex=st.session_state["convex_combinations"],
                     filtered_convex_data=filtered_convex_data,
                     show_original_ranges=st.session_state.get("show_original_ranges", False),
                     apply_prefix=False,
-                    plot_title="Installed Capacities Over Time"
+                    plot_title="Installed Capacities Over Time",
+                    convex_cluster_indices=st.session_state.get("convex_cluster_indices", [])  # << NEU
                 )
             
             else:
@@ -2373,15 +2374,16 @@ with tab1:
                 vertex_df=vertex_df,
                 current_indices=current_indices,
                 plot_indices_val=plot_indices,
-                time_column_map=source_map,
+                time_column_map=source_map_selected,  # oder source_map
                 selected_vertex=st.session_state.get("selected_vertex"),
                 n_cols_val=st.session_state.get("n_cols_plots", 3),
                 show_convex=st.session_state["show_convex"],
-                st_convex =st.session_state["convex_combinations"],
+                st_convex=st.session_state["convex_combinations"],
                 filtered_convex_data=filtered_convex_data,
                 show_original_ranges=st.session_state.get("show_original_ranges", False),
                 apply_prefix=False,
-                plot_title="Installed Capacities Over Time"
+                plot_title="Installed Capacities Over Time",
+                convex_cluster_indices=st.session_state.get("convex_cluster_indices", [])  # << NEU
             )
 
         else:
