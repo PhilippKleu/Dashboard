@@ -131,14 +131,14 @@ textarea, select,
 /* 6c) Dropdown-/Multiselect-Optionsliste: Höhe & Scrollbar (robust) */
 [data-baseweb="layer"] ul[role="listbox"],
 [data-baseweb="layer"] ul[role="menu"] {{
-  max-height: 320px !important;   /* gewünschte Höchst-Höhe */
+  max-height: 200px !important;   /* gewünschte Höchst-Höhe */
   height: auto !important;         /* erzwingt: nicht fix, sondern max-height */
   overflow-y: auto !important;     /* Scroll, wenn zu lang */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }}
 [data-baseweb="layer"] [data-baseweb="menu"] {{
-  max-height: 320px !important;
+  max-height: 200px !important;
   height: auto !important;
   overflow-y: auto !important;
 }}
