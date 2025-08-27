@@ -3105,14 +3105,8 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     
     
 with tab3:
-    from io import BytesIO
-    from zipfile import ZipFile, ZIP_DEFLATED
-    from datetime import datetime
-    import gc
-    import matplotlib.pyplot as plt
     
-    with tab3:
-        # ==== Utilities für on-demand Bytes ====
+    # ==== Utilities für on-demand Bytes ====
     from io import BytesIO
     from zipfile import ZipFile, ZIP_DEFLATED
     from datetime import datetime
