@@ -207,7 +207,7 @@ DEFAULT_ROW_HEIGHT_IN = 3.2   # feste Zollhöhe je Plot-Zeile in Matplotlib
 DEFAULT_COL_WIDTH_IN  = 5.5   # feste Zollbreite je Plot-Spalte in Matplotlib
 
 DEFAULT_TOP_MARGIN    = 80
-DEFAULT_BOTTOM_MARGIN = 40
+DEFAULT_BOTTOM_MARGIN = 70
 
 def compute_plotly_grid(
     n_plots:int,
