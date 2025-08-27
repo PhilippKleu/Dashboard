@@ -611,7 +611,7 @@ def plot_operational_variables_over_time(
     apply_prefix=True,
     plot_title="Operational Variables Over Time",
     # Feste Abstände zwischen Subplots:
-    h_gap=0.1,                # horizontal
+    h_gap=0.09,                # horizontal
     v_gap=0.08,                # vertikal
 ):
     """
