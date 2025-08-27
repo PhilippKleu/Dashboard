@@ -3106,193 +3106,183 @@ At any point, the user can reset all applied filters using the Reset-button. Thi
     
 with tab3:
     from io import BytesIO
-from zipfile import ZipFile, ZIP_DEFLATED
-from datetime import datetime
-import gc
-import matplotlib.pyplot as plt
-
-with tab3:
-    st.subheader("📥 Download")
-
-    # --- Excel (on-demand, keine Kopien im session_state) ---
-    with st.form("make_excel_now"):
-        st.caption("Erzeuge Excel aus dem aktuellen Stand – ohne etwas zu speichern.")
-        btn_excel = st.form_submit_button("🧾 Excel jetzt erzeugen")
-        if btn_excel:
-            excel_buf = BytesIO()
-            with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
-                # Original-Vertices Tabelle (wie in Tab 1, aber ohne Kopien)
-                base_idx = current_indices if 'current_indices' in locals() else tech_data.index
-                frames = [tech_data.loc[base_idx]]
-
-                if MAA_PREFIX == "VALUE_":
-                    inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
-                    if inst_cols:
-                        frames.append(vertex_df.loc[base_idx, inst_cols])
-
-                if additional_cols:
-                    frames.append(vertex_df.loc[base_idx, additional_cols])
-
-                original_all = pd.concat(frames, axis=1)
-                original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
-
-                # Konvexe Tabelle (falls vorhanden)
-                try:
-                    if (st.session_state.get('show_convex') 
-                        and 'filtered_convex_data' in locals() 
-                        and not filtered_convex_data.empty):
-                        conv_frames = [filtered_convex_data.reset_index(drop=True)]
-                        if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
-                            conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
-                        convex_all = pd.concat(conv_frames, axis=1)
-                        convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
-                        convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
-                except Exception:
-                    pass
-
-            excel_buf.seek(0)
-            ts = datetime.now().strftime("%Y%m%d_%H%M")
-            st.download_button(
-                "⬇️ Excel herunterladen",
-                data=excel_buf.getvalue(),
-                file_name=f"decision_tool_tables_{ts}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-    st.markdown("---")
-
-    # --- ZIP (Excel + on-demand gerenderte Plots, Figuren sofort schließen) ---
-    with st.form("make_zip_now"):
-        st.caption("Erzeuge ZIP (Excel + Plots) on-the-fly. Figuren werden sofort freigegeben.")
-        btn_zip = st.form_submit_button("📦 ZIP jetzt erzeugen")
-        if btn_zip:
-            ts = datetime.now().strftime("%Y%m%d_%H%M")
-
-            # 1) Excel sofort bauen (wie oben, ohne Duplikate zu halten)
-            excel_buf = BytesIO()
-            with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
-                base_idx = current_indices if 'current_indices' in locals() else tech_data.index
-                frames = [tech_data.loc[base_idx]]
-
-                if MAA_PREFIX == "VALUE_":
-                    inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
-                    if inst_cols:
-                        frames.append(vertex_df.loc[base_idx, inst_cols])
-
-                if additional_cols:
-                    frames.append(vertex_df.loc[base_idx, additional_cols])
-
-                original_all = pd.concat(frames, axis=1)
-                original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
-
-                try:
-                    if (st.session_state.get('show_convex') 
-                        and 'filtered_convex_data' in locals() 
-                        and not filtered_convex_data.empty):
-                        conv_frames = [filtered_convex_data.reset_index(drop=True)]
-                        if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
-                            conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
-                        convex_all = pd.concat(conv_frames, axis=1)
-                        convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
-                        convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
-                except Exception:
-                    pass
-
-            excel_buf.seek(0)
-
-            # 2) ZIP mit maximaler Kompression
-            zip_buf = BytesIO()
-            with ZipFile(zip_buf, "w", compression=ZIP_DEFLATED, compresslevel=9) as z:
-                z.writestr(f"tables/decision_tool_tables_{ts}.xlsx", excel_buf.getvalue())
-
-                # (a) Operational (je nach Plot-Typ)
-                value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
-                plot_kind = st.session_state.get("plot_type_selector2", "Line Plot")
-                if plot_kind == "Line Plot":
-                    fig_op = plot_operational_variables_over_time(
-                        vertex_df=vertex_df,
-                        current_indices=current_indices,
-                        plot_indices_val=(plot_indices_val if 'plot_indices_val' in locals() else current_indices),
-                        time_column_map=value_time_map,
-                        selected_vertex=st.session_state.get("selected_vertex"),
-                        n_cols_val=st.session_state.get("n_cols_plots", 3),
-                        show_convex=st.session_state.get("show_convex", True),
-                        st_convex=st.session_state.get("convex_combinations"),
-                        filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
-                        show_original_ranges=st.session_state.get("show_original_ranges", False),
-                        apply_prefix=True,
-                        plot_title="Operational Variables Over Time",
-                        convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
-                        render="return"
-                    )
-                    try:
-                        png = fig_op.to_image(format="png", scale=2)
-                        z.writestr("plots/operational_plotly.png", png)
-                    except Exception:
-                        html = fig_op.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
-                        z.writestr("plots/operational_plotly.html", html)
-                    del fig_op
-                else:
-                    fig_op_v = plot_violin_values(
-                        vertex_df,
-                        sorted([t for t, v in value_time_map.items() if v]),
-                        value_time_map,
-                        (plot_indices_val if 'plot_indices_val' in locals() else current_indices),
-                        current_indices,
-                        (filtered_convex_data if 'filtered_convex_data' in locals() else None),
-                        MAA_PREFIX="MAA_",
-                        render="return"
-                    )
-                    b = BytesIO()
-                    fig_op_v.savefig(b, format="png", dpi=200, bbox_inches="tight")
-                    b.seek(0)
-                    z.writestr("plots/operational_violin.png", b.getvalue())
-                    plt.close(fig_op_v); del fig_op_v; gc.collect()
-
-                # (b) Installed Capacities (gleiche Logik, nur anderes Mapping)
-                source_map_selected = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
-                fig_inst = plot_operational_variables_over_time(
+    from zipfile import ZipFile, ZIP_DEFLATED
+    from datetime import datetime
+    import gc
+    import matplotlib.pyplot as plt
+    
+    with tab3:
+        # ==== Utilities für on-demand Bytes ====
+    from io import BytesIO
+    from zipfile import ZipFile, ZIP_DEFLATED
+    from datetime import datetime
+    import gc
+    import matplotlib.pyplot as plt
+    
+    def make_current_excel_bytes():
+        excel_buf = BytesIO()
+        base_idx = current_indices if 'current_indices' in locals() else tech_data.index
+    
+        with pd.ExcelWriter(excel_buf, engine="xlsxwriter") as writer:
+            frames = [tech_data.loc[base_idx]]
+    
+            if MAA_PREFIX == "VALUE_":
+                inst_cols = [c for c in vertex_df.columns if c.startswith(INSTALLED_CAPACITY_PREFIX)]
+                if inst_cols:
+                    frames.append(vertex_df.loc[base_idx, inst_cols])
+    
+            if additional_cols:
+                frames.append(vertex_df.loc[base_idx, additional_cols])
+    
+            original_all = pd.concat(frames, axis=1)
+            original_all.to_excel(writer, index=False, sheet_name="Original_Vertices")
+    
+            # Konvexe Tabelle (falls vorhanden)
+            try:
+                if (st.session_state.get('show_convex')
+                    and 'filtered_convex_data' in locals()
+                    and not filtered_convex_data.empty):
+                    conv_frames = [filtered_convex_data.reset_index(drop=True)]
+                    if additional_cols and 'filtered_convex_additional' in locals() and not filtered_convex_additional.empty:
+                        conv_frames.append(filtered_convex_additional[additional_cols].reset_index(drop=True))
+                    convex_all = pd.concat(conv_frames, axis=1)
+                    convex_all = convex_all.loc[:, ~convex_all.columns.duplicated()]
+                    convex_all.to_excel(writer, index=False, sheet_name="Convex_Combinations")
+            except Exception:
+                pass
+    
+        excel_buf.seek(0)
+        return excel_buf.getvalue()
+    
+    def make_current_zip_bytes():
+        ts = datetime.now().strftime("%Y%m%d_%H%M")
+        zip_buf = BytesIO()
+    
+        with ZipFile(zip_buf, "w", compression=ZIP_DEFLATED, compresslevel=9) as z:
+            # 1) Excel hinein
+            z.writestr(f"tables/decision_tool_tables_{ts}.xlsx", make_current_excel_bytes())
+    
+            # 2) Operational Plot (je nach Modus)
+            value_time_map = extract_time_series_map(vertex_df, MAA_PREFIX, mode="operational")
+            plot_kind = st.session_state.get("plot_type_selector2", "Line Plot")
+    
+            if plot_kind == "Line Plot":
+                fig_op = plot_operational_variables_over_time(
                     vertex_df=vertex_df,
                     current_indices=current_indices,
-                    plot_indices_val=(plot_indices if 'plot_indices' in locals() else current_indices),
-                    time_column_map=source_map_selected,
+                    plot_indices_val=(plot_indices_val if 'plot_indices_val' in locals() else current_indices),
+                    time_column_map=value_time_map,
                     selected_vertex=st.session_state.get("selected_vertex"),
                     n_cols_val=st.session_state.get("n_cols_plots", 3),
                     show_convex=st.session_state.get("show_convex", True),
                     st_convex=st.session_state.get("convex_combinations"),
                     filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
                     show_original_ranges=st.session_state.get("show_original_ranges", False),
-                    apply_prefix=False,
-                    plot_title="Installed Capacities Over Time",
+                    apply_prefix=True,
+                    plot_title="Operational Variables Over Time",
                     convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
-                    render="return"
+                    render="return"   # <— wichtig: nur zurückgeben
                 )
                 try:
-                    png2 = fig_inst.to_image(format="png", scale=2)
-                    z.writestr("plots/installed_plotly.png", png2)
+                    png = fig_op.to_image(format="png", scale=2)
+                    z.writestr("plots/operational_plotly.png", png)
                 except Exception:
-                    html2 = fig_inst.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
-                    z.writestr("plots/installed_plotly.html", html2)
-                del fig_inst
-
-                # (c) Dichteplots optional
-                if st.session_state.get("show_density"):
-                    fig_den = plot_density_contours(
-                        tech_time_map=tech_time_map,
-                        vertex_df=vertex_df,
-                        current_indices=current_indices,
-                        render="return"
-                    )
-                    b2 = BytesIO()
-                    fig_den.savefig(b2, format="png", dpi=200, bbox_inches="tight")
-                    b2.seek(0)
-                    z.writestr("plots/density.png", b2.getvalue())
-                    plt.close(fig_den); del fig_den; gc.collect()
-
-            zip_buf.seek(0)
-            st.download_button(
-                "⬇️ ZIP herunterladen",
-                data=zip_buf.getvalue(),
-                file_name=f"decision_tool_export_{ts}.zip",
-                mime="application/zip",
+                    html = fig_op.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
+                    z.writestr("plots/operational_plotly.html", html)
+                del fig_op
+            else:
+                fig_op_v = plot_violin_values(
+                    vertex_df,
+                    sorted([t for t, v in value_time_map.items() if v]),
+                    value_time_map,
+                    (plot_indices_val if 'plot_indices_val' in locals() else current_indices),
+                    current_indices,
+                    (filtered_convex_data if 'filtered_convex_data' in locals() else None),
+                    MAA_PREFIX="MAA_",
+                    render="return"
+                )
+                b = BytesIO()
+                fig_op_v.savefig(b, format="png", dpi=200, bbox_inches="tight")
+                b.seek(0)
+                z.writestr("plots/operational_violin.png", b.getvalue())
+                plt.close(fig_op_v); del fig_op_v; gc.collect()
+    
+            # 3) Installed Capacities
+            source_map_selected = extract_time_series_map(vertex_df, MAA_PREFIX, mode="installed")
+            fig_inst = plot_operational_variables_over_time(
+                vertex_df=vertex_df,
+                current_indices=current_indices,
+                plot_indices_val=(plot_indices if 'plot_indices' in locals() else current_indices),
+                time_column_map=source_map_selected,
+                selected_vertex=st.session_state.get("selected_vertex"),
+                n_cols_val=st.session_state.get("n_cols_plots", 3),
+                show_convex=st.session_state.get("show_convex", True),
+                st_convex=st.session_state.get("convex_combinations"),
+                filtered_convex_data=(filtered_convex_data if 'filtered_convex_data' in locals() else None),
+                show_original_ranges=st.session_state.get("show_original_ranges", False),
+                apply_prefix=False,
+                plot_title="Installed Capacities Over Time",
+                convex_cluster_indices=st.session_state.get("convex_cluster_indices", []),
+                render="return"
             )
+            try:
+                png2 = fig_inst.to_image(format="png", scale=2)
+                z.writestr("plots/installed_plotly.png", png2)
+            except Exception:
+                html2 = fig_inst.to_html(include_plotlyjs="cdn", full_html=True).encode("utf-8")
+                z.writestr("plots/installed_plotly.html", html2)
+            del fig_inst
+    
+            # 4) Density (optional)
+            if st.session_state.get("show_density"):
+                fig_den = plot_density_contours(
+                    tech_time_map=tech_time_map,
+                    vertex_df=vertex_df,
+                    current_indices=current_indices,
+                    render="return"
+                )
+                b2 = BytesIO()
+                fig_den.savefig(b2, format="png", dpi=200, bbox_inches="tight")
+                b2.seek(0)
+                z.writestr("plots/density.png", b2.getvalue())
+                plt.close(fig_den); del fig_den; gc.collect()
+    
+        zip_buf.seek(0)
+        return zip_buf.getvalue()
+    st.subheader("📥 Download (Low-Memory, ohne Form)")
+
+    # --- Excel erzeugen (on-demand) ---
+    if st.button("🧾 Excel jetzt erzeugen", key="make_excel"):
+        st.session_state["export_excel_bytes"] = make_current_excel_bytes()
+        st.session_state["export_excel_name"]  = f"decision_tool_tables_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+    if "export_excel_bytes" in st.session_state:
+        st.download_button(
+            "⬇️ Excel herunterladen",
+            data=st.session_state["export_excel_bytes"],
+            file_name=st.session_state.get("export_excel_name", "decision_tool_tables.xlsx"),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="dl_excel"
+        )
+        if st.button("🧹 Excel export verwerfen", key="clear_excel"):
+            del st.session_state["export_excel_bytes"]
+            st.session_state.pop("export_excel_name", None)
+
+    st.markdown("---")
+
+    # --- ZIP erzeugen (on-demand) ---
+    if st.button("📦 ZIP jetzt erzeugen", key="make_zip"):
+        st.session_state["export_zip_bytes"] = make_current_zip_bytes()
+        st.session_state["export_zip_name"]  = f"decision_tool_export_{datetime.now().strftime('%Y%m%d_%H%M')}.zip"
+
+    if "export_zip_bytes" in st.session_state:
+        st.download_button(
+            "⬇️ ZIP herunterladen",
+            data=st.session_state["export_zip_bytes"],
+            file_name=st.session_state.get("export_zip_name", "decision_tool_export.zip"),
+            mime="application/zip",
+            key="dl_zip"
+        )
+        if st.button("🧹 ZIP export verwerfen", key="clear_zip"):
+            del st.session_state["export_zip_bytes"]
+            st.session_state.pop("export_zip_name", None)
