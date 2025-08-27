@@ -449,7 +449,7 @@ def plot_density_contours(
     color_levels=10,
     max_vertices_for_density=250,
 ):
-   (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
+    (fig_w_in, fig_h_in), n_rows, n_cols = compute_mpl_figsize(
         n_plots=n_techs,
         n_cols=st.session_state.get("n_cols_plots", 3),
         col_w_in=st.session_state.get("col_w_in", DEFAULT_COL_WIDTH_IN),
