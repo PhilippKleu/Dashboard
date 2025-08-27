@@ -143,14 +143,14 @@ textarea, select,
   overflow-y: auto !important;
 }}
 [data-baseweb="layer"] [data-baseweb="popover"] {{
-  max-height: 320px !important;
+  max-height: 200px !important;
   height: auto !important;
   overflow: visible !important;  /* Menü übernimmt das Scrollen */
 }}
 
 /* Compact MultiSelect input (fixe Höhe + interner Scroll für Chips) */
 [data-testid="stMultiSelect"] > div {{
-  min-height: 38px !important;            /* Grundhöhe des Eingabefelds */
+  min-height: 20px !important;            /* Grundhöhe des Eingabefelds */
 }}
 [data-testid="stMultiSelect"] div[data-baseweb="value-container"] {{
   max-height: 48px !important;            /* Sichtbare Chip-Höhe begrenzen */
