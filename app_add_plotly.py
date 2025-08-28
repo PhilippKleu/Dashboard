@@ -34,78 +34,41 @@ def load_font_b64(raw_url: str) -> str:
 FONT_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Montserrat/static/Montserrat-Regular.ttf"
 font_b64 = load_font_b64(FONT_URL)
 
-st.markdown("""
+st.markdown(f"""
 <style>
-/* ===== Farb-Variablen (Light als Default) ===== */
-:root{
-  --bg: #f4f4f4;
-  --text: #111111;
-  --muted: #4a4a4a;
-  --card: #ffffff;
-  --border: #d8d8d8;
-  --btn-bg: #C0C6D2;
-  --btn-text: #000000;
-  --input-bg: #ffffff;
-  --input-text: #111111;
-  --input-border: #c9c9c9;
-}
+/* 1) Montserrat einbetten – kein globales Anwenden */
+@font-face {{
+  font-family: 'Montserrat';
+  src: url(data:font/ttf;base64,{font_b64}) format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}}
 
-/* ===== Dark-Mode (OS/Browser-Einstellung) ===== */
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg: #0f1116;
-    --text: #e6e6e6;
-    --muted: #b8b8b8;
-    --card: #161a22;
-    --border: #2a2f3a;
-    --btn-bg: #3a3f4b;
-    --btn-text: #ffffff;
-    --input-bg: #1b202b;
-    --input-text: #e6e6e6;
-    --input-border: #2e3441;
-  }
-}
+/* 2) Icon-Schriften schützen */
+.material-icons,
+.material-icons-outlined,
+.material-icons-round {{
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+.material-symbols-outlined,
+.material-symbols-rounded {{
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
 
-/* ===== (Optional) Manuelle Forcierung per Attribut =====
-   Wird in Block B gesetzt: :root[data-user-theme="dark"|"light"] */
-:root[data-user-theme="dark"]{
-  --bg: #0f1116;
-  --text: #e6e6e6;
-  --muted: #b8b8b8;
-  --card: #161a22;
-  --border: #2a2f3a;
-  --btn-bg: #3a3f4b;
-  --btn-text: #ffffff;
-  --input-bg: #1b202b;
-  --input-text: #e6e6e6;
-  --input-border: #2e3441;
-}
-:root[data-user-theme="light"]{
-  --bg: #f4f4f4;
-  --text: #111111;
-  --muted: #4a4a4a;
-  --card: #ffffff;
-  --border: #d8d8d8;
-  --btn-bg: #C0C6D2;
-  --btn-text: #000000;
-  --input-bg: #ffffff;
-  --input-text: #111111;
-  --input-border: #c9c9c9;
-}
-
-/* ====== Bestehende Styles mit Variablen neu einfärben ====== */
-
-/* Hintergrund */
-body, .stApp { background-color: var(--bg) !important; }
-
-/* Typo-Farbe (Überschriften & Markdown) */
+/* 3) Hauptinhalt: Überschriften + Markdown-Text */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
-[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
-  color: var(--text) !important;
-}
+[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
 
-/* Sidebar-Texte */
+/* 4) Sidebar-Text */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -114,66 +77,240 @@ body, .stApp { background-color: var(--bg) !important; }
 [data-testid="stSidebar"] h6,
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] label,
-[data-testid="stSidebar"] small{
-  color: var(--text) !important;
-}
+[data-testid="stSidebar"] small {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
 
-/* Buttons */
-.stButton > button, .stDownloadButton > button{
-  background-color: var(--btn-bg) !important;
-  color: var(--btn-text) !important;
-  border: 1px solid var(--border) !important;
-}
+/* 5) Header-Text außer Toggle */
+[data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
 
-/* Inputs (sichtbare Felder) */
-input[type="text"], input[type="number"], input[type="search"],
-input[type="email"], input[type="password"], textarea, select,
-.stTextInput input, .stNumberInput input, .stTextArea textarea{
-  background-color: var(--input-bg) !important;
-  color: var(--input-text) !important;
-  border-color: var(--input-border) !important;
-}
+/* 6) Widgets: Labels, Inputs, Buttons */
+label,
+.stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"],
+textarea, select,
+.stTextInput input, .stNumberInput input, .stTextArea textarea {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+.stButton > button, .stDownloadButton > button {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  background-color: #C0C6D2;
+  color: black;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
+}}
 
-/* BaseWeb/Select Popover */
+/* 6a) Dropdown-Feld (sichtbares Input) */
+[data-testid="stSelectbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+/* MultiSelect ausgewählte Tags */
+[data-baseweb="tag"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+/* 6b) Portal-Menü der Dropdowns */
 [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined),
 [data-baseweb="popover"] *:not(.material-icons):not(.material-symbols-outlined),
-[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined){
-  color: var(--text) !important;
-}
-[data-baseweb="layer"] [data-baseweb="menu"],
-[data-baseweb="layer"] [data-baseweb="popover"]{
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-}
+[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="listbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="option"]:not(.material-icons):not(.material-symbols-outlined),
+[role="option"] *:not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
+}}
 
-/* DataFrames / Tabellen */
+/* 6c) Dropdown-/Multiselect-Optionsliste */
+[data-baseweb="layer"] ul[role="listbox"],
+[data-baseweb="layer"] ul[role="menu"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}}
+[data-baseweb="layer"] [data-baseweb="menu"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+}}
+[data-baseweb="layer"] [data-baseweb="popover"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow: visible !important;
+}}
+
+/* Compact MultiSelect input */
+[data-testid="stMultiSelect"] > div {{
+  min-height: 20px !important;
+}}
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {{
+  max-height: 48px !important;
+  overflow-y: auto !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {{
+  transform: scale(1);
+  margin: 1px 2px !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span {{
+  font-size: 12px !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {{
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}}
+
+/* 7) Tabs/Expander/Metrics */
+[data-testid="stSubheader"] *,
+[data-testid="stCaption"] *,
+[data-testid="stMetricLabel"],
+[data-testid="stMetricDelta"],
+[data-testid="stMetricValue"],
+[data-testid="stExpander"] summary,
+[data-testid="stTabs"] button p {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+
+/* Tabellen & DataFrames */
 [data-testid="stTable"] table,
 [data-testid="stTable"] th,
-[data-testid="stTable"] td{
-  color: var(--text) !important;
-  background-color: var(--card) !important;
-}
+[data-testid="stTable"] td {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+}}
+[data-testid="stDataFrame"] *:not(.material-icons):not(.material-symbols-outlined),
 [data-testid="stDataFrame"] div[role="gridcell"],
-[data-testid="stDataFrame"] div[role="columnheader"]{
-  color: var(--text) !important;
-}
+[data-testid="stDataFrame"] div[role="columnheader"],
+[data-testid="stDataFrame"] div[role="row"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
+}}
 
-/* Karten/Container (wenn vorhanden) */
-.block-container, .main, .element-container{
-  background-color: transparent !important;
-}
+/* 9) Hintergrund & Hover */
+body, .stApp {{ background-color: #f4f4f4; }}
+div[data-testid="stFileUploader"]:hover,
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover,
+div[data-testid^="stNumberInput"]:hover,
+div[data-testid^="stRadio"]:hover,
+div[data-testid^="stSlider"]:hover {{
+  transform: scale(1.01);
+  transition: transform 0.2s ease;
+}}
 
-/* Header-Toggle-Pfeile erben Textfarbe */
+/* === HEADER-TOGGLE: Inhalt ausblenden & eigene Pfeile === */
+[data-testid="collapsedControl"],
+[data-testid="stHeader"] [data-testid="collapsedControl"],
+[data-testid="stHeader"] button[aria-label*="sidebar" i],
+[data-testid="stHeader"] button[title*="sidebar" i] {{
+  position: relative !important;
+}}
+[data-testid="collapsedControl"] *,
+[data-testid="stHeader"] [data-testid="collapsedControl"] *,
+[data-testid="stHeader"] button[aria-label*="sidebar" i] *,
+[data-testid="stHeader"] button[title*="sidebar" i] * {{
+  opacity: 0 !important;
+}}
 [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-[data-testid="stHeader"] button[title*="sidebar" i]::after{
-  color: var(--text) !important;
-}
+[data-testid="stHeader"] button[title*="sidebar" i]::after {{
+  content: "❮❮";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+}}
+[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
+  content: "❯❯";
+}}
 
-/* Rahmen & dezente Linien */
-hr, .st-emotion-cache-12w0qpk p, .st-emotion-cache-1dp5vir{
-  border-color: var(--border) !important;
+/* ========= Dark Mode: nur Farben überschreiben ========= */
+@media (prefers-color-scheme: dark) {{
+  body, .stApp {{
+    background-color: #0f1116 !important;
+    color-scheme: dark;
+  }}
+  .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+  [data-testid="stMarkdownContainer"],
+  [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){{
+    color: #e6e6e6 !important;
+  }}
+  [data-testid="stSidebar"] h1,
+  [data-testid="stSidebar"] h2,
+  [data-testid="stSidebar"] h3,
+  [data-testid="stSidebar"] h4,
+  [data-testid="stSidebar"] h5,
+  [data-testid="stSidebar"] h6,
+  [data-testid="stSidebar"] p,
+  [data-testid="stSidebar"] label,
+  [data-testid="stSidebar"] small{{
+    color: #e6e6e6 !important;
+  }}
+  .stButton > button, .stDownloadButton > button{{
+    background-color: #3a3f4b !important;
+    color: #ffffff !important;
+  }}
+  input[type="text"], input[type="number"], input[type="search"],
+  input[type="email"], input[type="password"],
+  textarea, select,
+  .stTextInput input, .stNumberInput input, .stTextArea textarea{{
+    background-color: #1b202b !important;
+    color: #e6e6e6 !important;
+    border-color: #2e3441 !important;
+  }}
+  [data-baseweb="layer"] [data-baseweb="menu"],
+  [data-baseweb="layer"] [data-baseweb="popover"]{{
+    background-color: #161a22 !important;
+    border: 1px solid #2a2f3a !important;
+  }}
+  [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined){{
+    color: #e6e6e6 !important;
+  }}
+  [data-testid="stTable"] table,
+  [data-testid="stTable"] th,
+  [data-testid="stTable"] td{{
+    background-color: #161a22 !important;
+    color: #e6e6e6 !important;
+    border-color: #2a2f3a !important;
+  }}
+  [data-testid="stDataFrame"] div[role="gridcell"],
+  [data-testid="stDataFrame"] div[role="columnheader"]{{
+    color: #e6e6e6 !important;
+  }}
+  [data-testid="collapsedControl"]::after,
+  [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
+  [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
+  [data-testid="stHeader"] button[title*="sidebar" i]::after{{
+    color: #e6e6e6 !important;
+  }}
+}}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+:root{
+  --ms-box-h: 100px;   /* Höhe der MultiSelect-Box */
+}
+[data-testid="stMultiSelect"] [data-baseweb="select"],
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] div[aria-haspopup="listbox"]{
+  min-height: var(--ms-box-h) !important;
+  height: var(--ms-box-h) !important;
+}
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"]{
+  max-height: calc(var(--ms-box-h) - 6px) !important;
+  overflow: hidden !important;
 }
 </style>
 """, unsafe_allow_html=True)
