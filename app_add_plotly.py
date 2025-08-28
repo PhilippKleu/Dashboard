@@ -34,6 +34,27 @@ def load_font_b64(raw_url: str) -> str:
 FONT_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Montserrat/static/Montserrat-Regular.ttf"
 font_b64 = load_font_b64(FONT_URL)
 
+
+
+# Hilfsfunktion: legt ein <script> in die Seite
+def detect_theme():
+    detect_js = """
+    <script>
+    const theme = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-background-color");
+    const mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    // an Streamlit zurückgeben über eine SessionStorage Variable
+    window.parent.postMessage({isStreamlitMessage:true, type:"theme-mode", mode:mode}, "*");
+    </script>
+    """
+    st.markdown(detect_js, unsafe_allow_html=True)
+
+# Abhören in Python
+from streamlit_javascript import st_javascript   # kleines Helfer-Paket
+
+mode = st_javascript("() => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'")
+st.write("Aktuelles Theme:", mode)
+
+#############Light
 st.markdown(f"""
 <style>
 /* 1) Montserrat einbetten – kein globales Anwenden */
@@ -111,6 +132,7 @@ textarea, select,
 [data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
+/* MultiSelect ausgewählte Tags */
 [data-baseweb="tag"] {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
@@ -191,7 +213,8 @@ textarea, select,
   font-variant-ligatures: normal !important;
 }}
 
-/* Hover-Animation */
+/* 9) Hintergrund & Hover */
+body, .stApp {{ background-color: #f4f4f4; }}
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
@@ -231,73 +254,242 @@ div[data-testid^="stSlider"]:hover {{
 [data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
   content: "❯❯";
 }}
+</style>
+""", unsafe_allow_html=True)
 
-/* === Hintergrund-Konfiguration: Light/Dark === */
-
-/* --- Light (Default) --- */
-html, body,
-.stApp,
-[data-testid="stAppViewContainer"],
-[data-testid="stSidebar"],
-[data-testid="stHeader"],
-.main,
-.block-container{{
-  background: #f4f4f4 !important;
-  background-color: #f4f4f4 !important;
+###########Dark
+st.markdown(f"""
+<style>
+/* 1) Montserrat einbetten – kein globales Anwenden */
+@font-face {{
+  font-family: 'Montserrat';
+  src: url(data:font/ttf;base64,{font_b64}) format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }}
 
-/* --- Dark: System (OS) --- */
-@media (prefers-color-scheme: dark){{
-  html, body,
-  .stApp,
-  [data-testid="stAppViewContainer"],
-  [data-testid="stSidebar"],
-  [data-testid="stHeader"],
-  .main,
-  .block-container{{
-    background: #0f1116 !important;
-    background-color: #0f1116 !important;
-    color-scheme: dark;
-  }}
-  [data-testid="stAppViewContainer"]::before{{
-    content: none !important;
-    background: none !important;
-    background-image: none !important;
-  }}
+/* 2) Icon-Schriften schützen */
+.material-icons,
+.material-icons-outlined,
+.material-icons-round {{
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
+}}
+.material-symbols-outlined,
+.material-symbols-rounded {{
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+  font-feature-settings: 'liga' 1 !important;
+  font-variant-ligatures: normal !important;
 }}
 
-/* --- Dark: wenn Streamlit explizit Dark-Theme setzt --- */
-html[data-theme="dark"] body,
-html[data-theme="dark"] .stApp,
-html[data-theme="dark"] [data-testid="stAppViewContainer"],
-html[data-theme="dark"] [data-testid="stSidebar"],
-html[data-theme="dark"] [data-testid="stHeader"],
-html[data-theme="dark"] .main,
-html[data-theme="dark"] .block-container,
-html[data-base-theme="dark"] body,
-html[data-base-theme="dark"] .stApp,
-html[data-base-theme="dark"] [data-testid="stAppViewContainer"],
-html[data-base-theme="dark"] [data-testid="stSidebar"],
-html[data-base-theme="dark"] [data-testid="stHeader"],
-html[data-base-theme="dark"] .main,
-html[data-base-theme="dark"] .block-container{{
-  background: #0f1116 !important;
-  background-color: #0f1116 !important;
-  color-scheme: dark;
+/* 3) Hauptinhalt: Überschriften + Markdown-Text (nur Farbe ergänzt) */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
 }}
-html[data-theme="dark"] [data-testid="stAppViewContainer"]::before,
-html[data-base-theme="dark"] [data-testid="stAppViewContainer"]::before{{
-  content: none !important;
-  background: none !important;
-  background-image: none !important;
+
+/* 4) Sidebar-Text (nur Farbe ergänzt) */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] small {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+
+/* 5) Header-Text außer Toggle (nur Farbe ergänzt) */
+[data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+
+/* 6) Widgets: Labels, Inputs, Buttons (nur Farben geändert) */
+label,
+.stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"],
+textarea, select,
+.stTextInput input, .stNumberInput input, .stTextArea textarea {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  background-color: #1b202b !important;
+  color: #e6e6e6 !important;
+  border-color: #2e3441 !important;
+}}
+.stButton > button, .stDownloadButton > button {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  background-color: #3a3f4b;
+  color: #ffffff;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
+}}
+
+/* 6a) Dropdown-Feld (sichtbares Input) */
+[data-testid="stSelectbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+/* MultiSelect ausgewählte Tags */
+[data-baseweb="tag"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+
+/* 6b) Portal-Menü der Dropdowns (Farben dunkel) */
+[data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-baseweb="popover"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="listbox"] *:not(.material-icons):not(.material-symbols-outlined),
+[role="option"]:not(.material-icons):not(.material-symbols-outlined),
+[role="option"] *:not(.material-icons):not(.material-symbols-outlined) {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
+  color: #e6e6e6 !important;
+}}
+[data-baseweb="layer"] [data-baseweb="menu"],
+[data-baseweb="layer"] [data-baseweb="popover"] {{
+  background-color: #161a22 !important;
+  border: 1px solid #2a2f3a !important;
+}}
+
+/* 6c) Dropdown-/Multiselect-Optionsliste (Höhe/Scroll identisch) */
+[data-baseweb="layer"] ul[role="listbox"],
+[data-baseweb="layer"] ul[role="menu"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}}
+[data-baseweb="layer"] [data-baseweb="menu"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+}}
+[data-baseweb="layer"] [data-baseweb="popover"] {{
+  max-height: 200px !important;
+  height: auto !important;
+  overflow: visible !important;
+}}
+
+/* Compact MultiSelect input (unverändert) */
+[data-testid="stMultiSelect"] > div {{
+  min-height: 20px !important;
+}}
+[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {{
+  max-height: 48px !important;
+  overflow-y: auto !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {{
+  transform: scale(1);
+  margin: 1px 2px !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span {{
+  font-size: 12px !important;
+}}
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {{
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}}
+
+/* 7) Tabs/Expander/Metrics */
+[data-testid="stSubheader"] *,
+[data-testid="stCaption"] *,
+[data-testid="stMetricLabel"],
+[data-testid="stMetricDelta"],
+[data-testid="stMetricValue"],
+[data-testid="stExpander"] summary,
+[data-testid="stTabs"] button p {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  color: #e6e6e6 !important;
+}}
+
+/* Tabellen & DataFrames (dunkle Hintergründe) */
+[data-testid="stTable"] table,
+[data-testid="stTable"] th,
+[data-testid="stTable"] td {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  background-color: #161a22 !important;
+  color: #e6e6e6 !important;
+  border-color: #2a2f3a !important;
+}}
+[data-testid="stDataFrame"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stDataFrame"] div[role="gridcell"],
+[data-testid="stDataFrame"] div[role="columnheader"],
+[data-testid="stDataFrame"] div[role="row"] {{
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-variant-ligatures: normal !important;
+  color: #e6e6e6 !important;
+}}
+
+/* 9) Hintergrund & Hover (nur Hintergrundfarbe geändert) */
+body, .stApp {{ background-color: #0f1116 !important; }}
+div[data-testid="stFileUploader"]:hover,
+div[data-testid^="stSelectbox"]:hover,
+div[data-testid^="stMultiSelect"]:hover,
+div[data-testid^="stNumberInput"]:hover,
+div[data-testid^="stRadio"]:hover,
+div[data-testid^="stSlider"]:hover {{
+  transform: scale(1.01);
+  transition: transform 0.2s ease;
+}}
+
+/* === HEADER-TOGGLE: Inhalt ausblenden & eigene Pfeile (nur Farbe ergänzt) === */
+[data-testid="collapsedControl"],
+[data-testid="stHeader"] [data-testid="collapsedControl"],
+[data-testid="stHeader"] button[aria-label*="sidebar" i],
+[data-testid="stHeader"] button[title*="sidebar" i] {{
+  position: relative !important;
+}}
+[data-testid="collapsedControl"] *,
+[data-testid="stHeader"] [data-testid="collapsedControl"] *,
+[data-testid="stHeader"] button[aria-label*="sidebar" i] *,
+[data-testid="stHeader"] button[title*="sidebar" i] * {{
+  opacity: 0 !important;
+}}
+[data-testid="collapsedControl"]::after,
+[data-testid="stHeader"] [data-testid="collapsedControl"]::after,
+[data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
+[data-testid="stHeader"] button[title*="sidebar" i]::after {{
+  content: "❮❮";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  color: #e6e6e6 !important;
+}}
+[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
+  content: "❯❯";
 }}
 </style>
 """, unsafe_allow_html=True)
 
+
+
+
+
+# Zweiter (unveränderter) Block: MultiSelect-Boxhöhe
 st.markdown("""
 <style>
 :root{
-  --ms-box-h: 100px;   /* Höhe der MultiSelect-Box */
+  --ms-box-h: 100px;
 }
 [data-testid="stMultiSelect"] [data-baseweb="select"],
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
@@ -308,210 +500,6 @@ st.markdown("""
 [data-testid="stMultiSelect"] div[data-baseweb="value-container"]{
   max-height: calc(var(--ms-box-h) - 6px) !important;
   overflow: hidden !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* ========= Dark Mode: nur Farben überschreiben ========= */
-@media (prefers-color-scheme: dark){
-
-  /* Hintergrund – auf allen Hauptcontainern */
-  html, body, .stApp,
-  .st-emotion-cache-18ni7ap,  /* App-Haupt-Wrapper */
-  .block-container { 
-    background-color: #0f1116 !important;
-    color-scheme: dark;
-  }
-
-  /* Textfarben (Hauptbereich) */
-  .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
-  [data-testid="stMarkdownContainer"],
-  [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
-    color: #e6e6e6 !important;
-  }
-
-  /* Sidebar-Texte */
-  [data-testid="stSidebar"] h1,
-  [data-testid="stSidebar"] h2,
-  [data-testid="stSidebar"] h3,
-  [data-testid="stSidebar"] h4,
-  [data-testid="stSidebar"] h5,
-  [data-testid="stSidebar"] h6,
-  [data-testid="stSidebar"] p,
-  [data-testid="stSidebar"] label,
-  [data-testid="stSidebar"] small{
-    color: #e6e6e6 !important;
-  }
-
-  /* Buttons */
-  .stButton > button, .stDownloadButton > button{
-    background-color: #3a3f4b !important;
-    color: #ffffff !important;
-  }
-
-  /* Inputs */
-  input[type="text"], input[type="number"], input[type="search"],
-  input[type="email"], input[type="password"],
-  textarea, select,
-  .stTextInput input, .stNumberInput input, .stTextArea textarea{
-    background-color: #1b202b !important;
-    color: #e6e6e6 !important;
-    border-color: #2e3441 !important;
-  }
-
-  /* Dropdown/Popover */
-  [data-baseweb="layer"] [data-baseweb="menu"],
-  [data-baseweb="layer"] [data-baseweb="popover"]{
-    background-color: #161a22 !important;
-    border: 1px solid #2a2f3a !important;
-  }
-  [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined){
-    color: #e6e6e6 !important;
-  }
-
-  /* Tabellen & DataFrames */
-  [data-testid="stTable"] table,
-  [data-testid="stTable"] th,
-  [data-testid="stTable"] td{
-    background-color: #161a22 !important;
-    color: #e6e6e6 !important;
-    border-color: #2a2f3a !important;
-  }
-  [data-testid="stDataFrame"] div[role="gridcell"],
-  [data-testid="stDataFrame"] div[role="columnheader"]{
-    color: #e6e6e6 !important;
-  }
-
-  /* Header-Toggle-Pfeile */
-  [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-  [data-testid="stHeader"] button[title*="sidebar" i]::after{
-    color: #e6e6e6 !important;
-  }
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* ========= Dark Mode: nur Farbe/Background überschreiben ========= */
-/* Greift, wenn System-Dark-Mode aktiv ist ODER Streamlit-Theme auf "Dark" steht */
-@media (prefers-color-scheme: dark){
-  html, body,
-  .stApp,
-  [data-testid="stAppViewContainer"],
-  [data-testid="stSidebar"],
-  [data-testid="stHeader"],
-  .main,
-  .block-container{
-    background: #0f1116 !important;
-    background-color: #0f1116 !important;
-    color-scheme: dark;
-  }
-
-  /* Falls Streamlit einen Gradient als Overlay nutzt */
-  [data-testid="stAppViewContainer"]::before{
-    content: none !important;
-    background: none !important;
-    background-image: none !important;
-  }
-
-  /* Sicherheitshalber alle möglichen Background-Images kappen */
-  html, body, .stApp, [data-testid="stAppViewContainer"], .main, .block-container{
-    background-image: none !important;
-  }
-
-  /* Texte */
-  .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
-  [data-testid="stMarkdownContainer"],
-  [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
-    color: #e6e6e6 !important;
-  }
-  [data-testid="stSidebar"] *{
-    color: #e6e6e6 !important;
-  }
-
-  /* Buttons */
-  .stButton > button, .stDownloadButton > button{
-    background-color: #3a3f4b !important;
-    color: #ffffff !important;
-    border-color: transparent !important;
-  }
-
-  /* Inputs */
-  input[type="text"], input[type="number"], input[type="search"],
-  input[type="email"], input[type="password"],
-  textarea, select,
-  .stTextInput input, .stNumberInput input, .stTextArea textarea{
-    background-color: #1b202b !important;
-    color: #e6e6e6 !important;
-    border-color: #2e3441 !important;
-  }
-
-  /* Dropdown/Popover */
-  [data-baseweb="layer"] [data-baseweb="menu"],
-  [data-baseweb="layer"] [data-baseweb="popover"]{
-    background-color: #161a22 !important;
-    border: 1px solid #2a2f3a !important;
-  }
-  [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined){
-    color: #e6e6e6 !important;
-  }
-
-  /* Tabellen & DataFrames */
-  [data-testid="stTable"] table,
-  [data-testid="stTable"] th,
-  [data-testid="stTable"] td{
-    background-color: #161a22 !important;
-    color: #e6e6e6 !important;
-    border-color: #2a2f3a !important;
-  }
-  [data-testid="stDataFrame"] div[role="gridcell"],
-  [data-testid="stDataFrame"] div[role="columnheader"]{
-    color: #e6e6e6 !important;
-  }
-
-  /* Header-Toggle-Pfeile */
-  [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-  [data-testid="stHeader"] button[title*="sidebar" i]::after{
-    color: #e6e6e6 !important;
-  }
-}
-
-/* Zusätzlich: greife, wenn Streamlit explizit das Theme auf "dark" setzt */
-html[data-theme="dark"] body,
-html[data-theme="dark"] .stApp,
-html[data-theme="dark"] [data-testid="stAppViewContainer"],
-html[data-theme="dark"] [data-testid="stSidebar"],
-html[data-theme="dark"] [data-testid="stHeader"],
-html[data-theme="dark"] .main,
-html[data-theme="dark"] .block-container{
-  background: #0f1116 !important;
-  background-color: #0f1116 !important;
-  color-scheme: dark;
-}
-html[data-theme="dark"] [data-testid="stAppViewContainer"]::before{
-  content: none !important;
-  background: none !important;
-  background-image: none !important;
-}
-html[data-theme="dark"] .stApp h1,
-html[data-theme="dark"] .stApp h2,
-html[data-theme="dark"] .stApp h3,
-html[data-theme="dark"] .stApp h4,
-html[data-theme="dark"] .stApp h5,
-html[data-theme="dark"] .stApp h6,
-html[data-theme="dark"] [data-testid="stMarkdownContainer"],
-html[data-theme="dark"] [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
-  color: #e6e6e6 !important;
-}
-html[data-theme="dark"] [data-testid="stSidebar"] *{
-  color: #e6e6e6 !important;
 }
 </style>
 """, unsafe_allow_html=True)
