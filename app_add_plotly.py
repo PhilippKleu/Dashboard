@@ -111,7 +111,6 @@ textarea, select,
 [data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
-/* MultiSelect ausgewählte Tags */
 [data-baseweb="tag"] {{
   font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
 }}
@@ -192,43 +191,7 @@ textarea, select,
   font-variant-ligatures: normal !important;
 }}
 
-/* 9) Hintergrund & Hover
-   — Light = Default (#f4f4f4)
-   — Dark: überschreibe HINTERGRUND auf allen relevanten Containern */
-body, .stApp {{ background-color: #f4f4f4; }}
-
-@media (prefers-color-scheme: dark){{
-  html, body,
-  .stApp,
-  [data-testid="stAppViewContainer"],
-  [data-testid="stSidebar"],
-  [data-testid="stHeader"],
-  .main,
-  .block-container {{
-    background: #0f1116 !important;
-    background-color: #0f1116 !important;
-    color-scheme: dark;
-  }}
-  /* evtl. Overlay/Gradient entfernen */
-  [data-testid="stAppViewContainer"]::before {{
-    content: none !important;
-    background: none !important;
-    background-image: none !important;
-  }}
-}}
-/* greift zusätzlich, falls Streamlit explizit ein Dark-Theme setzt */
-html[data-theme="dark"] body,
-html[data-theme="dark"] .stApp,
-html[data-theme="dark"] [data-testid="stAppViewContainer"],
-html[data-theme="dark"] [data-testid="stSidebar"],
-html[data-theme="dark"] [data-testid="stHeader"],
-html[data-theme="dark"] .main,
-html[data-theme="dark"] .block-container {{
-  background: #0f1116 !important;
-  background-color: #0f1116 !important;
-  color-scheme: dark;
-}}
-
+/* Hover-Animation */
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
@@ -267,6 +230,66 @@ div[data-testid^="stSlider"]:hover {{
 }}
 [data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
   content: "❯❯";
+}}
+
+/* === Hintergrund-Konfiguration: Light/Dark === */
+
+/* --- Light (Default) --- */
+html, body,
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stSidebar"],
+[data-testid="stHeader"],
+.main,
+.block-container{{
+  background: #f4f4f4 !important;
+  background-color: #f4f4f4 !important;
+}}
+
+/* --- Dark: System (OS) --- */
+@media (prefers-color-scheme: dark){{
+  html, body,
+  .stApp,
+  [data-testid="stAppViewContainer"],
+  [data-testid="stSidebar"],
+  [data-testid="stHeader"],
+  .main,
+  .block-container{{
+    background: #0f1116 !important;
+    background-color: #0f1116 !important;
+    color-scheme: dark;
+  }}
+  [data-testid="stAppViewContainer"]::before{{
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+  }}
+}}
+
+/* --- Dark: wenn Streamlit explizit Dark-Theme setzt --- */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .stApp,
+html[data-theme="dark"] [data-testid="stAppViewContainer"],
+html[data-theme="dark"] [data-testid="stSidebar"],
+html[data-theme="dark"] [data-testid="stHeader"],
+html[data-theme="dark"] .main,
+html[data-theme="dark"] .block-container,
+html[data-base-theme="dark"] body,
+html[data-base-theme="dark"] .stApp,
+html[data-base-theme="dark"] [data-testid="stAppViewContainer"],
+html[data-base-theme="dark"] [data-testid="stSidebar"],
+html[data-base-theme="dark"] [data-testid="stHeader"],
+html[data-base-theme="dark"] .main,
+html[data-base-theme="dark"] .block-container{{
+  background: #0f1116 !important;
+  background-color: #0f1116 !important;
+  color-scheme: dark;
+}}
+html[data-theme="dark"] [data-testid="stAppViewContainer"]::before,
+html[data-base-theme="dark"] [data-testid="stAppViewContainer"]::before{{
+  content: none !important;
+  background: none !important;
+  background-image: none !important;
 }}
 </style>
 """, unsafe_allow_html=True)
