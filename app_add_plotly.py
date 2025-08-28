@@ -34,41 +34,78 @@ def load_font_b64(raw_url: str) -> str:
 FONT_URL = "https://raw.githubusercontent.com/PhilippKleu/Dashboard/develope/Montserrat/static/Montserrat-Regular.ttf"
 font_b64 = load_font_b64(FONT_URL)
 
-st.markdown(f"""
+st.markdown("""
 <style>
-/* 1) Montserrat einbetten – kein globales Anwenden */
-@font-face {{
-  font-family: 'Montserrat';
-  src: url(data:font/ttf;base64,{font_b64}) format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}}
+/* ===== Farb-Variablen (Light als Default) ===== */
+:root{
+  --bg: #f4f4f4;
+  --text: #111111;
+  --muted: #4a4a4a;
+  --card: #ffffff;
+  --border: #d8d8d8;
+  --btn-bg: #C0C6D2;
+  --btn-text: #000000;
+  --input-bg: #ffffff;
+  --input-text: #111111;
+  --input-border: #c9c9c9;
+}
 
-/* 2) Icon-Schriften schützen */
-.material-icons,
-.material-icons-outlined,
-.material-icons-round {{
-  font-family: 'Material Icons' !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
-}}
-.material-symbols-outlined,
-.material-symbols-rounded {{
-  font-family: 'Material Symbols Outlined' !important;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
-  font-feature-settings: 'liga' 1 !important;
-  font-variant-ligatures: normal !important;
-}}
+/* ===== Dark-Mode (OS/Browser-Einstellung) ===== */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg: #0f1116;
+    --text: #e6e6e6;
+    --muted: #b8b8b8;
+    --card: #161a22;
+    --border: #2a2f3a;
+    --btn-bg: #3a3f4b;
+    --btn-text: #ffffff;
+    --input-bg: #1b202b;
+    --input-text: #e6e6e6;
+    --input-border: #2e3441;
+  }
+}
 
-/* 3) Hauptinhalt: Überschriften + Markdown-Text */
+/* ===== (Optional) Manuelle Forcierung per Attribut =====
+   Wird in Block B gesetzt: :root[data-user-theme="dark"|"light"] */
+:root[data-user-theme="dark"]{
+  --bg: #0f1116;
+  --text: #e6e6e6;
+  --muted: #b8b8b8;
+  --card: #161a22;
+  --border: #2a2f3a;
+  --btn-bg: #3a3f4b;
+  --btn-text: #ffffff;
+  --input-bg: #1b202b;
+  --input-text: #e6e6e6;
+  --input-border: #2e3441;
+}
+:root[data-user-theme="light"]{
+  --bg: #f4f4f4;
+  --text: #111111;
+  --muted: #4a4a4a;
+  --card: #ffffff;
+  --border: #d8d8d8;
+  --btn-bg: #C0C6D2;
+  --btn-text: #000000;
+  --input-bg: #ffffff;
+  --input-text: #111111;
+  --input-border: #c9c9c9;
+}
+
+/* ====== Bestehende Styles mit Variablen neu einfärben ====== */
+
+/* Hintergrund */
+body, .stApp { background-color: var(--bg) !important; }
+
+/* Typo-Farbe (Überschriften & Markdown) */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
 [data-testid="stMarkdownContainer"],
-[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined) {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
+[data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
+  color: var(--text) !important;
+}
 
-/* 4) Sidebar-Text */
+/* Sidebar-Texte */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
@@ -77,190 +114,66 @@ st.markdown(f"""
 [data-testid="stSidebar"] h6,
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] label,
-[data-testid="stSidebar"] small {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
+[data-testid="stSidebar"] small{
+  color: var(--text) !important;
+}
 
-/* 5) Header-Text außer Toggle */
-[data-testid="stHeader"] *:not([data-testid="collapsedControl"] *):not(.material-icons):not(.material-symbols-outlined) {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
+/* Buttons */
+.stButton > button, .stDownloadButton > button{
+  background-color: var(--btn-bg) !important;
+  color: var(--btn-text) !important;
+  border: 1px solid var(--border) !important;
+}
 
-/* 6) Widgets: Labels, Inputs, Buttons */
-label,
-.stCheckbox, .stRadio, .stSelectbox, .stMultiSelect, .stSlider, .stDateInput, .stTimeInput {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"],
-textarea, select,
-.stTextInput input, .stNumberInput input, .stTextArea textarea {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-.stButton > button, .stDownloadButton > button {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-  background-color: #C0C6D2;
-  color: black;
-  border: none;
-  padding: 0.5em 1.2em;
-  border-radius: 8px;
-  font-weight: 500;
-}}
+/* Inputs (sichtbare Felder) */
+input[type="text"], input[type="number"], input[type="search"],
+input[type="email"], input[type="password"], textarea, select,
+.stTextInput input, .stNumberInput input, .stTextArea textarea{
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--input-border) !important;
+}
 
-/* 6a) Dropdown-Feld (sichtbares Input) */
-[data-testid="stSelectbox"] *:not(.material-icons):not(.material-symbols-outlined),
-[data-testid="stMultiSelect"] *:not(.material-icons):not(.material-symbols-outlined) {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-/* MultiSelect ausgewählte Tags */
-[data-baseweb="tag"] {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-
-/* 6b) >>> WICHTIG: Portal-Menü der Dropdowns (Base Web Popover/Menu) <<< */
-/* Das Optionsmenü wird außerhalb des Widgets im Body gerendert. */
+/* BaseWeb/Select Popover */
 [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined),
 [data-baseweb="popover"] *:not(.material-icons):not(.material-symbols-outlined),
-[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined),
-[role="listbox"] *:not(.material-icons):not(.material-symbols-outlined),
-[role="option"]:not(.material-icons):not(.material-symbols-outlined),
-[role="option"] *:not(.material-icons):not(.material-symbols-outlined) {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-  font-variant-ligatures: normal !important;
-}}
+[data-baseweb="menu"] *:not(.material-icons):not(.material-symbols-outlined){
+  color: var(--text) !important;
+}
+[data-baseweb="layer"] [data-baseweb="menu"],
+[data-baseweb="layer"] [data-baseweb="popover"]{
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+}
 
-/* 6c) Dropdown-/Multiselect-Optionsliste: Höhe & Scrollbar (robust) */
-[data-baseweb="layer"] ul[role="listbox"],
-[data-baseweb="layer"] ul[role="menu"] {{
-  max-height: 200px !important;   /* gewünschte Höchst-Höhe */
-  height: auto !important;         /* erzwingt: nicht fix, sondern max-height */
-  overflow-y: auto !important;     /* Scroll, wenn zu lang */
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}}
-[data-baseweb="layer"] [data-baseweb="menu"] {{
-  max-height: 200px !important;
-  height: auto !important;
-  overflow-y: auto !important;
-}}
-[data-baseweb="layer"] [data-baseweb="popover"] {{
-  max-height: 200px !important;
-  height: auto !important;
-  overflow: visible !important;  /* Menü übernimmt das Scrollen */
-}}
-
-/* Compact MultiSelect input (fixe Höhe + interner Scroll für Chips) */
-[data-testid="stMultiSelect"] > div {{
-  min-height: 20px !important;            /* Grundhöhe des Eingabefelds */
-}}
-[data-testid="stMultiSelect"] div[data-baseweb="value-container"] {{
-  max-height: 48px !important;            /* Sichtbare Chip-Höhe begrenzen */
-  overflow-y: auto !important;            /* Scrollbar für viele Chips */
-}}
-
-/* Chips kleiner machen */
-[data-testid="stMultiSelect"] [data-baseweb="tag"] {{
-  transform: scale(1);                  /* kompaktere Chips */
-  margin: 1px 2px !important;
-}}
-[data-testid="stMultiSelect"] [data-baseweb="tag"] span {{
-  font-size: 12px !important;
-}}
-
-/* Weniger vertikales Padding im Control */
-[data-testid="stMultiSelect"] [data-baseweb="select"] > div {{
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}}
-
-/* 7) Tabs/Expander/Metrics */
-[data-testid="stSubheader"] *,
-[data-testid="stCaption"] *,
-[data-testid="stMetricLabel"],
-[data-testid="stMetricDelta"],
-[data-testid="stMetricValue"],
-[data-testid="stExpander"] summary,
-[data-testid="stTabs"] button p {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-
-/* ==== Tabellen & DataFrames in Montserrat ==== */
+/* DataFrames / Tabellen */
 [data-testid="stTable"] table,
 [data-testid="stTable"] th,
-[data-testid="stTable"] td {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-}}
-
-[data-testid="stDataFrame"] *:not(.material-icons):not(.material-symbols-outlined),
+[data-testid="stTable"] td{
+  color: var(--text) !important;
+  background-color: var(--card) !important;
+}
 [data-testid="stDataFrame"] div[role="gridcell"],
-[data-testid="stDataFrame"] div[role="columnheader"],
-[data-testid="stDataFrame"] div[role="row"] {{
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-  font-variant-ligatures: normal !important;
-}}
+[data-testid="stDataFrame"] div[role="columnheader"]{
+  color: var(--text) !important;
+}
 
-/* 9) Hintergrund & Hover */
-body, .stApp {{ background-color: #f4f4f4; }}
-div[data-testid="stFileUploader"]:hover,
-div[data-testid^="stSelectbox"]:hover,
-div[data-testid^="stMultiSelect"]:hover,
-div[data-testid^="stNumberInput"]:hover,
-div[data-testid^="stRadio"]:hover,
-div[data-testid^="stSlider"]:hover {{
-  transform: scale(1.01);
-  transition: transform 0.2s ease;
-}}
+/* Karten/Container (wenn vorhanden) */
+.block-container, .main, .element-container{
+  background-color: transparent !important;
+}
 
-/* === HEADER-TOGGLE: Inhalt ausblenden & eigene Pfeile überlagern === */
-[data-testid="collapsedControl"],
-[data-testid="stHeader"] [data-testid="collapsedControl"],
-[data-testid="stHeader"] button[aria-label*="sidebar" i],
-[data-testid="stHeader"] button[title*="sidebar" i] {{
-  position: relative !important;
-}}
-[data-testid="collapsedControl"] * ,
-[data-testid="stHeader"] [data-testid="collapsedControl"] * ,
-[data-testid="stHeader"] button[aria-label*="sidebar" i] * ,
-[data-testid="stHeader"] button[title*="sidebar" i] * {{
-  opacity: 0 !important;
-}}
+/* Header-Toggle-Pfeile erben Textfarbe */
 [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
 [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-[data-testid="stHeader"] button[title*="sidebar" i]::after {{
-  content: "❮❮";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 22px;
-  line-height: 1;
-}}
-[data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
-  content: "❯❯";
-}}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-:root{
-  --ms-box-h: 100px;   /* <— HIER die gewünschte Box-Höhe einstellen (z.B. 28px, 32px, 40px) */
+[data-testid="stHeader"] button[title*="sidebar" i]::after{
+  color: var(--text) !important;
 }
 
-/* Nur die Höhe des sichtbaren MultiSelect-Eingabefelds fixen */
-[data-testid="stMultiSelect"] [data-baseweb="select"],
-[data-testid="stMultiSelect"] [data-baseweb="select"] > div,
-[data-testid="stMultiSelect"] div[aria-haspopup="listbox"]{
-  min-height: var(--ms-box-h) !important;
-  height: var(--ms-box-h) !important;
-}
-
-/* Inhalt innerhalb der Box an die Höhe anpassen – keine weitere Optik ändern */
-[data-testid="stMultiSelect"] div[data-baseweb="value-container"]{
-  max-height: calc(var(--ms-box-h) - 6px) !important;
-  overflow: hidden !important;   /* schneidet Chips ab, damit die Box nicht wächst */
-  /* Wenn du Chips innerhalb der Box scrollen willst, nimm stattdessen: overflow: auto !important; */
+/* Rahmen & dezente Linien */
+hr, .st-emotion-cache-12w0qpk p, .st-emotion-cache-1dp5vir{
+  border-color: var(--border) !important;
 }
 </style>
 """, unsafe_allow_html=True)
