@@ -36,23 +36,7 @@ font_b64 = load_font_b64(FONT_URL)
 
 
 
-# Hilfsfunktion: legt ein <script> in die Seite
-def detect_theme():
-    detect_js = """
-    <script>
-    const theme = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-background-color");
-    const mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    // an Streamlit zurückgeben über eine SessionStorage Variable
-    window.parent.postMessage({isStreamlitMessage:true, type:"theme-mode", mode:mode}, "*");
-    </script>
-    """
-    st.markdown(detect_js, unsafe_allow_html=True)
 
-# Abhören in Python
-from streamlit_javascript import st_javascript   # kleines Helfer-Paket
-
-mode = st_javascript("() => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'")
-st.write("Aktuelles Theme:", mode)
 
 #############Light
 st.markdown(f"""
