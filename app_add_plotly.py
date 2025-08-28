@@ -242,6 +242,7 @@ div[data-testid^="stSlider"]:hover {{
 """, unsafe_allow_html=True)
 
 ###########Dark
+'''
 st.markdown(f"""
 <style>
 /* 1) Montserrat einbetten – kein globales Anwenden */
@@ -465,7 +466,7 @@ div[data-testid^="stSlider"]:hover {{
 </style>
 """, unsafe_allow_html=True)
 
-
+'''
 
 
 
