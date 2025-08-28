@@ -315,6 +315,89 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* ========= Dark Mode: nur Farben überschreiben ========= */
+@media (prefers-color-scheme: dark){
+
+  /* Hintergrund – auf allen Hauptcontainern */
+  html, body, .stApp,
+  .st-emotion-cache-18ni7ap,  /* App-Haupt-Wrapper */
+  .block-container { 
+    background-color: #0f1116 !important;
+    color-scheme: dark;
+  }
+
+  /* Textfarben (Hauptbereich) */
+  .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+  [data-testid="stMarkdownContainer"],
+  [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){
+    color: #e6e6e6 !important;
+  }
+
+  /* Sidebar-Texte */
+  [data-testid="stSidebar"] h1,
+  [data-testid="stSidebar"] h2,
+  [data-testid="stSidebar"] h3,
+  [data-testid="stSidebar"] h4,
+  [data-testid="stSidebar"] h5,
+  [data-testid="stSidebar"] h6,
+  [data-testid="stSidebar"] p,
+  [data-testid="stSidebar"] label,
+  [data-testid="stSidebar"] small{
+    color: #e6e6e6 !important;
+  }
+
+  /* Buttons */
+  .stButton > button, .stDownloadButton > button{
+    background-color: #3a3f4b !important;
+    color: #ffffff !important;
+  }
+
+  /* Inputs */
+  input[type="text"], input[type="number"], input[type="search"],
+  input[type="email"], input[type="password"],
+  textarea, select,
+  .stTextInput input, .stNumberInput input, .stTextArea textarea{
+    background-color: #1b202b !important;
+    color: #e6e6e6 !important;
+    border-color: #2e3441 !important;
+  }
+
+  /* Dropdown/Popover */
+  [data-baseweb="layer"] [data-baseweb="menu"],
+  [data-baseweb="layer"] [data-baseweb="popover"]{
+    background-color: #161a22 !important;
+    border: 1px solid #2a2f3a !important;
+  }
+  [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined){
+    color: #e6e6e6 !important;
+  }
+
+  /* Tabellen & DataFrames */
+  [data-testid="stTable"] table,
+  [data-testid="stTable"] th,
+  [data-testid="stTable"] td{
+    background-color: #161a22 !important;
+    color: #e6e6e6 !important;
+    border-color: #2a2f3a !important;
+  }
+  [data-testid="stDataFrame"] div[role="gridcell"],
+  [data-testid="stDataFrame"] div[role="columnheader"]{
+    color: #e6e6e6 !important;
+  }
+
+  /* Header-Toggle-Pfeile */
+  [data-testid="collapsedControl"]::after,
+  [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
+  [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
+  [data-testid="stHeader"] button[title*="sidebar" i]::after{
+    color: #e6e6e6 !important;
+  }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ==== Row-based sizing (Plotly & Matplotlib) ====
 DEFAULT_ROW_HEIGHT_PX = 320   # feste Pixelhöhe je Plot-Zeile in Plotly
 DEFAULT_HSPACE_FRAC   = 0.1  # 0..1
