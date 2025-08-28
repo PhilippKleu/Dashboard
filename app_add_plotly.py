@@ -192,8 +192,43 @@ textarea, select,
   font-variant-ligatures: normal !important;
 }}
 
-/* 9) Hintergrund & Hover */
+/* 9) Hintergrund & Hover
+   — Light = Default (#f4f4f4)
+   — Dark: überschreibe HINTERGRUND auf allen relevanten Containern */
 body, .stApp {{ background-color: #f4f4f4; }}
+
+@media (prefers-color-scheme: dark){{
+  html, body,
+  .stApp,
+  [data-testid="stAppViewContainer"],
+  [data-testid="stSidebar"],
+  [data-testid="stHeader"],
+  .main,
+  .block-container {{
+    background: #0f1116 !important;
+    background-color: #0f1116 !important;
+    color-scheme: dark;
+  }}
+  /* evtl. Overlay/Gradient entfernen */
+  [data-testid="stAppViewContainer"]::before {{
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+  }}
+}}
+/* greift zusätzlich, falls Streamlit explizit ein Dark-Theme setzt */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .stApp,
+html[data-theme="dark"] [data-testid="stAppViewContainer"],
+html[data-theme="dark"] [data-testid="stSidebar"],
+html[data-theme="dark"] [data-testid="stHeader"],
+html[data-theme="dark"] .main,
+html[data-theme="dark"] .block-container {{
+  background: #0f1116 !important;
+  background-color: #0f1116 !important;
+  color-scheme: dark;
+}}
+
 div[data-testid="stFileUploader"]:hover,
 div[data-testid^="stSelectbox"]:hover,
 div[data-testid^="stMultiSelect"]:hover,
@@ -232,67 +267,6 @@ div[data-testid^="stSlider"]:hover {{
 }}
 [data-testid="stSidebar"] [data-testid="collapsedControl"]::after {{
   content: "❯❯";
-}}
-
-/* ========= Dark Mode: nur Farben überschreiben ========= */
-@media (prefers-color-scheme: dark) {{
-  body, .stApp {{
-    background-color: #0f1116 !important;
-    color-scheme: dark;
-  }}
-  .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
-  [data-testid="stMarkdownContainer"],
-  [data-testid="stMarkdownContainer"] *:not(i):not(.material-icons):not(.material-symbols-outlined){{
-    color: #e6e6e6 !important;
-  }}
-  [data-testid="stSidebar"] h1,
-  [data-testid="stSidebar"] h2,
-  [data-testid="stSidebar"] h3,
-  [data-testid="stSidebar"] h4,
-  [data-testid="stSidebar"] h5,
-  [data-testid="stSidebar"] h6,
-  [data-testid="stSidebar"] p,
-  [data-testid="stSidebar"] label,
-  [data-testid="stSidebar"] small{{
-    color: #e6e6e6 !important;
-  }}
-  .stButton > button, .stDownloadButton > button{{
-    background-color: #3a3f4b !important;
-    color: #ffffff !important;
-  }}
-  input[type="text"], input[type="number"], input[type="search"],
-  input[type="email"], input[type="password"],
-  textarea, select,
-  .stTextInput input, .stNumberInput input, .stTextArea textarea{{
-    background-color: #1b202b !important;
-    color: #e6e6e6 !important;
-    border-color: #2e3441 !important;
-  }}
-  [data-baseweb="layer"] [data-baseweb="menu"],
-  [data-baseweb="layer"] [data-baseweb="popover"]{{
-    background-color: #161a22 !important;
-    border: 1px solid #2a2f3a !important;
-  }}
-  [data-baseweb="layer"] *:not(.material-icons):not(.material-symbols-outlined){{
-    color: #e6e6e6 !important;
-  }}
-  [data-testid="stTable"] table,
-  [data-testid="stTable"] th,
-  [data-testid="stTable"] td{{
-    background-color: #161a22 !important;
-    color: #e6e6e6 !important;
-    border-color: #2a2f3a !important;
-  }}
-  [data-testid="stDataFrame"] div[role="gridcell"],
-  [data-testid="stDataFrame"] div[role="columnheader"]{{
-    color: #e6e6e6 !important;
-  }}
-  [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] [data-testid="collapsedControl"]::after,
-  [data-testid="stHeader"] button[aria-label*="sidebar" i]::after,
-  [data-testid="stHeader"] button[title*="sidebar" i]::after{{
-    color: #e6e6e6 !important;
-  }}
 }}
 </style>
 """, unsafe_allow_html=True)
